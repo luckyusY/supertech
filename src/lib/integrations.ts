@@ -30,7 +30,10 @@ export function hasCloudinaryServerConfig() {
 }
 
 export function hasCloudinaryClientConfig() {
-  return hasValue(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME);
+  return (
+    hasValue(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) &&
+    hasValue(process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY)
+  );
 }
 
 export function getIntegrationStatus(): IntegrationStatus {
@@ -54,8 +57,8 @@ export function getIntegrationStatus(): IntegrationStatus {
     cloudinaryClient: {
       configured: cloudinaryClientConfigured,
       label: cloudinaryClientConfigured
-        ? "Client-side Cloudinary delivery is ready for transformed storefront images."
-        : "Expose NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME for browser-side uploads and previews.",
+        ? "Client-side Cloudinary uploads and delivery are ready for vendor workflows."
+        : "Expose NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_API_KEY.",
     },
   };
 }

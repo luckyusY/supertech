@@ -35,11 +35,13 @@ export default function PhasesPage() {
                 </p>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${
-                    phase.status === "active"
+                    phase.status === "done"
                       ? "bg-[rgba(26,123,112,0.12)] text-[var(--teal)]"
-                      : phase.status === "next"
+                      : phase.status === "active"
                         ? "bg-[rgba(242,191,99,0.18)] text-[#9c6b0b]"
-                        : "bg-[rgba(16,32,25,0.06)] text-[var(--muted)]"
+                        : phase.status === "next"
+                          ? "bg-[rgba(228,90,54,0.1)] text-[var(--accent)]"
+                          : "bg-[rgba(16,32,25,0.06)] text-[var(--muted)]"
                   }`}
                 >
                   {phase.status}
@@ -70,14 +72,14 @@ export default function PhasesPage() {
               Current focus
             </p>
             <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
-              Phase 1 is live: customers can submit manual order requests now.
+              Phase 2 is live: vendors can submit products for admin approval.
             </p>
           </div>
           <Link
-            href="/order"
+            href="/dashboard/vendor"
             className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
           >
-            Try the order flow
+            Open vendor dashboard
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

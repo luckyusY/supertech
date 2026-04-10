@@ -36,6 +36,7 @@ Required for real integrations:
 - `CLOUDINARY_API_KEY`
 - `CLOUDINARY_API_SECRET`
 - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
+- `NEXT_PUBLIC_CLOUDINARY_API_KEY`
 
 ## Suggested next steps
 

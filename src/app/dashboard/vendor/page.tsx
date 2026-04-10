@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import { ImagePlus, PackageSearch } from "lucide-react";
+import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
 import { getIntegrationStatus } from "@/lib/integrations";
-import {
-  sellerChecklist,
-  vendorDashboardHighlights,
-  vendorOrders,
-} from "@/lib/marketplace";
+import { sellerChecklist, vendorDashboardHighlights, vendorOrders } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
   title: "Vendor Dashboard",
@@ -60,6 +57,10 @@ export default function VendorDashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-8">
+        <VendorProductWorkspace />
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
@@ -133,9 +134,9 @@ export default function VendorDashboardPage() {
               </div>
             ))}
             <div className="rounded-[1.25rem] border border-dashed border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-4 text-sm leading-7 text-[var(--muted)]">
-              Next move: plug a seller product form into MongoDB and post image
-              assets through the signed Cloudinary endpoint before saving product
-              documents.
+              This vendor dashboard is now in Phase 2. Sellers can upload product
+              images to Cloudinary, submit products for review, and track approval
+              status without needing payments first.
             </div>
           </div>
         </section>

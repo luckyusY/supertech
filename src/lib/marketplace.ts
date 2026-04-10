@@ -41,7 +41,7 @@ export type BuildPhase = {
   id: string;
   step: string;
   title: string;
-  status: "active" | "next" | "planned";
+  status: "done" | "active" | "next" | "planned";
   description: string;
   deliverables: string[];
 };
@@ -88,7 +88,7 @@ export const buildPhases: BuildPhase[] = [
     id: "phase-1",
     step: "Phase 1",
     title: "Manual order capture",
-    status: "active",
+    status: "done",
     description:
       "Launch the storefront, vendor pages, and a manual order-request flow before online payments exist.",
     deliverables: [
@@ -101,7 +101,7 @@ export const buildPhases: BuildPhase[] = [
     id: "phase-2",
     step: "Phase 2",
     title: "Catalog operations",
-    status: "next",
+    status: "active",
     description:
       "Give vendors and admins the ability to create, review, and publish products from the dashboard.",
     deliverables: [
@@ -114,7 +114,7 @@ export const buildPhases: BuildPhase[] = [
     id: "phase-3",
     step: "Phase 3",
     title: "Cart and checkout",
-    status: "planned",
+    status: "next",
     description:
       "Move from manual requests to a proper cart and customer checkout once payment rails are ready.",
     deliverables: [

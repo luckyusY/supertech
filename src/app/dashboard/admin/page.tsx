@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BadgeCheck, Layers3, Wallet2 } from "lucide-react";
 import { OrderRequestInbox } from "@/components/order-request-inbox";
+import { ProductApprovalInbox } from "@/components/product-approval-inbox";
 import { adminQueue, buildPhases, vendors } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
@@ -64,6 +65,22 @@ export default function AdminDashboardPage() {
             <OrderRequestInbox />
           </section>
 
+          <section className="rounded-[1.75rem] border border-[var(--line)] bg-white/72 p-6">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold tracking-[-0.04em]">
+                Product approval queue
+              </h2>
+              <span className="rounded-full bg-[rgba(242,191,99,0.18)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#9c6b0b]">
+                Phase 2
+              </span>
+            </div>
+            <div className="mt-6">
+              <ProductApprovalInbox />
+            </div>
+          </section>
+        </div>
+
+        <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
           <section className="rounded-[1.75rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-6">
             <h2 className="text-2xl font-semibold tracking-[-0.04em]">Current roadmap</h2>
             <div className="mt-6 space-y-4">

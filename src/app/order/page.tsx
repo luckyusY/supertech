@@ -90,7 +90,7 @@ export default async function OrderPage({ searchParams }: OrderPageProps) {
               "Customer submits a request with product, address, and payment preference.",
               "The request is saved in MongoDB so it is visible from the admin side.",
               "You confirm availability, delivery timing, and payment manually.",
-              "Later we replace this flow with a full cart and payment checkout.",
+              "Phase 2 now lets vendors submit new products while checkout is still pending.",
             ].map((item, index) => (
               <div
                 key={item}
