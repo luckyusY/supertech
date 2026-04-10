@@ -18,3 +18,12 @@ export function formatCompactNumber(value: number) {
     maximumFractionDigits: 1,
   }).format(value);
 }
+
+export function formatDateTime(value: Date | string) {
+  const date = typeof value === "string" ? new Date(value) : value;
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}

@@ -121,8 +121,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
                 <Star className="h-4 w-4 fill-current text-[var(--accent)]" />
-                {product.rating.toFixed(1)} · {product.reviewCount} reviews
+                {product.rating.toFixed(1)} | {product.reviewCount} reviews
               </span>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href={`/order?product=${product.slug}`}
+                className="inline-flex items-center justify-center rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
+              >
+                Order from us
+              </Link>
+              <Link
+                href="/phases"
+                className="inline-flex items-center justify-center rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
+              >
+                See build phases
+              </Link>
             </div>
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-white/72 p-5">
               <div className="space-y-3 text-sm text-[var(--muted)]">
@@ -133,6 +147,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-4 w-4 text-[var(--teal)]" />
                   Marketplace purchase protection and vendor quality review
+                </div>
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="h-4 w-4 text-[var(--teal)]" />
+                  No online payment yet; order requests are confirmed manually
                 </div>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">

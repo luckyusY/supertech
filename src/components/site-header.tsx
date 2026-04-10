@@ -3,6 +3,7 @@ import Link from "next/link";
 const navigation = [
   { href: "/catalog", label: "Catalog" },
   { href: "/vendors", label: "Vendors" },
+  { href: "/phases", label: "Phases" },
   { href: "/dashboard/vendor", label: "Vendor Dashboard" },
   { href: "/dashboard/admin", label: "Admin" },
 ];
@@ -36,10 +37,10 @@ export function SiteHeader() {
           ))}
         </nav>
         <Link
-          href="/catalog"
+          href="/order"
           className="rounded-full bg-[var(--foreground)] px-4 py-2.5 text-sm font-semibold text-white"
         >
-          Start browsing
+          Order now
         </Link>
       </div>
     </header>

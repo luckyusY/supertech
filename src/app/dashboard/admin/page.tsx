@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BadgeCheck, Layers3, Wallet2 } from "lucide-react";
-import { adminQueue, vendors } from "@/lib/marketplace";
+import { OrderRequestInbox } from "@/components/order-request-inbox";
+import { adminQueue, buildPhases, vendors } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -17,7 +18,7 @@ export default function AdminDashboardPage() {
               Marketplace control room
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-              Admin oversight for approvals, payouts, and vendor quality.
+              Admin oversight for approvals, manual orders, payouts, and vendor quality.
             </h1>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {[
@@ -43,63 +44,77 @@ export default function AdminDashboardPage() {
               Ops notes
             </p>
             <div className="mt-5 space-y-4 text-sm leading-7 text-[rgba(255,255,255,0.76)]">
-              <p>Commission configuration should be enforced before products go live.</p>
-              <p>Vendors need clear payout windows and refund responsibility rules.</p>
-              <p>High-performing sellers can graduate to dedicated storefront themes later.</p>
+              <p>Phase 1 is about converting interest into manual orders as fast as possible.</p>
+              <p>Every request should be confirmed quickly so customers still feel momentum.</p>
+              <p>Payments can wait until the catalog and seller operations feel stable.</p>
             </div>
           </div>
         </div>
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
           <section className="rounded-[1.75rem] border border-[var(--line)] bg-white/72 p-6">
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Vendor review queue
-            </h2>
-            <div className="mt-6 space-y-4">
-              {adminQueue.map((entry) => (
-                <div
-                  key={entry.name}
-                  className="flex flex-col gap-4 rounded-[1.3rem] border border-[var(--line)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="text-lg font-semibold tracking-[-0.03em]">
-                      {entry.name}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">{entry.category}</p>
-                  </div>
-                  <div className="text-sm text-[var(--muted)]">
-                    <p>{entry.stage}</p>
-                    <p className="mt-1 font-semibold text-[var(--foreground)]">
-                      {entry.eta}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold tracking-[-0.04em]">
+                Manual order inbox
+              </h2>
+              <span className="rounded-full bg-[rgba(26,123,112,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--teal)]">
+                Phase 1
+              </span>
             </div>
+            <OrderRequestInbox />
           </section>
 
           <section className="rounded-[1.75rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-6">
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Seller health snapshot
-            </h2>
+            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Current roadmap</h2>
             <div className="mt-6 space-y-4">
-              {vendors.map((vendor) => (
+              {buildPhases.slice(0, 3).map((phase) => (
                 <div
-                  key={vendor.id}
+                  key={phase.id}
                   className="rounded-[1.3rem] border border-[var(--line)] bg-white px-4 py-4"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-semibold tracking-[-0.03em]">{vendor.name}</p>
-                      <p className="mt-1 text-sm text-[var(--muted)]">{vendor.location}</p>
+                      <p className="font-semibold tracking-[-0.03em]">{phase.step}</p>
+                      <p className="mt-1 text-sm text-[var(--muted)]">{phase.title}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-[var(--muted)]">Fulfillment</p>
-                      <p className="font-semibold">{vendor.fulfillmentRate}</p>
+                      <p className="text-sm text-[var(--muted)]">Status</p>
+                      <p className="font-semibold capitalize">{phase.status}</p>
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="mt-6 rounded-[1.3rem] border border-[var(--line)] bg-white px-4 py-4">
+              <p className="font-semibold tracking-[-0.03em]">Vendor review queue</p>
+              <div className="mt-4 space-y-3">
+                {adminQueue.map((entry) => (
+                  <div key={entry.name} className="flex items-center justify-between gap-4 text-sm">
+                    <div>
+                      <p>{entry.name}</p>
+                      <p className="text-[var(--muted)]">{entry.category}</p>
+                    </div>
+                    <div className="text-right text-[var(--muted)]">
+                      <p>{entry.stage}</p>
+                      <p>{entry.eta}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-6 rounded-[1.3rem] border border-[var(--line)] bg-white px-4 py-4">
+              <p className="font-semibold tracking-[-0.03em]">Seller health snapshot</p>
+              <div className="mt-4 space-y-3">
+                {vendors.slice(0, 3).map((vendor) => (
+                  <div key={vendor.id} className="flex items-center justify-between gap-4 text-sm">
+                    <div>
+                      <p>{vendor.name}</p>
+                      <p className="text-[var(--muted)]">{vendor.location}</p>
+                    </div>
+                    <p className="font-semibold">{vendor.fulfillmentRate}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         </div>

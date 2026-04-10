@@ -37,6 +37,15 @@ export type Product = {
   featured?: boolean;
 };
 
+export type BuildPhase = {
+  id: string;
+  step: string;
+  title: string;
+  status: "active" | "next" | "planned";
+  description: string;
+  deliverables: string[];
+};
+
 export const marketplaceMetrics = [
   { label: "Launch lanes", value: "4" },
   { label: "Seed vendors", value: "4" },
@@ -72,6 +81,61 @@ export const sellerChecklist = [
   "Approve the first product batch with brand and quality checks.",
   "Enable Cloudinary uploads for product galleries and storefront banners.",
   "Route orders into the vendor dashboard with fulfillment expectations.",
+] as const;
+
+export const buildPhases: BuildPhase[] = [
+  {
+    id: "phase-1",
+    step: "Phase 1",
+    title: "Manual order capture",
+    status: "active",
+    description:
+      "Launch the storefront, vendor pages, and a manual order-request flow before online payments exist.",
+    deliverables: [
+      "Customer order-request page",
+      "MongoDB persistence for order inquiries",
+      "Admin visibility into new order requests",
+    ],
+  },
+  {
+    id: "phase-2",
+    step: "Phase 2",
+    title: "Catalog operations",
+    status: "next",
+    description:
+      "Give vendors and admins the ability to create, review, and publish products from the dashboard.",
+    deliverables: [
+      "Vendor product CRUD",
+      "Cloudinary image uploads from dashboard forms",
+      "Admin approval workflow for new listings",
+    ],
+  },
+  {
+    id: "phase-3",
+    step: "Phase 3",
+    title: "Cart and checkout",
+    status: "planned",
+    description:
+      "Move from manual requests to a proper cart and customer checkout once payment rails are ready.",
+    deliverables: [
+      "Cart state and checkout summary",
+      "Address book and shipping options",
+      "Payment provider integration",
+    ],
+  },
+  {
+    id: "phase-4",
+    step: "Phase 4",
+    title: "Marketplace scale-up",
+    status: "planned",
+    description:
+      "Add the systems that turn the MVP into a full operational marketplace for multiple sellers.",
+    deliverables: [
+      "Vendor payouts and commissions",
+      "Order tracking and notifications",
+      "Analytics, reviews, and seller performance tooling",
+    ],
+  },
 ] as const;
 
 export const vendors: Vendor[] = [
