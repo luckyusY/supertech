@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, CheckCircle2, Clock, MapPin, Store, XCircle } from "lucide-react";
+import { Building2, CheckCircle2, Clock, Copy, KeyRound, MapPin, Store, XCircle } from "lucide-react";
 
 type Application = {
   _id: string;
@@ -17,6 +17,13 @@ type Application = {
   createdAt: string;
 };
 
+type ApprovalResult = {
+  id: string;
+  email: string;
+  tempPassword: string | null;
+  vendorSlug: string;
+};
+
 type Props = {
   initialApplications: Application[];
 };
@@ -24,9 +31,11 @@ type Props = {
 export function VendorApplicationsInbox({ initialApplications }: Props) {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
   const [loading, setLoading] = useState<string | null>(null);
+  const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null);
 
   async function review(id: string, status: "approved" | "rejected") {
     setLoading(id);
+    setApprovalResult(null);
     try {
       const res = await fetch(`/api/vendor-applications/${id}`, {
         method: "PATCH",
@@ -34,9 +43,23 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
         body: JSON.stringify({ status }),
       });
       if (res.ok) {
+        const data = (await res.json()) as {
+          success: boolean;
+          email?: string;
+          tempPassword?: string | null;
+          vendorSlug?: string;
+        };
         setApplications((prev) =>
           prev.map((a) => (a._id === id ? { ...a, status } : a)),
         );
+        if (status === "approved" && data.tempPassword) {
+          setApprovalResult({
+            id,
+            email: data.email ?? "",
+            tempPassword: data.tempPassword,
+            vendorSlug: data.vendorSlug ?? "",
+          });
+        }
       }
     } finally {
       setLoading(null);
@@ -60,6 +83,32 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Temp password banner shown after approval */}
+      {approvalResult?.tempPassword && (
+        <div className="rounded-[1.4rem] border border-[rgba(26,123,112,0.3)] bg-[rgba(26,123,112,0.06)] p-5">
+          <div className="flex items-center gap-3">
+            <KeyRound className="h-5 w-5 text-[var(--teal)]" />
+            <p className="font-semibold text-[var(--teal)]">Vendor account created</p>
+          </div>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            This vendor had no existing account. A new one was created. Share these credentials with them:
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <CredentialBox label="Email" value={approvalResult.email} />
+            <CredentialBox label="Temporary password" value={approvalResult.tempPassword} highlight />
+          </div>
+          <p className="mt-3 text-xs text-[var(--muted)]">
+            The vendor should sign in at <strong>/sign-in</strong> with these credentials. They can change their password after logging in.
+          </p>
+          <button
+            onClick={() => setApprovalResult(null)}
+            className="mt-3 text-xs text-[var(--muted)] underline underline-offset-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {pending.length > 0 && (
         <div>
           <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-amber-600">
@@ -113,6 +162,29 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
   );
 }
 
+function CredentialBox({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  const [copied, setCopied] = useState(false);
+
+  function copy() {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div className={`rounded-[1rem] border p-3 ${highlight ? "border-[var(--teal)] bg-white" : "border-[var(--line)] bg-white/70"}`}>
+      <p className="text-xs text-[var(--muted)]">{label}</p>
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <p className={`font-mono text-sm font-semibold ${highlight ? "text-[var(--teal)]" : ""}`}>{value}</p>
+        <button onClick={copy} className="shrink-0 text-[var(--muted)] hover:text-[var(--foreground)]">
+          {copied ? <CheckCircle2 className="h-4 w-4 text-[var(--teal)]" /> : <Copy className="h-4 w-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ApplicationCard({
   app,
   loading,
@@ -142,29 +214,29 @@ function ApplicationCard({
       </div>
 
       <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-        <div className="flex items-center gap-2 text-[var(--muted)]">
+        <div className="text-[var(--muted)]">
           <span className="font-medium text-[var(--foreground)]">Contact:</span> {app.name}
         </div>
-        <div className="flex items-center gap-2 text-[var(--muted)]">
+        <div className="text-[var(--muted)]">
           <span className="font-medium text-[var(--foreground)]">Email:</span> {app.email}
         </div>
         {app.phone && (
-          <div className="flex items-center gap-2 text-[var(--muted)]">
+          <div className="text-[var(--muted)]">
             <span className="font-medium text-[var(--foreground)]">Phone:</span> {app.phone}
           </div>
         )}
-        <div className="flex items-center gap-2 text-[var(--muted)]">
+        <div className="flex items-center gap-1.5 text-[var(--muted)]">
           <MapPin className="h-3.5 w-3.5" /> {app.location}
         </div>
         {app.website && (
-          <div className="flex items-center gap-2 text-[var(--muted)]">
-            <span className="font-medium text-[var(--foreground)]">Website:</span>
+          <div className="text-[var(--muted)]">
+            <span className="font-medium text-[var(--foreground)]">Website:</span>{" "}
             <a href={app.website} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
               {app.website.replace(/^https?:\/\//, "")}
             </a>
           </div>
         )}
-        <div className="flex items-center gap-2 text-[var(--muted)]">
+        <div className="text-[var(--muted)]">
           <span className="font-medium text-[var(--foreground)]">Applied:</span>{" "}
           {new Date(app.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
         </div>
