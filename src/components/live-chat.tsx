@@ -183,7 +183,7 @@ export function LiveChat() {
           onClick={() =>
             openChat({ room: "support", title: "Live Support", subtitle: "We reply within minutes" })
           }
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-xl transition-transform hover:scale-105"
+          className="fixed bottom-4 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-xl transition-transform hover:scale-105 sm:bottom-6 sm:right-6"
           aria-label="Open chat"
         >
           <MessageCircle className="h-6 w-6" />
@@ -193,7 +193,7 @@ export function LiveChat() {
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[520px] w-[350px] flex-col overflow-hidden rounded-[1.6rem] border border-[var(--line)] bg-white shadow-2xl">
+        <div className="fixed bottom-4 right-4 z-50 flex h-[520px] w-[calc(100vw-2rem)] max-w-[350px] flex-col overflow-hidden rounded-[1.6rem] border border-[var(--line)] bg-white shadow-2xl sm:bottom-6 sm:right-6">
 
           {/* Header */}
           <div className="flex shrink-0 items-center justify-between bg-[var(--foreground)] px-4 py-3">

@@ -69,8 +69,8 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               -{Math.round((1 - product.price / product.compareAt) * 100)}% OFF
             </div>
           )}
-          {/* Quick-add overlay */}
-          <div className="absolute inset-x-0 bottom-0 translate-y-full transition-transform duration-300 group-hover:translate-y-0">
+          {/* Quick-add overlay — slides in on hover (desktop) or always visible on touch */}
+          <div className="absolute inset-x-0 bottom-0 translate-y-full transition-transform duration-300 group-hover:translate-y-0 [@media(hover:none)]:translate-y-0">
             <button
               type="button"
               onClick={handleQuickAdd}

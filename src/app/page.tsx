@@ -25,7 +25,7 @@ export default async function Home() {
     <div className="pb-20">
       {/* Hero */}
       <section className="page-shell pt-8 pb-6 sm:pt-12">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[var(--foreground)] px-8 py-12 text-white sm:px-12 sm:py-16 lg:px-16 lg:py-20">
+        <div className="relative overflow-hidden rounded-[2rem] bg-[var(--foreground)] px-5 py-10 text-white sm:px-12 sm:py-16 lg:px-16 lg:py-20">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[var(--accent)] opacity-20 blur-3xl" />
             <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-[var(--teal)] opacity-15 blur-3xl" />
@@ -43,7 +43,7 @@ export default async function Home() {
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
                 🌍 Shipping across East &amp; West Africa
               </span>
-              <h1 className="text-5xl font-semibold leading-[1.05] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
+              <h1 className="text-4xl font-semibold leading-[1.05] tracking-[-0.05em] sm:text-5xl lg:text-6xl xl:text-7xl">
                 Premium tech, delivered to your door.
               </h1>
               <p className="text-lg leading-8 text-white/70 sm:text-xl">
@@ -63,11 +63,11 @@ export default async function Home() {
                   Browse sellers
                 </Link>
               </div>
-              <div className="flex flex-wrap items-center gap-6 pt-2 text-sm text-white/60">
+              <div className="flex flex-wrap items-center gap-4 pt-2 text-sm text-white/60 sm:gap-6">
                 <span><span className="font-semibold text-white">24</span> products</span>
-                <span className="h-4 w-px bg-white/20" />
+                <span className="hidden h-4 w-px bg-white/20 sm:block" />
                 <span><span className="font-semibold text-white">6</span> verified sellers</span>
-                <span className="h-4 w-px bg-white/20" />
+                <span className="hidden h-4 w-px bg-white/20 sm:block" />
                 <span><span className="font-semibold text-white">12+</span> cities served</span>
               </div>
             </div>

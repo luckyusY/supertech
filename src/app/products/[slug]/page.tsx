@@ -220,7 +220,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      <section className="soft-card p-6 sm:p-8">
+      <section className="mt-8 soft-card p-6 sm:p-8">
         <ProductReviews productSlug={product.slug} />
       </section>
 

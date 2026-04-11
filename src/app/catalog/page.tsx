@@ -46,31 +46,33 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       </div>
 
       {/* Category filter bar */}
-      <div className="mb-6 flex flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-          <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
-        </span>
-        <div className="mx-2 h-4 w-px bg-[var(--line)]" />
-        {categories.map((item) => {
-          const isActive = item === selectedCategory;
-          const href = item === "All" ? "/catalog" : `/catalog?category=${encodeURIComponent(item)}`;
-          return (
-            <Link
-              key={item}
-              href={href}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-                isActive
-                  ? "bg-[var(--foreground)] text-white"
-                  : "border border-[var(--line)] bg-white/80 text-[var(--muted)] hover:border-[var(--foreground)] hover:text-[var(--foreground)]"
-              }`}
-            >
-              {item}
-            </Link>
-          );
-        })}
-        <p className="ml-auto text-xs text-[var(--muted)] sm:hidden">
-          {filteredProducts.length} items
-        </p>
+      <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+            <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
+          </span>
+          <div className="mx-1 h-4 w-px shrink-0 bg-[var(--line)]" />
+          {categories.map((item) => {
+            const isActive = item === selectedCategory;
+            const href = item === "All" ? "/catalog" : `/catalog?category=${encodeURIComponent(item)}`;
+            return (
+              <Link
+                key={item}
+                href={href}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                  isActive
+                    ? "bg-[var(--foreground)] text-white"
+                    : "border border-[var(--line)] bg-white/80 text-[var(--muted)] hover:border-[var(--foreground)] hover:text-[var(--foreground)]"
+                }`}
+              >
+                {item}
+              </Link>
+            );
+          })}
+          <p className="ml-auto shrink-0 pl-2 text-xs text-[var(--muted)] sm:hidden">
+            {filteredProducts.length} items
+          </p>
+        </div>
       </div>
 
       {/* Product grid */}
