@@ -1,11 +1,16 @@
+import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { authorizeRequest } from "@/lib/auth";
 import { createMongoVendor } from "@/lib/mongodb-vendors";
-import { promoteToVendor } from "@/lib/users";
+import { createUser, findUserByEmail, promoteToVendor } from "@/lib/users";
 import {
   getVendorApplicationById,
   updateVendorApplicationStatus,
 } from "@/lib/vendor-applications";
+
+function generateTempPassword() {
+  return "ST-" + crypto.randomBytes(5).toString("hex").toUpperCase();
+}
 
 export async function PATCH(
   request: Request,
@@ -41,11 +46,36 @@ export async function PATCH(
       description: application.description,
     });
 
-    // Promote user account to vendor (if they have a MongoDB account)
-    await promoteToVendor(application.email, slug);
+    // Check if this person has a user account
+    const existingUser = await findUserByEmail(application.email);
+
+    let tempPassword: string | null = null;
+
+    if (existingUser) {
+      // Promote existing account to vendor
+      await promoteToVendor(application.email, slug);
+    } else {
+      // No account yet — create one with a temporary password
+      tempPassword = generateTempPassword();
+      await createUser({
+        email: application.email,
+        password: tempPassword,
+        name: application.name,
+        role: "vendor",
+        vendorSlug: slug,
+      });
+    }
+
+    await updateVendorApplicationStatus(id, status, auth.session.email);
+
+    return NextResponse.json({
+      success: true,
+      vendorSlug: slug,
+      tempPassword, // null if they already had an account
+      email: application.email,
+    });
   }
 
   await updateVendorApplicationStatus(id, status, auth.session.email);
-
   return NextResponse.json({ success: true });
 }
