@@ -20,7 +20,7 @@ type TrackOrderPageProps = {
 export const metadata: Metadata = {
   title: "Track Order",
   description:
-    "Look up a manual marketplace order by request ID and customer email.",
+    "Track your SuperTech order in real time using your request ID and email address.",
 };
 
 export const dynamic = "force-dynamic";
@@ -49,12 +49,11 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
             Order tracking
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-            Track a manual order by request ID.
+            Where is my order?
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
-            Use the request ID from your confirmation screen and the same customer
-            email you used when placing the order. This gives customers visibility
-            even before account auth and online payments are live.
+            Enter the request ID from your order confirmation and the email you used
+            when placing the order. We'll pull up the latest status instantly.
           </p>
 
           <form action="/track-order" method="get" className="mt-8 soft-card p-6">
@@ -87,8 +86,8 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-                Tracking uses your request ID plus email so the public page stays
-                customer-friendly without exposing admin notes or marketplace controls.
+                No account needed — just your request ID and the email you used at
+                checkout. Your order details are private and only visible to you.
               </p>
               <button
                 type="submit"
@@ -214,27 +213,27 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
 
         <aside className="dark-card p-6 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
-            Why this helps
+            Order stages
           </p>
           <div className="mt-6 space-y-4">
             {[
               {
-                icon: ShieldCheck,
-                title: "Public-safe tracking",
+                icon: MailCheck,
+                title: "Order received",
                 description:
-                  "Customers only see a sanitized order view after matching the request ID with their email.",
+                  "Your request is in our system and our team has been notified.",
               },
               {
-                icon: MailCheck,
-                title: "No account required",
+                icon: ShieldCheck,
+                title: "Seller confirmed",
                 description:
-                  "Tracking works even before login, payments, and full customer accounts are introduced.",
+                  "Stock is verified and the seller has accepted the order.",
               },
               {
                 icon: Search,
-                title: "Tied to admin workflow",
+                title: "Out for delivery",
                 description:
-                  "As admins update statuses in the dashboard, customers immediately see the new stage here.",
+                  "Your package is on its way and will arrive within the estimated window.",
               },
             ].map((item) => (
               <div
@@ -253,13 +252,13 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
           </div>
           <div className="mt-8 rounded-[1.3rem] border border-white/10 bg-white/6 p-5">
             <p className="text-sm leading-7 text-[rgba(255,255,255,0.76)]">
-              Need to place a new request instead?
+              Need to place a new order?
             </p>
             <Link
               href="/order"
               className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)]"
             >
-              Open order page
+              Shop now
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

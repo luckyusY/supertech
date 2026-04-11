@@ -1,66 +1,105 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Star } from "lucide-react";
+import { ShoppingBag, Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { useCart } from "@/components/cart-provider";
 import { getVendorBySlug, type Product } from "@/lib/marketplace";
 import { formatPrice } from "@/lib/utils";
 
 type ProductCardProps = {
   product: Product;
+  index?: number;
 };
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const vendor = getVendorBySlug(product.vendorSlug);
+  const { addItem } = useCart();
+
+  function handleQuickAdd(e: React.MouseEvent) {
+    e.preventDefault();
+    addItem({
+      slug: product.slug,
+      name: product.name,
+      vendorSlug: product.vendorSlug,
+      vendorName: vendor?.name ?? product.vendorSlug,
+      heroImage: product.heroImage,
+      price: product.price,
+      badge: product.badge,
+      accent: product.accent,
+    });
+    toast.success(`${product.name} added to cart`, {
+      description: `${formatPrice(product.price)} · from ${vendor?.name ?? "SuperTech"}`,
+      duration: 2500,
+    });
+  }
 
   return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group overflow-hidden rounded-[1.7rem] border border-[var(--line)] bg-white transition-transform hover:-translate-y-1"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{ duration: 0.45, delay: index * 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      <div className="relative aspect-[4/4.8] overflow-hidden">
-        <Image
-          src={product.heroImage}
-          alt={product.name}
-          fill
-          className="object-cover transition duration-500 group-hover:scale-105"
-          sizes="(min-width: 1280px) 30vw, (min-width: 768px) 40vw, 100vw"
-        />
-        <div
-          className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white"
-          style={{ backgroundColor: product.accent }}
-        >
-          {product.badge}
-        </div>
-      </div>
-      <div className="space-y-4 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-[var(--muted)]">
-              {vendor?.name ?? "Marketplace vendor"}
-            </p>
-            <h3 className="mt-1 text-xl font-semibold tracking-[-0.04em]">
-              {product.name}
-            </h3>
+      <Link
+        href={`/products/${product.slug}`}
+        className="group relative flex flex-col overflow-hidden rounded-[1.7rem] border border-[var(--line)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      >
+        {/* Image area */}
+        <div className="relative aspect-[4/4.2] overflow-hidden bg-[rgba(16,32,25,0.04)]">
+          <Image
+            src={product.heroImage}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 40vw, 100vw"
+          />
+          {/* Badge */}
+          <div
+            className="absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm"
+            style={{ backgroundColor: product.accent }}
+          >
+            {product.badge}
           </div>
-          <ArrowUpRight className="h-4 w-4 text-[var(--muted)]" />
-        </div>
-        <p className="text-sm leading-6 text-[var(--muted)]">{product.description}</p>
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-2xl font-semibold tracking-[-0.04em]">
-              {formatPrice(product.price)}
-            </p>
-            {product.compareAt ? (
-              <p className="text-sm text-[var(--muted)] line-through">
-                {formatPrice(product.compareAt)}
-              </p>
-            ) : null}
-          </div>
-          <div className="flex items-center gap-1 rounded-full bg-[var(--accent-soft)] px-3 py-1 text-sm font-semibold text-[var(--foreground)]">
-            <Star className="h-3.5 w-3.5 fill-current" />
-            {product.reviewCount > 0 ? product.rating.toFixed(1) : "New"}
+          {/* Discount tag */}
+          {product.compareAt && (
+            <div className="absolute right-3 top-3 rounded-full bg-[var(--foreground)] px-2.5 py-0.5 text-[11px] font-bold text-white">
+              -{Math.round((1 - product.price / product.compareAt) * 100)}% OFF
+            </div>
+          )}
+          {/* Quick-add overlay */}
+          <div className="absolute inset-x-0 bottom-0 translate-y-full transition-transform duration-300 group-hover:translate-y-0">
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              className="flex w-full items-center justify-center gap-2 bg-[var(--foreground)] py-3.5 text-sm font-semibold text-white hover:bg-[var(--accent)] transition-colors"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Add to cart
+            </button>
           </div>
         </div>
-      </div>
-    </Link>
+
+        {/* Info */}
+        <div className="flex flex-1 flex-col p-4">
+          <p className="text-xs font-medium text-[var(--muted)]">{vendor?.name ?? "SuperTech"}</p>
+          <h3 className="mt-1 font-semibold leading-snug tracking-[-0.03em]">{product.name}</h3>
+          <div className="mt-auto flex items-end justify-between pt-3">
+            <div>
+              <p className="text-xl font-semibold tracking-[-0.04em]">{formatPrice(product.price)}</p>
+              {product.compareAt && (
+                <p className="text-xs text-[var(--muted)] line-through">{formatPrice(product.compareAt)}</p>
+              )}
+            </div>
+            <span className="flex items-center gap-1 rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-semibold">
+              <Star className="h-3 w-3 fill-[var(--accent)] text-[var(--accent)]" />
+              {product.reviewCount > 0 ? product.rating.toFixed(1) : "New"}
+            </span>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
   );
 }

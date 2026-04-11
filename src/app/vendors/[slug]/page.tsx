@@ -131,22 +131,16 @@ export default async function VendorPage({ params }: VendorPageProps) {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-              Merchant assortment
+              Store catalog
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
               Products from {vendor.name}
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-              Approved submissions from this vendor now publish directly into this
-              storefront alongside the original seeded catalog.
+              All products below are verified and sold directly by {vendor.name}.
+              Every listing is reviewed by SuperTech before going live.
             </p>
           </div>
-          <Link
-            href="/dashboard/vendor"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--teal)]"
-          >
-            Open vendor dashboard shell
-          </Link>
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {vendorProducts.map((product) => (

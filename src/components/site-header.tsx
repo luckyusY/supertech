@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { AuthStatusControls } from "@/components/auth-status-controls";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MegaMenu } from "@/components/mega-menu";
-import { NotificationBell } from "@/components/notification-bell";
+import { MobileNav } from "@/components/mobile-nav";
 
 export function SiteHeader() {
   return (
@@ -23,13 +22,11 @@ export function SiteHeader() {
           </div>
         </Link>
 
-        {/* Mega menu */}
+        {/* Mega menu — desktop only */}
         <MegaMenu />
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          <AuthStatusControls />
-          <NotificationBell />
           <CartStatusLink />
           <Link
             href="/catalog"
@@ -37,6 +34,8 @@ export function SiteHeader() {
           >
             Shop now
           </Link>
+          {/* Mobile hamburger */}
+          <MobileNav />
         </div>
       </div>
     </header>

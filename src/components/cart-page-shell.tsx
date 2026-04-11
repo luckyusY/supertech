@@ -51,7 +51,7 @@ export function CartPageShell() {
     setError("");
 
     if (items.length === 0) {
-      setError("Add at least one item to the cart before requesting a quote.");
+      setError("Add at least one item to your cart before placing an order.");
       return;
     }
 
@@ -83,7 +83,7 @@ export function CartPageShell() {
           | CartOrderSuccessPayload;
 
         if (!response.ok || "error" in result) {
-          throw new Error("error" in result ? result.error : "Unable to send cart quote.");
+          throw new Error("error" in result ? result.error : "Unable to place order. Please try again.");
         }
 
         setSuccess({
@@ -103,7 +103,7 @@ export function CartPageShell() {
         setError(
           submissionError instanceof Error
             ? submissionError.message
-            : "Unable to send cart quote.",
+            : "Unable to place order. Please try again.",
         );
       }
     });
@@ -114,14 +114,14 @@ export function CartPageShell() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
         <section className="soft-card p-6 sm:p-8 lg:p-10">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-            Cart request submitted
+            Order placed
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-            Your manual quote request is in the queue.
+            We have received your order.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
-            We now have your cart, delivery details, and preferred payment option.
-            The team will confirm stock and next steps manually.
+            Our team will review your order details, confirm stock with the seller, and
+            reach out within 24 hours to arrange delivery and payment.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {[
@@ -166,12 +166,12 @@ export function CartPageShell() {
 
         <aside className="dark-card p-6 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
-            Next step
+            What happens next
           </p>
           <div className="mt-6 space-y-4 text-sm leading-7 text-[rgba(255,255,255,0.76)]">
-            <p>Your cart request is stored in MongoDB and visible in the admin inbox.</p>
-            <p>The team will confirm stock, delivery timing, and the exact payment path manually.</p>
-            <p>This keeps multi-item ordering live before card or mobile payment gateways are added.</p>
+            <p>Our team contacts you within 24 hours to confirm availability and delivery details.</p>
+            <p>We coordinate with the seller and arrange dispatch to your city.</p>
+            <p>Use your request ID and email on the tracking page to follow your order at any time.</p>
           </div>
         </aside>
       </div>
@@ -182,14 +182,13 @@ export function CartPageShell() {
     return (
       <div className="soft-card p-6 sm:p-8 lg:p-10">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-          Quote cart
+          Your cart
         </p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
           Loading your cart...
         </h1>
         <p className="mt-4 text-base leading-7 text-[var(--muted)]">
-          Pulling the latest cart state from this browser so you can continue the
-          manual quote flow.
+          Getting your saved items ready.
         </p>
       </div>
     );
@@ -203,15 +202,14 @@ export function CartPageShell() {
             <ShoppingBag className="h-7 w-7 text-[var(--accent)]" />
           </div>
           <p className="mt-6 font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-            Quote cart
+            Your cart
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-            Add products to the cart first.
+            Your cart is empty.
           </h1>
           <p className="mt-4 text-base leading-7 text-[var(--muted)]">
-            This cart is designed for manual quote requests while payments are still
-            offline. Add products from any product page, then come back here to send
-            one customer request for the full basket.
+            Browse our catalog and add items to your cart. You can order multiple
+            products from different sellers in a single checkout.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
@@ -224,7 +222,7 @@ export function CartPageShell() {
               href="/order"
               className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
             >
-              Single-product order page
+              Place a single order
             </Link>
           </div>
         </div>
@@ -236,15 +234,14 @@ export function CartPageShell() {
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
       <section className="soft-card p-6 sm:p-8 lg:p-10">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-          Manual quote cart
+          Your cart
         </p>
         <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-          Build a basket now, confirm payment later.
+          Review your items.
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
-          This is the bridge between the current manual-order phase and the future
-          payment checkout. Customers can group items, send one request, and let your
-          team confirm everything manually.
+          Add your delivery details below to place your order. Our team will confirm
+          availability and coordinate delivery to your city within 24 hours.
         </p>
 
         <div className="mt-8 space-y-4">
@@ -334,8 +331,8 @@ export function CartPageShell() {
               </p>
             </div>
             <div className="rounded-[1.25rem] border border-white/10 bg-white/6 p-4 text-sm leading-7 text-[rgba(255,255,255,0.76)]">
-              This cart does not charge anyone online yet. It turns the basket into a
-              manual quote request that your team can confirm by phone, WhatsApp, or email.
+              Free delivery on orders over $150. Our team will confirm your order
+              and arrange delivery by phone, WhatsApp, or email.
             </div>
           </div>
         </section>
@@ -472,7 +469,7 @@ export function CartPageShell() {
               disabled={isPending}
               className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isPending ? "Sending quote request..." : "Send manual quote request"}
+              {isPending ? "Placing order..." : "Place order"}
             </button>
             <button
               type="button"

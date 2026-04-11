@@ -4,7 +4,7 @@ import { CartPageShell } from "@/components/cart-page-shell";
 export const metadata: Metadata = {
   title: "Cart",
   description:
-    "Collect multiple marketplace products into one manual quote request before payments go live.",
+    "Review your selected items and place your order for fast delivery across East and West Africa.",
 };
 
 export default function CartPage() {

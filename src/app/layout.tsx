@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -18,11 +20,15 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "SuperTech Marketplace",
-    template: "%s | SuperTech Marketplace",
+    default: "SuperTech — Premium Tech Marketplace",
+    template: "%s | SuperTech",
   },
   description:
-    "A Vercel-ready multivendor ecommerce starter built with Next.js, MongoDB, and Cloudinary.",
+    "Shop premium tech from verified sellers across East and West Africa. Home control, mobile, audio, gaming, wearables — delivered fast.",
+  openGraph: {
+    siteName: "SuperTech Marketplace",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -37,12 +43,24 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <CartProvider>
+          <SmoothScroll />
           <div className="noise fixed inset-0 -z-10 opacity-40" />
           <div className="relative flex min-h-full flex-col">
             <SiteHeader />
             <main className="flex-1">{children}</main>
             <SiteFooter />
           </div>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                fontFamily: "var(--font-space-grotesk)",
+                borderRadius: "1rem",
+                border: "1px solid rgba(16,32,25,0.12)",
+                background: "rgba(255,252,246,0.95)",
+              },
+            }}
+          />
         </CartProvider>
       </body>
     </html>

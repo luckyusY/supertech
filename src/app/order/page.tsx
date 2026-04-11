@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Clock3, MessagesSquare, ShieldCheck } from "lucide-react";
+import { ArrowRight, Clock3, MapPin, ShieldCheck } from "lucide-react";
 import { OrderRequestForm } from "@/components/order-request-form";
 import { getPublicProducts, getPublicVendorBySlug } from "@/lib/public-marketplace";
 
@@ -11,9 +11,9 @@ type OrderPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: "Order Request",
+  title: "Place Order",
   description:
-    "Submit a manual order request while the marketplace is still in the pre-payment phase.",
+    "Order premium tech from verified sellers across East and West Africa. Fast delivery, buyer protection.",
 };
 
 export const dynamic = "force-dynamic";
@@ -39,33 +39,32 @@ export default async function OrderPage({ searchParams }: OrderPageProps) {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
         <section className="soft-card p-6 sm:p-8 lg:p-10">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-            Phase 1 checkout
+            Place an order
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-            Customers can place an order request even before payments go live.
+            Get any product delivered to your door.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
-            This flow captures the product, quantity, contact information, delivery
-            details, and preferred payment method so you can confirm everything
-            manually. Newly approved vendor products are available here too, so
-            customers can order from the live catalog before checkout is built.
+            Fill in your details below and our team will confirm your order, coordinate
+            with the seller, and arrange fast delivery to your city. We cover major
+            cities across East and West Africa.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
               {
-                icon: MessagesSquare,
-                title: "Manual confirmation",
-                description: "You contact the customer after the request is submitted.",
+                icon: ShieldCheck,
+                title: "Verified sellers",
+                description: "Every vendor is vetted and reviewed before they list products here.",
               },
               {
-                icon: ShieldCheck,
-                title: "No payment gateway yet",
-                description: "Customers pick a payment preference but are not charged online.",
+                icon: MapPin,
+                title: "Wide coverage",
+                description: "We deliver across major cities in East and West Africa.",
               },
               {
                 icon: Clock3,
-                title: "Fast MVP launch",
-                description: "Start selling while payments, cart, and checkout are still in progress.",
+                title: "Fast confirmation",
+                description: "Our team contacts you quickly to confirm availability and delivery.",
               },
             ].map((item) => (
               <div
@@ -89,14 +88,14 @@ export default async function OrderPage({ searchParams }: OrderPageProps) {
 
         <aside className="dark-card p-6 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
-            What happens next
+            How it works
           </p>
           <div className="mt-6 space-y-4">
             {[
-              "Customer submits a request with product, address, and payment preference.",
-              "The request is saved in MongoDB so it is visible from the admin side.",
-              "You confirm availability, delivery timing, and payment manually.",
-              "Phase 3 also adds a quote cart and public tracking page for customers after they submit.",
+              "Pick a product, enter your delivery details and preferred payment method.",
+              "Our team reviews your order and contacts you within 24 hours to confirm.",
+              "We coordinate with the verified seller for packaging and dispatch.",
+              "Your order ships and you receive a tracking update to follow it to your door.",
             ].map((item, index) => (
               <div
                 key={item}
@@ -109,13 +108,13 @@ export default async function OrderPage({ searchParams }: OrderPageProps) {
           </div>
           <div className="mt-8 rounded-[1.4rem] border border-white/10 bg-white/6 p-5">
             <p className="text-sm leading-7 text-[rgba(255,255,255,0.76)]">
-              Want to see the whole build path?
+              Want to track an existing order?
             </p>
             <Link
-              href="/phases"
+              href="/track-order"
               className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)]"
             >
-              Open roadmap
+              Track my order
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

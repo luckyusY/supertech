@@ -137,7 +137,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 href={`/order?product=${product.slug}`}
                 className="inline-flex items-center justify-center rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
               >
-                Order from us
+                Buy now
               </Link>
               <AddToCartButton
                 item={{
@@ -151,17 +151,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   accent: product.accent,
                 }}
               />
-              <Link
-                href="/phases"
-                className="inline-flex items-center justify-center rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
-              >
-                See build phases
-              </Link>
             </div>
-            <p className="text-sm leading-7 text-[var(--muted)]">
-              Need more than one item? Add products to the quote cart and send a
-              single manual request while payments are still offline.
-            </p>
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-white/72 p-5">
               <div className="space-y-3 text-sm text-[var(--muted)]">
                 <div className="flex items-center gap-3">
@@ -170,11 +160,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-4 w-4 text-[var(--teal)]" />
-                  Marketplace review gate before products go live to customers
+                  Every seller is verified by SuperTech before listing
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-4 w-4 text-[var(--teal)]" />
-                  No online payment yet; order requests are confirmed manually
+                  Buyer protection on every order placed through SuperTech
                 </div>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
