@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AuthStatusControls } from "@/components/auth-status-controls";
+import { User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MegaMenu } from "@/components/mega-menu";
 import { MobileNav } from "@/components/mobile-nav";
@@ -28,19 +28,17 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-2 md:flex">
-            <Link
-              href="/request-product"
-              className="hidden rounded-full border border-[var(--line)] bg-white/70 px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] xl:inline-flex"
-            >
-              Request item
-            </Link>
-            <AuthStatusControls />
-          </div>
+          <Link
+            href="/sign-in"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)] hover:text-[var(--foreground)]"
+            aria-label="Account"
+          >
+            <User className="h-4 w-4" />
+          </Link>
           <CartStatusLink />
           <Link
             href="/catalog"
-            className="hidden rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white xl:inline-flex"
+            className="hidden rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white sm:inline-flex"
           >
             Shop now
           </Link>

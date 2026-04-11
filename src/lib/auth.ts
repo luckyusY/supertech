@@ -4,17 +4,12 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
-import {
-  authenticateCustomerAccount,
-  getCustomerAccountSummaryByEmail,
-  type CustomerAccountSummary,
-} from "@/lib/customer-accounts";
-import { hasMongoConfig } from "@/lib/integrations";
 import { getVendorBySlug, vendors, type Vendor } from "@/lib/marketplace";
+import { hasMongoConfig } from "@/lib/integrations";
 
 export type AuthRole = "admin" | "vendor" | "customer";
 
-type StaffAuthUserConfig = {
+type AuthUserConfig = {
   email: string;
   password: string;
   role: AuthRole;
@@ -38,17 +33,25 @@ export type AuthSession = {
   dashboardPath: string;
 };
 
+export type AuthPreviewProfile = {
+  email: string;
+  role: AuthRole;
+  name: string;
+  vendorSlug?: string;
+  password?: string;
+};
+
 export type AuthSetupState = {
   ready: boolean;
+  usingDevFallbackUsers: boolean;
   hasRuntimeSecret: boolean;
-  staffAccountsConfigured: boolean;
-  customerAccountsEnabled: boolean;
+  previewProfiles: AuthPreviewProfile[];
 };
 
 const AUTH_COOKIE_NAME = "supertech_session";
 const AUTH_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
-const DEV_FALLBACK_STAFF_USERS: StaffAuthUserConfig[] = [
+const DEV_FALLBACK_USERS: AuthUserConfig[] = [
   {
     email: "admin@supertech.local",
     password: "Admin123!",
@@ -61,6 +64,12 @@ const DEV_FALLBACK_STAFF_USERS: StaffAuthUserConfig[] = [
     role: "vendor",
     name: "Aurora Labs",
     vendorSlug: "aurora-labs",
+  },
+  {
+    email: "customer@supertech.local",
+    password: "Customer123!",
+    role: "customer",
+    name: "Customer Account",
   },
 ];
 
@@ -75,7 +84,7 @@ function getDefaultDashboardPath(role: AuthRole) {
     case "vendor":
       return "/dashboard/vendor";
     case "customer":
-      return "/account";
+      return "/track-order";
     default:
       return "/";
   }
@@ -85,7 +94,7 @@ function isAuthRole(value: unknown): value is AuthRole {
   return value === "admin" || value === "vendor" || value === "customer";
 }
 
-function sanitizeStaffUserConfig(value: unknown): StaffAuthUserConfig | null {
+function sanitizeAuthUserConfig(value: unknown): AuthUserConfig | null {
   if (typeof value !== "object" || value === null) {
     return null;
   }
@@ -129,40 +138,40 @@ function getRuntimeSecret() {
   return "";
 }
 
-function getConfiguredStaffUsers() {
+function getConfiguredAuthUsers(): AuthUserConfig[] {
   const raw = process.env.AUTH_DEMO_USERS_JSON;
 
   if (!raw) {
-    return [] as StaffAuthUserConfig[];
+    return [];
   }
 
   try {
     const parsed = JSON.parse(raw) as unknown;
 
     if (!Array.isArray(parsed)) {
-      return [] as StaffAuthUserConfig[];
+      return [];
     }
 
     return parsed
-      .map((entry) => sanitizeStaffUserConfig(entry))
-      .filter((entry): entry is StaffAuthUserConfig => entry !== null);
+      .map((entry) => sanitizeAuthUserConfig(entry))
+      .filter((entry): entry is AuthUserConfig => entry !== null);
   } catch {
-    return [] as StaffAuthUserConfig[];
+    return [];
   }
 }
 
-function getAvailableStaffUsers() {
-  const configuredUsers = getConfiguredStaffUsers();
+function getAvailableAuthUsers(): AuthUserConfig[] {
+  const configuredUsers = getConfiguredAuthUsers();
 
   if (configuredUsers.length > 0) {
     return configuredUsers;
   }
 
   if (process.env.NODE_ENV !== "production") {
-    return DEV_FALLBACK_STAFF_USERS;
+    return DEV_FALLBACK_USERS;
   }
 
-  return [] as StaffAuthUserConfig[];
+  return [];
 }
 
 function signPayload(encodedPayload: string) {
@@ -186,9 +195,7 @@ function buildCookieValue(session: AuthSession) {
   return `${encodedPayload}.${signature}`;
 }
 
-function toAuthSession(
-  session: StoredAuthSession | StaffAuthUserConfig | CustomerAccountSummary,
-): AuthSession {
+function toAuthSession(session: StoredAuthSession | AuthUserConfig): AuthSession {
   return {
     email: normalizeEmail(session.email),
     role: session.role,
@@ -307,53 +314,74 @@ function normalizeNextPath(nextPath: string | null | undefined, fallback: string
 }
 
 export function getAuthSetupState(): AuthSetupState {
+  const configuredUsers = getConfiguredAuthUsers();
+  const usingDevFallbackUsers =
+    configuredUsers.length === 0 && process.env.NODE_ENV !== "production";
+  const availableUsers = usingDevFallbackUsers ? DEV_FALLBACK_USERS : configuredUsers;
   const hasRuntimeSecret = Boolean(getRuntimeSecret());
 
+  // ready = true as long as there is a runtime secret (MongoDB users will handle auth if env users are empty)
   return {
     ready: hasRuntimeSecret,
+    usingDevFallbackUsers,
     hasRuntimeSecret,
-    staffAccountsConfigured: getAvailableStaffUsers().length > 0,
-    customerAccountsEnabled: hasMongoConfig(),
+    previewProfiles: availableUsers.map((user) => ({
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      vendorSlug: user.vendorSlug,
+      password: usingDevFallbackUsers ? user.password : undefined,
+    })),
+  };
+}
+
+export function buildSessionFromMongo(user: { email: string; role: AuthRole; name: string; vendorSlug?: string }): AuthSession {
+  return {
+    email: normalizeEmail(user.email),
+    role: user.role,
+    name: user.name,
+    vendorSlug: user.role === "vendor" ? user.vendorSlug : undefined,
+    dashboardPath: getDefaultDashboardPath(user.role),
   };
 }
 
 export function hasConfiguredAuthUsers() {
-  return getAvailableStaffUsers().length > 0 || hasMongoConfig();
+  return getAvailableAuthUsers().length > 0;
 }
 
-export function isReservedStaffEmail(email: string) {
-  const normalizedEmail = normalizeEmail(email);
-
-  return getAvailableStaffUsers().some((user) => user.email === normalizedEmail);
-}
-
-export async function authenticateUser(input: { email: string; password: string }) {
+export async function authenticateUser(input: { email: string; password: string }): Promise<AuthSession | null> {
   const runtimeSecret = getRuntimeSecret();
 
   if (!runtimeSecret) {
-    throw new Error("AUTH_SECRET is missing. Add it before using login.");
+    throw new Error("AUTH_SECRET is missing. Add it before using sign-in.");
   }
 
+  const users = getAvailableAuthUsers();
   const normalizedEmail = normalizeEmail(input.email);
   const password = input.password.trim();
 
-  const customerAccount = await authenticateCustomerAccount({
-    email: normalizedEmail,
-    password,
-  });
-
-  if (customerAccount) {
-    return toAuthSession(customerAccount);
+  // Check env/dev users first
+  if (users.length > 0) {
+    const user = users.find(
+      (entry) => entry.email === normalizedEmail && entry.password === password,
+    );
+    if (user) return toAuthSession(user);
   }
 
-  const staffUser = getAvailableStaffUsers().find(
-    (entry) => entry.email === normalizedEmail && entry.password === password,
-  );
+  // Fall back to MongoDB users
+  if (hasMongoConfig()) {
+    const { authenticateMongoUser } = await import("@/lib/users");
+    const mongoUser = await authenticateMongoUser(input.email, input.password);
+    if (mongoUser) return buildSessionFromMongo(mongoUser);
+  }
 
-  return staffUser ? toAuthSession(staffUser) : null;
+  return null;
 }
 
-export function getPostSignInPath(session: AuthSession, nextPath?: string | null) {
+export function getPostSignInPath(
+  session: AuthSession,
+  nextPath?: string | null,
+) {
   return normalizeNextPath(nextPath, session.dashboardPath);
 }
 
@@ -410,14 +438,6 @@ export function clearAuthSessionCookie(response: NextResponse) {
   });
 }
 
-export async function getCurrentCustomerAccount(session: AuthSession) {
-  if (session.role !== "customer") {
-    return null;
-  }
-
-  return getCustomerAccountSummaryByEmail(session.email);
-}
-
 export async function requirePageSession({
   roles,
   nextPath,
@@ -428,7 +448,7 @@ export async function requirePageSession({
   const session = await getAuthSession();
 
   if (!session) {
-    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+    redirect(`/sign-in?next=${encodeURIComponent(nextPath)}`);
   }
 
   if (roles && !roles.includes(session.role)) {
@@ -445,7 +465,7 @@ export function authorizeRequest(request: Request, roles?: AuthRole[]) {
     return {
       ok: false as const,
       response: NextResponse.json(
-        { error: "Please log in to continue." },
+        { error: "Sign in is required for this action." },
         { status: 401 },
       ),
     };

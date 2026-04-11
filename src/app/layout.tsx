@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
+import { LiveChat } from "@/components/live-chat";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SmoothScroll } from "@/components/smooth-scroll";
@@ -61,6 +62,7 @@ export default function RootLayout({
               },
             }}
           />
+          <LiveChat />
         </CartProvider>
       </body>
     </html>

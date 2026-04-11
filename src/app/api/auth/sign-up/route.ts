@@ -1,70 +1,28 @@
 import { NextResponse } from "next/server";
-import { createCustomerAccount } from "@/lib/customer-accounts";
-import {
-  getPostSignInPath,
-  isReservedStaffEmail,
-  setAuthSessionCookie,
-  type AuthSession,
-} from "@/lib/auth";
-
-type SignUpRequestBody = {
-  name?: string;
-  email?: string;
-  city?: string;
-  password?: string;
-  nextPath?: string;
-};
+import { createUser } from "@/lib/users";
+import { buildSessionFromMongo, setAuthSessionCookie } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as SignUpRequestBody;
-    const name = typeof body.name === "string" ? body.name : "";
-    const email = typeof body.email === "string" ? body.email : "";
-    const city = typeof body.city === "string" ? body.city : "";
-    const password = typeof body.password === "string" ? body.password : "";
+    const body = await request.json();
+    const { email, password, name } = body as { email?: string; password?: string; name?: string };
 
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      return NextResponse.json(
-        { error: "Name, email, and password are required." },
-        { status: 400 },
-      );
+    if (!email?.trim() || !password?.trim() || !name?.trim()) {
+      return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
-    if (isReservedStaffEmail(email)) {
-      return NextResponse.json(
-        { error: "This email is reserved for staff access." },
-        { status: 400 },
-      );
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
     }
 
-    const account = await createCustomerAccount({
-      name,
-      email,
-      city,
-      password,
-    });
-
-    const session: AuthSession = {
-      email: account.email,
-      role: "customer",
-      name: account.name,
-      dashboardPath: "/account",
-    };
-
-    const response = NextResponse.json({
-      session,
-      redirectTo: getPostSignInPath(session, body.nextPath),
-    });
-
+    const user = await createUser({ email, password, name, role: "customer" });
+    const session = buildSessionFromMongo(user);
+    const response = NextResponse.json({ session, redirectTo: "/" });
     setAuthSessionCookie(response, session);
-
     return response;
   } catch (error) {
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Unable to create your account.",
-      },
+      { error: error instanceof Error ? error.message : "Could not create account." },
       { status: 400 },
     );
   }

@@ -21,6 +21,8 @@ const quickLinks = [
   { label: "Request product", href: "/request-product" },
   { label: "Track order", href: "/track-order" },
   { label: "Cart", href: "/cart" },
+  { label: "Request a product", href: "/request" },
+  { label: "Sign in", href: "/sign-in" },
 ];
 
 type MobileSession = {
