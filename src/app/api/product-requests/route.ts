@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         body.deliveryAddress ? `Delivery: ${body.deliveryAddress}` : null,
       ]
         .filter(Boolean)
-        .join(" | ") || body.productName ?? "",
+        .join(" | ") || (body.productName ?? ""),
       budget: body.targetBudget ? `$${body.targetBudget}` : undefined,
       city: body.city ?? "",
     });
