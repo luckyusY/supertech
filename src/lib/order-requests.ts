@@ -120,6 +120,31 @@ export type OrderRequestOperationsSnapshot = {
   sharedCartOrders: number;
 };
 
+export type PublicOrderTrackingSummary = {
+  requestId: string;
+  status: OrderRequestStatus;
+  requestType: "single_product" | "cart_quote";
+  productName: string;
+  vendorName: string;
+  quantity: number;
+  itemCount: number;
+  estimatedTotal: number;
+  lineItems: {
+    productName: string;
+    vendorName: string;
+    quantity: number;
+    lineTotal: number;
+  }[];
+  customerName: string;
+  customerEmail: string;
+  city: string;
+  paymentPreference: PaymentPreference;
+  contactPreference: ContactPreference;
+  notes: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 const ORDER_REQUEST_COLLECTION = "order_requests";
 
 function generateRequestId() {
@@ -138,6 +163,27 @@ export function isOrderRequestStatus(value: string): value is OrderRequestStatus
 
 export function formatOrderRequestStatus(status: OrderRequestStatus) {
   return status.replaceAll("_", " ");
+}
+
+export function getOrderTrackingStatusMessage(status: OrderRequestStatus) {
+  switch (status) {
+    case "pending_confirmation":
+      return "We received your request and the team is reviewing stock, delivery, and payment details.";
+    case "confirmed":
+      return "Your request has been confirmed and the order is now scheduled for fulfillment.";
+    case "preparing":
+      return "The seller is preparing your items and organizing them for handoff.";
+    case "ready_for_delivery":
+      return "Your order is packed and ready for delivery coordination.";
+    case "out_for_delivery":
+      return "Your order is on the way or in final delivery coordination.";
+    case "completed":
+      return "This order has been marked as completed.";
+    case "cancelled":
+      return "This order was cancelled. Contact support if you need to restart it.";
+    default:
+      return "Your order is in progress.";
+  }
 }
 
 function normalizeOrderRequestStatus(status?: string): OrderRequestStatus {
@@ -193,6 +239,33 @@ function toSummary(record: OrderRequestRecord): OrderRequestSummary {
     internalNote: record.internalNote ?? "",
     createdAt: record.createdAt,
     updatedAt: record.updatedAt ?? record.createdAt,
+  };
+}
+
+function toPublicTrackingSummary(record: OrderRequestSummary): PublicOrderTrackingSummary {
+  return {
+    requestId: record.requestId,
+    status: record.status,
+    requestType: record.requestType,
+    productName: record.productName,
+    vendorName: record.vendorName,
+    quantity: record.quantity,
+    itemCount: record.itemCount,
+    estimatedTotal: record.estimatedTotal,
+    lineItems: record.lineItems.map((item) => ({
+      productName: item.productName,
+      vendorName: item.vendorName,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal,
+    })),
+    customerName: record.customerName,
+    customerEmail: record.customerEmail,
+    city: record.city,
+    paymentPreference: record.paymentPreference,
+    contactPreference: record.contactPreference,
+    notes: record.notes,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
   };
 }
 
@@ -342,6 +415,34 @@ export async function getOrderRequests({
 
 export async function getRecentOrderRequests(limit = 6): Promise<OrderRequestSummary[]> {
   return getOrderRequests({ limit });
+}
+
+export async function getPublicOrderTracking({
+  requestId,
+  customerEmail,
+}: {
+  requestId: string;
+  customerEmail: string;
+}) {
+  const normalizedRequestId = requestId.trim().toUpperCase();
+  const normalizedEmail = customerEmail.trim().toLowerCase();
+
+  if (!normalizedRequestId || !normalizedEmail) {
+    throw new Error("Request ID and email are required.");
+  }
+
+  const database = await getDatabase();
+  const collection = database.collection<OrderRequestRecord>(ORDER_REQUEST_COLLECTION);
+  const record = await collection.findOne({
+    requestId: normalizedRequestId,
+    customerEmail: normalizedEmail,
+  });
+
+  if (!record) {
+    return null;
+  }
+
+  return toPublicTrackingSummary(toSummary(record));
 }
 
 export async function getOrderRequestOperationsSnapshot(): Promise<OrderRequestOperationsSnapshot> {

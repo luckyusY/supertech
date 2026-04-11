@@ -13,7 +13,10 @@ type CartOrderSuccess = {
   vendorName: string;
   estimatedTotal: number;
   itemCount: number;
+  customerEmail: string;
 };
+
+type CartOrderSuccessPayload = Omit<CartOrderSuccess, "customerEmail">;
 
 const contactOptions = [
   { value: "phone", label: "Phone call" },
@@ -77,13 +80,16 @@ export function CartPageShell() {
 
         const result = (await response.json()) as
           | { error: string }
-          | CartOrderSuccess;
+          | CartOrderSuccessPayload;
 
         if (!response.ok || "error" in result) {
           throw new Error("error" in result ? result.error : "Unable to send cart quote.");
         }
 
-        setSuccess(result);
+        setSuccess({
+          ...result,
+          customerEmail,
+        });
         clearCart();
         setCustomerName("");
         setCustomerEmail("");
@@ -143,6 +149,12 @@ export function CartPageShell() {
             >
               Start another cart
             </button>
+            <Link
+              href={`/track-order?requestId=${encodeURIComponent(success.requestId)}&email=${encodeURIComponent(success.customerEmail)}`}
+              className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
+            >
+              Track this request
+            </Link>
             <Link
               href="/catalog"
               className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"

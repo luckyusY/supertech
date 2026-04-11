@@ -22,7 +22,10 @@ type SuccessState = {
   productName: string;
   vendorName: string;
   estimatedTotal: number;
+  customerEmail: string;
 };
+
+type SuccessPayload = Omit<SuccessState, "customerEmail">;
 
 const contactOptions = [
   { value: "phone", label: "Phone call" },
@@ -104,7 +107,7 @@ export function OrderRequestForm({
 
         const result = (await response.json()) as
           | { error: string }
-          | SuccessState;
+          | SuccessPayload;
 
         if (!response.ok || "error" in result) {
           throw new Error(
@@ -112,7 +115,10 @@ export function OrderRequestForm({
           );
         }
 
-        setSuccess(result);
+        setSuccess({
+          ...result,
+          customerEmail,
+        });
         resetForm();
       } catch (submissionError) {
         setError(
@@ -163,6 +169,12 @@ export function OrderRequestForm({
           >
             Send another request
           </button>
+          <Link
+            href={`/track-order?requestId=${encodeURIComponent(success.requestId)}&email=${encodeURIComponent(success.customerEmail)}`}
+            className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
+          >
+            Track this request
+          </Link>
           <Link
             href="/catalog"
             className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"

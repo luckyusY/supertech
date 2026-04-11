@@ -121,7 +121,7 @@ export const buildPhases: BuildPhase[] = [
     deliverables: [
       "Cart state and checkout summary",
       "Manual cart quote requests before payments",
-      "Address book and shipping options",
+      "Customer order tracking by request ID",
       "Payment provider integration",
     ],
   },
@@ -134,7 +134,7 @@ export const buildPhases: BuildPhase[] = [
       "Add the systems that turn the MVP into a full operational marketplace for multiple sellers.",
     deliverables: [
       "Vendor payouts and commissions",
-      "Order tracking and notifications",
+      "Order notifications and messaging",
       "Analytics, reviews, and seller performance tooling",
     ],
   },

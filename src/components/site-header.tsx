@@ -5,6 +5,7 @@ const navigation = [
   { href: "/catalog", label: "Catalog" },
   { href: "/vendors", label: "Vendors" },
   { href: "/cart", label: "Cart" },
+  { href: "/track-order", label: "Track Order" },
   { href: "/phases", label: "Phases" },
   { href: "/dashboard/vendor", label: "Vendor Dashboard" },
   { href: "/dashboard/admin", label: "Admin" },
