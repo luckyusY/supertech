@@ -47,32 +47,53 @@ export type BuildPhase = {
 };
 
 export const marketplaceMetrics = [
-  { label: "Launch lanes", value: "4" },
-  { label: "Seed vendors", value: "4" },
-  { label: "Ready routes", value: "7+" },
+  { label: "Verified sellers", value: "6" },
+  { label: "Products listed", value: "24" },
+  { label: "Cities served", value: "12+" },
 ] as const;
 
 export const categoryHighlights = [
   {
     name: "Home Control",
-    count: 14,
+    count: 5,
     accent: "linear-gradient(90deg, #e45a36, #f2bf63)",
     description:
-      "Smart hubs, sensors, and connected accessories designed for reliable daily automation.",
+      "Smart hubs, sensors, light strips, and mesh routers for a seamlessly connected home.",
   },
   {
     name: "Mobile Essentials",
-    count: 11,
+    count: 4,
     accent: "linear-gradient(90deg, #1a7b70, #7ad0bf)",
     description:
-      "Charging, audio, and everyday carry tech with a sharper premium aesthetic.",
+      "Charging, cases, and everyday carry gear that keeps you moving faster.",
   },
   {
     name: "Creator Gear",
-    count: 9,
+    count: 4,
     accent: "linear-gradient(90deg, #11211c, #45695b)",
     description:
-      "Desk setups, peripherals, and tools for focused creators and power users.",
+      "Monitors, keyboards, docks, and desk lights built for your best work.",
+  },
+  {
+    name: "Gaming",
+    count: 4,
+    accent: "linear-gradient(90deg, #f2bf63, #e45a36)",
+    description:
+      "Controllers, headsets, RGB pads, and stands for setups with personality.",
+  },
+  {
+    name: "Audio",
+    count: 4,
+    accent: "linear-gradient(90deg, #5b3a8c, #9b6fd4)",
+    description:
+      "Studio headphones, portable speakers, and DAC amps for serious listening.",
+  },
+  {
+    name: "Wearables",
+    count: 3,
+    accent: "linear-gradient(90deg, #1a5c7b, #4ab0d4)",
+    description:
+      "Smartwatches and fitness bands that track what matters most to you.",
   },
 ] as const;
 
@@ -154,7 +175,7 @@ export const vendors: Vendor[] = [
     reviewCount: 124,
     accent: "#e45a36",
     coverImage:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
     logoMark: "AL",
     categories: ["Home Control", "Audio"],
     activeProducts: 18,
@@ -190,7 +211,7 @@ export const vendors: Vendor[] = [
     reviewCount: 86,
     accent: "#11211c",
     coverImage:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1593640408182-31c228eed6e5?auto=format&fit=crop&w=1200&q=80",
     logoMark: "PF",
     categories: ["Creator Gear", "Desk Setup"],
     activeProducts: 15,
@@ -215,9 +236,46 @@ export const vendors: Vendor[] = [
     fulfillmentRate: "96.4%",
     joined: "2022",
   },
+  {
+    id: "vendor-wave",
+    slug: "wave-audio",
+    name: "Wave Audio",
+    headline: "Studio-grade audio for everyday listeners and serious audiophiles.",
+    location: "Accra, Ghana",
+    responseTime: "Replies in 1h",
+    rating: 4.9,
+    reviewCount: 98,
+    accent: "#5b3a8c",
+    coverImage:
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80",
+    logoMark: "WA",
+    categories: ["Audio"],
+    activeProducts: 12,
+    fulfillmentRate: "98.2%",
+    joined: "2024",
+  },
+  {
+    id: "vendor-flex",
+    slug: "flex-wearables",
+    name: "Flex Wearables",
+    headline: "Smart fitness gear that works as hard as you do.",
+    location: "Kampala, Uganda",
+    responseTime: "Replies in 2h",
+    rating: 4.6,
+    reviewCount: 145,
+    accent: "#1a5c7b",
+    coverImage:
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80",
+    logoMark: "FW",
+    categories: ["Wearables"],
+    activeProducts: 9,
+    fulfillmentRate: "97.8%",
+    joined: "2024",
+  },
 ];
 
 export const products: Product[] = [
+  // ── Aurora Labs · Home Control ──────────────────────────────────────
   {
     id: "product-hub",
     slug: "aurora-smart-hub",
@@ -245,6 +303,106 @@ export const products: Product[] = [
     featured: true,
   },
   {
+    id: "product-strip",
+    slug: "aurora-light-strip",
+    vendorSlug: "aurora-labs",
+    name: "Aurora Light Strip",
+    category: "Home Control",
+    badge: "Scene-ready",
+    description:
+      "A room-defining RGBIC light strip with segment control, automation triggers, and voice support.",
+    price: 69,
+    compareAt: 89,
+    rating: 4.8,
+    reviewCount: 58,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#e45a36",
+    heroImage:
+      "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Segment control", "Matter scene sync", "Warm-to-neon range"],
+    featured: true,
+  },
+  {
+    id: "product-sensor",
+    slug: "aurora-smart-sensor",
+    vendorSlug: "aurora-labs",
+    name: "Aurora Motion Sensor",
+    category: "Home Control",
+    badge: "New drop",
+    description:
+      "A compact motion and temperature sensor that triggers automations instantly, no cloud required.",
+    price: 45,
+    rating: 4.7,
+    reviewCount: 31,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#e45a36",
+    heroImage:
+      "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Thread protocol", "Local processing", "2-year battery"],
+  },
+  {
+    id: "product-plug",
+    slug: "aurora-smart-plug",
+    vendorSlug: "aurora-labs",
+    name: "Aurora Smart Plug",
+    category: "Home Control",
+    badge: "Value pick",
+    description:
+      "A Matter-compatible smart plug with energy monitoring. Control any device from the Aurora app.",
+    price: 29,
+    rating: 4.6,
+    reviewCount: 44,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#e45a36",
+    heroImage:
+      "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Energy monitoring", "Voice control", "Matter compatible"],
+  },
+  {
+    id: "product-mesh",
+    slug: "aurora-mesh-router",
+    vendorSlug: "aurora-labs",
+    name: "Aurora Mesh Node",
+    category: "Home Control",
+    badge: "Wi-Fi 6E",
+    description:
+      "A single mesh node that extends your Wi-Fi 6E network with seamless handoff and zero dead zones.",
+    price: 129,
+    compareAt: 159,
+    rating: 4.8,
+    reviewCount: 27,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#e45a36",
+    heroImage:
+      "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Wi-Fi 6E", "Seamless roaming", "Matter hub built-in"],
+  },
+  // ── Signal Mobile · Mobile Essentials ──────────────────────────────
+  {
     id: "product-buds",
     slug: "signal-noise-buds",
     vendorSlug: "signal-mobile",
@@ -268,56 +426,6 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?auto=format&fit=crop&w=1200&q=80",
     ],
     features: ["Low latency mode", "Quick charge case", "Dual-device switch"],
-    featured: true,
-  },
-  {
-    id: "product-arm",
-    slug: "pixel-monitor-arm",
-    vendorSlug: "pixel-foundry",
-    name: "Pixel Monitor Arm",
-    category: "Creator Gear",
-    badge: "Editor pick",
-    description:
-      "A studio-grade monitor arm with clean cable routing and fast-adjust tension control.",
-    price: 129,
-    rating: 4.9,
-    reviewCount: 51,
-    stockLabel: "In stock",
-    shipWindow: "Ships within 24h",
-    accent: "#11211c",
-    heroImage:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
-    ],
-    features: ["Hidden cable channel", "Tool-free tilt", "Desk clamp + grommet mount"],
-    featured: true,
-  },
-  {
-    id: "product-stand",
-    slug: "orbit-controller-stand",
-    vendorSlug: "orbit-play",
-    name: "Orbit Controller Stand",
-    category: "Gaming",
-    badge: "New drop",
-    description:
-      "A sculpted display stand with charging passthrough for premium gaming setups.",
-    price: 59,
-    rating: 4.7,
-    reviewCount: 34,
-    stockLabel: "In stock",
-    shipWindow: "Ships within 72h",
-    accent: "#f2bf63",
-    heroImage:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=900&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1603481546579-65d935ba9cdd?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&w=1200&q=80",
-    ],
-    features: ["USB-C passthrough", "Weighted base", "Fits modern controllers"],
     featured: true,
   },
   {
@@ -345,29 +453,79 @@ export const products: Product[] = [
     features: ["Fast wireless charge", "Fold-flat travel mode", "Portrait or landscape"],
   },
   {
-    id: "product-strip",
-    slug: "aurora-light-strip",
-    vendorSlug: "aurora-labs",
-    name: "Aurora Light Strip",
-    category: "Home Control",
-    badge: "Scene-ready",
+    id: "product-powerbank",
+    slug: "signal-power-bank",
+    vendorSlug: "signal-mobile",
+    name: "Signal Power Bank 20K",
+    category: "Mobile Essentials",
+    badge: "Travel essential",
     description:
-      "A room-defining RGB light strip with segment control, automation triggers, and voice support.",
-    price: 69,
-    compareAt: 89,
-    rating: 4.8,
-    reviewCount: 58,
+      "A 20,000mAh slim power bank with 65W USB-C PD and dual device charging for long trips.",
+    price: 65,
+    compareAt: 79,
+    rating: 4.7,
+    reviewCount: 89,
     stockLabel: "In stock",
     shipWindow: "Ships within 24h",
-    accent: "#e45a36",
+    accent: "#1a7b70",
     heroImage:
-      "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1609592806510-40ca98d6e9e5?auto=format&fit=crop&w=900&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1609592806510-40ca98d6e9e5?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1585060544812-6b45742d762f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
     ],
-    features: ["Segment control", "Matter scene sync", "Warm-to-neon range"],
+    features: ["65W USB-C PD", "20,000 mAh", "Dual simultaneous charge"],
+  },
+  {
+    id: "product-carmount",
+    slug: "signal-car-mount",
+    vendorSlug: "signal-mobile",
+    name: "Signal Car Mount",
+    category: "Mobile Essentials",
+    badge: "Driver pick",
+    description:
+      "A wireless charging car mount with one-hand grip release and 15W fast charge.",
+    price: 39,
+    rating: 4.5,
+    reviewCount: 52,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#1a7b70",
+    heroImage:
+      "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1585060544812-6b45742d762f?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["15W wireless", "One-grip release", "Vent + dash mount"],
+  },
+  // ── Pixel Foundry · Creator Gear ────────────────────────────────────
+  {
+    id: "product-arm",
+    slug: "pixel-monitor-arm",
+    vendorSlug: "pixel-foundry",
+    name: "Pixel Monitor Arm",
+    category: "Creator Gear",
+    badge: "Editor pick",
+    description:
+      "A studio-grade monitor arm with clean cable routing and fast-adjust tension control.",
+    price: 129,
+    rating: 4.9,
+    reviewCount: 51,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#11211c",
+    heroImage:
+      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Hidden cable channel", "Tool-free tilt", "Desk clamp + grommet mount"],
+    featured: true,
   },
   {
     id: "product-dock",
@@ -392,6 +550,333 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
     ],
     features: ["7 ports", "4K display output", "Single-cable desk setup"],
+  },
+  {
+    id: "product-keyboard",
+    slug: "pixel-mechanical-keyboard",
+    vendorSlug: "pixel-foundry",
+    name: "Pixel Mech Keyboard",
+    category: "Creator Gear",
+    badge: "Type better",
+    description:
+      "A compact 75% wireless mechanical keyboard with hot-swap sockets, per-key RGB, and aluminum case.",
+    price: 199,
+    compareAt: 239,
+    rating: 4.8,
+    reviewCount: 63,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#11211c",
+    heroImage:
+      "https://images.unsplash.com/photo-1593640408182-31c228eed6e5?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1593640408182-31c228eed6e5?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1541140532154-b024d705b90a?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Hot-swap sockets", "Tri-mode wireless", "Aluminum CNC case"],
+    featured: true,
+  },
+  {
+    id: "product-lamp",
+    slug: "pixel-desk-lamp",
+    vendorSlug: "pixel-foundry",
+    name: "Pixel Monitor Light Bar",
+    category: "Creator Gear",
+    badge: "Zero glare",
+    description:
+      "A clip-on monitor light bar with asymmetric lighting that illuminates your desk without screen glare.",
+    price: 79,
+    rating: 4.7,
+    reviewCount: 38,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#11211c",
+    heroImage:
+      "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Zero screen glare", "Touch dimmer", "USB-C powered"],
+  },
+  // ── Orbit Play · Gaming ──────────────────────────────────────────────
+  {
+    id: "product-stand",
+    slug: "orbit-controller-stand",
+    vendorSlug: "orbit-play",
+    name: "Orbit Controller Stand",
+    category: "Gaming",
+    badge: "New drop",
+    description:
+      "A sculpted display stand with charging passthrough for premium gaming setups.",
+    price: 59,
+    rating: 4.7,
+    reviewCount: 34,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 72h",
+    accent: "#f2bf63",
+    heroImage:
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1603481546579-65d935ba9cdd?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["USB-C passthrough", "Weighted base", "Fits modern controllers"],
+  },
+  {
+    id: "product-headset",
+    slug: "orbit-gaming-headset",
+    vendorSlug: "orbit-play",
+    name: "Orbit Wireless Headset",
+    category: "Gaming",
+    badge: "Clear comms",
+    description:
+      "A 2.4GHz wireless gaming headset with 50mm drivers, detachable mic, and 24h battery.",
+    price: 119,
+    compareAt: 149,
+    rating: 4.6,
+    reviewCount: 71,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#f2bf63",
+    heroImage:
+      "https://images.unsplash.com/photo-1599669454699-248893623440?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1599669454699-248893623440?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["2.4GHz wireless", "50mm drivers", "24h battery life"],
+    featured: true,
+  },
+  {
+    id: "product-mousepad",
+    slug: "orbit-rgb-mousepad",
+    vendorSlug: "orbit-play",
+    name: "Orbit XXL RGB Pad",
+    category: "Gaming",
+    badge: "Desk cover",
+    description:
+      "A full-desk XXL mousepad with addressable RGB edge lighting and smooth micro-weave surface.",
+    price: 45,
+    rating: 4.8,
+    reviewCount: 56,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#f2bf63",
+    heroImage:
+      "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1603481546579-65d935ba9cdd?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["900×400mm surface", "14 RGB zones", "Anti-slip base"],
+  },
+  {
+    id: "product-chair",
+    slug: "orbit-gaming-chair",
+    vendorSlug: "orbit-play",
+    name: "Orbit Ergo Chair",
+    category: "Gaming",
+    badge: "Posture-first",
+    description:
+      "An ergonomic mesh gaming chair with lumbar support, 4D armrests, and 135° recline.",
+    price: 299,
+    compareAt: 379,
+    rating: 4.5,
+    reviewCount: 29,
+    stockLabel: "Limited stock",
+    shipWindow: "Ships within 5–7 days",
+    accent: "#f2bf63",
+    heroImage:
+      "https://images.unsplash.com/photo-1666397830751-74aa62f51be4?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1666397830751-74aa62f51be4?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1603481546579-65d935ba9cdd?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["4D armrests", "135° recline", "Breathable mesh back"],
+  },
+  // ── Wave Audio · Audio ──────────────────────────────────────────────
+  {
+    id: "product-headphones",
+    slug: "wave-studio-headphones",
+    vendorSlug: "wave-audio",
+    name: "Wave Studio Pro",
+    category: "Audio",
+    badge: "Audiophile",
+    description:
+      "Closed-back studio headphones with 40mm beryllium-coated drivers and a detachable cable.",
+    price: 249,
+    compareAt: 299,
+    rating: 4.9,
+    reviewCount: 42,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#5b3a8c",
+    heroImage:
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["40mm beryllium drivers", "Closed-back isolation", "Detachable cable"],
+    featured: true,
+  },
+  {
+    id: "product-speaker",
+    slug: "wave-bt-speaker",
+    vendorSlug: "wave-audio",
+    name: "Wave BT Speaker",
+    category: "Audio",
+    badge: "360° sound",
+    description:
+      "A compact 360° Bluetooth speaker with 24h battery, IP67 waterproofing, and dual-pairing.",
+    price: 89,
+    compareAt: 109,
+    rating: 4.7,
+    reviewCount: 88,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#5b3a8c",
+    heroImage:
+      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["360° omnidirectional", "IP67 waterproof", "Dual stereo pairing"],
+  },
+  {
+    id: "product-dac",
+    slug: "wave-dac-amp",
+    vendorSlug: "wave-audio",
+    name: "Wave DAC + Amp",
+    category: "Audio",
+    badge: "Pure signal",
+    description:
+      "A desktop DAC and headphone amplifier with balanced 4.4mm output and 32-bit/384kHz decoding.",
+    price: 179,
+    rating: 4.8,
+    reviewCount: 33,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#5b3a8c",
+    heroImage:
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["32-bit/384kHz", "Balanced 4.4mm out", "USB-C + optical input"],
+  },
+  {
+    id: "product-earbuds2",
+    slug: "wave-sport-earbuds",
+    vendorSlug: "wave-audio",
+    name: "Wave Sport Earbuds",
+    category: "Audio",
+    badge: "Gym-ready",
+    description:
+      "IPX5 sport earbuds with ANC, 9-hour battery, and an ear-hook design that never falls out.",
+    price: 99,
+    compareAt: 129,
+    rating: 4.6,
+    reviewCount: 61,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#5b3a8c",
+    heroImage:
+      "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["IPX5 sweat-proof", "Active noise cancel", "Ear-hook secure fit"],
+  },
+  // ── Flex Wearables · Wearables ──────────────────────────────────────
+  {
+    id: "product-watch",
+    slug: "flex-smart-watch",
+    vendorSlug: "flex-wearables",
+    name: "Flex Smart Watch",
+    category: "Wearables",
+    badge: "Always-on",
+    description:
+      "A slim AMOLED smartwatch with GPS, SpO2, heart rate, and 10-day battery for daily wear.",
+    price: 229,
+    compareAt: 279,
+    rating: 4.8,
+    reviewCount: 94,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#1a5c7b",
+    heroImage:
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["AMOLED always-on display", "GPS + SpO2", "10-day battery"],
+    featured: true,
+  },
+  {
+    id: "product-band",
+    slug: "flex-fitness-band",
+    vendorSlug: "flex-wearables",
+    name: "Flex Fitness Band",
+    category: "Wearables",
+    badge: "Entry level",
+    description:
+      "A lightweight fitness band with step counting, sleep tracking, and 14-day battery life.",
+    price: 49,
+    rating: 4.5,
+    reviewCount: 112,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#1a5c7b",
+    heroImage:
+      "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Step + sleep tracking", "14-day battery", "Water resistant"],
+  },
+  {
+    id: "product-swatch",
+    slug: "flex-sport-watch",
+    vendorSlug: "flex-wearables",
+    name: "Flex Sport Watch",
+    category: "Wearables",
+    badge: "Rugged",
+    description:
+      "A MIL-STD-810 rated sport watch with built-in compass, altimeter, and 20-day battery.",
+    price: 179,
+    compareAt: 219,
+    rating: 4.7,
+    reviewCount: 48,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#1a5c7b",
+    heroImage:
+      "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["MIL-STD-810 rated", "Compass + altimeter", "20-day battery"],
   },
 ];
 
@@ -463,5 +948,9 @@ export function getFeaturedProducts() {
 }
 
 export function getTopVendors() {
-  return vendors.slice(0, 3);
+  return vendors.slice(0, 4);
+}
+
+export function getCategories() {
+  return [...new Set(products.map((p) => p.category))].sort();
 }

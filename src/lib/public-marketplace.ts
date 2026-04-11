@@ -125,11 +125,11 @@ export async function getPublicFeaturedProducts() {
     }
   }
 
-  return Array.from(featuredMap.values()).slice(0, 6);
+  return Array.from(featuredMap.values()).slice(0, 8);
 }
 
 export async function getPublicTopVendors() {
   const vendors = await getPublicVendors();
 
-  return vendors.slice(0, 3);
+  return vendors.slice(0, 4);
 }
