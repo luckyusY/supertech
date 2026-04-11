@@ -155,6 +155,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <ChatWithSellerButton
                 vendorSlug={product.vendorSlug}
                 vendorName={vendor?.name ?? product.vendorSlug}
+                productContext={{
+                  name: product.name,
+                  price: product.price,
+                  vendorName: vendor?.name ?? product.vendorSlug,
+                  category: product.category,
+                  description: product.description,
+                  features: product.features,
+                  stockLabel: product.stockLabel,
+                  shipWindow: product.shipWindow,
+                  slug: product.slug,
+                }}
               />
             </div>
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-white/72 p-5">
