@@ -10,6 +10,35 @@ export type PaymentPreference =
 
 export type ContactPreference = "phone" | "email" | "whatsapp";
 
+export type OrderRequestStatus =
+  | "pending_confirmation"
+  | "confirmed"
+  | "preparing"
+  | "ready_for_delivery"
+  | "out_for_delivery"
+  | "completed"
+  | "cancelled";
+
+export type OrderRequestLineItem = {
+  productSlug: string;
+  productName: string;
+  vendorSlug: string;
+  vendorName: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+};
+
+export const orderRequestStatuses: OrderRequestStatus[] = [
+  "pending_confirmation",
+  "confirmed",
+  "preparing",
+  "ready_for_delivery",
+  "out_for_delivery",
+  "completed",
+  "cancelled",
+];
+
 export type CreateOrderRequestLineInput = {
   productSlug: string;
   quantity: number;
@@ -32,7 +61,7 @@ export type CreateOrderRequestInput = {
 export type OrderRequestRecord = {
   _id?: ObjectId;
   requestId: string;
-  status: "pending_confirmation";
+  status: OrderRequestStatus;
   requestType: "single_product" | "cart_quote";
   productSlug: string;
   productName: string;
@@ -42,15 +71,7 @@ export type OrderRequestRecord = {
   itemCount: number;
   unitPrice: number;
   estimatedTotal: number;
-  lineItems: {
-    productSlug: string;
-    productName: string;
-    vendorSlug: string;
-    vendorName: string;
-    quantity: number;
-    unitPrice: number;
-    lineTotal: number;
-  }[];
+  lineItems: OrderRequestLineItem[];
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -59,6 +80,7 @@ export type OrderRequestRecord = {
   contactPreference: ContactPreference;
   paymentPreference: PaymentPreference;
   notes: string;
+  internalNote?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -66,18 +88,36 @@ export type OrderRequestRecord = {
 export type OrderRequestSummary = {
   id: string;
   requestId: string;
-  status: string;
+  status: OrderRequestStatus;
   requestType: "single_product" | "cart_quote";
+  productSlug: string;
   productName: string;
+  vendorSlug: string;
   vendorName: string;
   quantity: number;
   itemCount: number;
   estimatedTotal: number;
+  lineItems: OrderRequestLineItem[];
   customerName: string;
+  customerEmail: string;
+  customerPhone: string;
   city: string;
+  deliveryAddress: string;
   paymentPreference: PaymentPreference;
   contactPreference: ContactPreference;
+  notes: string;
+  internalNote: string;
   createdAt: Date;
+  updatedAt: Date;
+};
+
+export type OrderRequestOperationsSnapshot = {
+  totalOrders: number;
+  pendingConfirmation: number;
+  activeFulfillment: number;
+  completedOrders: number;
+  estimatedRevenue: number;
+  sharedCartOrders: number;
 };
 
 const ORDER_REQUEST_COLLECTION = "order_requests";
@@ -90,6 +130,70 @@ function generateRequestId() {
   const randomPart = Math.random().toString(36).slice(2, 6).toUpperCase();
 
   return `ORQ-${datePart}-${randomPart}`;
+}
+
+export function isOrderRequestStatus(value: string): value is OrderRequestStatus {
+  return orderRequestStatuses.includes(value as OrderRequestStatus);
+}
+
+export function formatOrderRequestStatus(status: OrderRequestStatus) {
+  return status.replaceAll("_", " ");
+}
+
+function normalizeOrderRequestStatus(status?: string): OrderRequestStatus {
+  return status && isOrderRequestStatus(status) ? status : "pending_confirmation";
+}
+
+function buildFallbackLineItems(record: Partial<OrderRequestRecord>) {
+  if (Array.isArray(record.lineItems) && record.lineItems.length > 0) {
+    return record.lineItems;
+  }
+
+  if (!record.productSlug || !record.productName || !record.vendorSlug || !record.vendorName) {
+    return [] as OrderRequestLineItem[];
+  }
+
+  return [
+    {
+      productSlug: record.productSlug,
+      productName: record.productName,
+      vendorSlug: record.vendorSlug,
+      vendorName: record.vendorName,
+      quantity: record.quantity ?? 1,
+      unitPrice: record.unitPrice ?? record.estimatedTotal ?? 0,
+      lineTotal: record.estimatedTotal ?? record.unitPrice ?? 0,
+    },
+  ] satisfies OrderRequestLineItem[];
+}
+
+function toSummary(record: OrderRequestRecord): OrderRequestSummary {
+  const lineItems = buildFallbackLineItems(record);
+
+  return {
+    id: record._id?.toString() ?? record.requestId,
+    requestId: record.requestId,
+    status: normalizeOrderRequestStatus(record.status),
+    requestType: record.requestType ?? "single_product",
+    productSlug: record.productSlug,
+    productName: record.productName,
+    vendorSlug: record.vendorSlug,
+    vendorName: record.vendorName,
+    quantity: record.quantity ?? 1,
+    itemCount: record.itemCount ?? (lineItems.length || 1),
+    estimatedTotal: record.estimatedTotal,
+    lineItems,
+    customerName: record.customerName,
+    customerEmail: record.customerEmail,
+    customerPhone: record.customerPhone,
+    city: record.city,
+    deliveryAddress: record.deliveryAddress,
+    paymentPreference: record.paymentPreference,
+    contactPreference: record.contactPreference,
+    notes: record.notes ?? "",
+    internalNote: record.internalNote ?? "",
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt ?? record.createdAt,
+  };
 }
 
 export async function createOrderRequest(input: CreateOrderRequestInput) {
@@ -200,25 +304,107 @@ export async function createOrderRequest(input: CreateOrderRequestInput) {
   };
 }
 
-export async function getRecentOrderRequests(limit = 6): Promise<OrderRequestSummary[]> {
+export async function getOrderRequests({
+  limit = 6,
+  vendorSlug,
+  status,
+  requestId,
+}: {
+  limit?: number;
+  vendorSlug?: string;
+  status?: OrderRequestStatus;
+  requestId?: string;
+}): Promise<OrderRequestSummary[]> {
   const database = await getDatabase();
   const collection = database.collection<OrderRequestRecord>(ORDER_REQUEST_COLLECTION);
-  const docs = await collection.find({}).sort({ createdAt: -1 }).limit(limit).toArray();
+  const query: Record<string, unknown> = {};
 
-  return docs.map((doc) => ({
-    itemCount: doc.itemCount ?? 1,
-    id: doc._id?.toString() ?? doc.requestId,
-    requestId: doc.requestId,
-    status: doc.status,
-    requestType: doc.requestType ?? "single_product",
-    productName: doc.productName,
-    vendorName: doc.vendorName,
-    quantity: doc.quantity,
-    estimatedTotal: doc.estimatedTotal,
-    customerName: doc.customerName,
-    city: doc.city,
-    paymentPreference: doc.paymentPreference,
-    contactPreference: doc.contactPreference,
-    createdAt: doc.createdAt,
-  }));
+  if (requestId) {
+    query.requestId = requestId.trim().toUpperCase();
+  }
+
+  if (status) {
+    query.status = status;
+  }
+
+  if (vendorSlug) {
+    query.$or = [{ vendorSlug }, { "lineItems.vendorSlug": vendorSlug }];
+  }
+
+  const docs = await collection
+    .find(query)
+    .sort({ createdAt: -1 })
+    .limit(Math.max(1, Math.min(limit, 50)))
+    .toArray();
+
+  return docs.map((doc) => toSummary(doc));
+}
+
+export async function getRecentOrderRequests(limit = 6): Promise<OrderRequestSummary[]> {
+  return getOrderRequests({ limit });
+}
+
+export async function getOrderRequestOperationsSnapshot(): Promise<OrderRequestOperationsSnapshot> {
+  const orders = await getOrderRequests({ limit: 50 });
+  const activeStatuses: OrderRequestStatus[] = [
+    "confirmed",
+    "preparing",
+    "ready_for_delivery",
+    "out_for_delivery",
+  ];
+
+  return {
+    totalOrders: orders.length,
+    pendingConfirmation: orders.filter((order) => order.status === "pending_confirmation").length,
+    activeFulfillment: orders.filter((order) => activeStatuses.includes(order.status)).length,
+    completedOrders: orders.filter((order) => order.status === "completed").length,
+    estimatedRevenue: orders
+      .filter((order) => order.status !== "cancelled")
+      .reduce((total, order) => total + order.estimatedTotal, 0),
+    sharedCartOrders: orders.filter((order) => order.itemCount > 1).length,
+  };
+}
+
+export async function updateOrderRequest(
+  id: string,
+  input: {
+    status?: OrderRequestStatus;
+    internalNote?: string;
+  },
+) {
+  if (!ObjectId.isValid(id)) {
+    throw new Error("Invalid order request id.");
+  }
+
+  const updateFields: Record<string, unknown> = {
+    updatedAt: new Date(),
+  };
+
+  if (input.status) {
+    updateFields.status = input.status;
+  }
+
+  if (typeof input.internalNote === "string") {
+    updateFields.internalNote = input.internalNote.trim();
+  }
+
+  if (Object.keys(updateFields).length === 1) {
+    throw new Error("No order updates were provided.");
+  }
+
+  const database = await getDatabase();
+  const collection = database.collection<OrderRequestRecord>(ORDER_REQUEST_COLLECTION);
+  const result = await collection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    {
+      $set: updateFields,
+    },
+    { returnDocument: "after" },
+  );
+
+  if (!result) {
+    throw new Error("Order request not found.");
+  }
+
+  return toSummary(result);
 }

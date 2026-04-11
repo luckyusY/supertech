@@ -1,7 +1,11 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { hasMongoConfig } from "@/lib/integrations";
-import { createOrderRequest, getRecentOrderRequests } from "@/lib/order-requests";
+import {
+  createOrderRequest,
+  getOrderRequests,
+  isOrderRequestStatus,
+} from "@/lib/order-requests";
 
 export async function GET(request: Request) {
   if (!hasMongoConfig()) {
@@ -10,14 +14,23 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const limit = Number(searchParams.get("limit") ?? "6");
+  const vendorSlug = searchParams.get("vendorSlug") ?? undefined;
+  const requestId = searchParams.get("requestId") ?? undefined;
+  const statusParam = searchParams.get("status");
 
   try {
-    const orders = await getRecentOrderRequests(Number.isFinite(limit) ? limit : 6);
+    const orders = await getOrderRequests({
+      limit: Number.isFinite(limit) ? limit : 6,
+      vendorSlug,
+      requestId,
+      status: statusParam && isOrderRequestStatus(statusParam) ? statusParam : undefined,
+    });
 
     return NextResponse.json({
       orders: orders.map((order) => ({
         ...order,
         createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
       })),
     });
   } catch {
@@ -65,6 +78,7 @@ export async function POST(request: Request) {
     const orderRequest = await createOrderRequest(body);
 
     revalidatePath("/dashboard/admin");
+    revalidatePath("/dashboard/vendor");
 
     return NextResponse.json(orderRequest, { status: 201 });
   } catch (error) {

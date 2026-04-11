@@ -1,15 +1,43 @@
 import type { Metadata } from "next";
 import { BadgeCheck, Layers3, Wallet2 } from "lucide-react";
-import { OrderRequestInbox } from "@/components/order-request-inbox";
+import { AdminOrderOperations } from "@/components/admin-order-operations";
 import { ProductApprovalInbox } from "@/components/product-approval-inbox";
+import { hasMongoConfig } from "@/lib/integrations";
 import { adminQueue, buildPhases, vendors } from "@/lib/marketplace";
+import { getOrderRequestOperationsSnapshot } from "@/lib/order-requests";
+import { formatPrice } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
   description: "Marketplace admin shell for approvals, payouts, and vendor health.",
 };
 
-export default function AdminDashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminDashboardPage() {
+  const operationsSnapshot =
+    hasMongoConfig()
+      ? await getOrderRequestOperationsSnapshot().catch(() => null)
+      : null;
+
+  const metricCards = [
+    {
+      label: "Estimated GMV",
+      value: operationsSnapshot ? formatPrice(operationsSnapshot.estimatedRevenue) : "$42.8K",
+      icon: Layers3,
+    },
+    {
+      label: "Pending confirmations",
+      value: operationsSnapshot ? String(operationsSnapshot.pendingConfirmation) : "3",
+      icon: BadgeCheck,
+    },
+    {
+      label: "Active fulfillment",
+      value: operationsSnapshot ? String(operationsSnapshot.activeFulfillment) : "6",
+      icon: Wallet2,
+    },
+  ];
+
   return (
     <div className="page-shell py-8">
       <div className="soft-card p-6 sm:p-8 lg:p-10">
@@ -22,11 +50,7 @@ export default function AdminDashboardPage() {
               Admin oversight for approvals, manual orders, payouts, and vendor quality.
             </h1>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {[
-                { label: "Monthly GMV", value: "$42.8K", icon: Layers3 },
-                { label: "Pending approvals", value: "3", icon: BadgeCheck },
-                { label: "Scheduled payouts", value: "$11.2K", icon: Wallet2 },
-              ].map((card) => (
+              {metricCards.map((card) => (
                 <div
                   key={card.label}
                   className="rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-5"
@@ -45,9 +69,9 @@ export default function AdminDashboardPage() {
               Ops notes
             </p>
             <div className="mt-5 space-y-4 text-sm leading-7 text-[rgba(255,255,255,0.76)]">
-              <p>Phase 1 is about converting interest into manual orders as fast as possible.</p>
-              <p>Every request should be confirmed quickly so customers still feel momentum.</p>
-              <p>Payments can wait until the catalog and seller operations feel stable.</p>
+              <p>Manual orders now move through a real fulfillment status flow instead of staying as inbox-only leads.</p>
+              <p>Shared quote carts still need central coordination, while vendor-specific shipments can be tracked from the seller side.</p>
+              <p>Payments can still wait while order operations, seller publishing, and fulfillment discipline mature.</p>
             </div>
           </div>
         </div>
@@ -56,13 +80,15 @@ export default function AdminDashboardPage() {
           <section className="rounded-[1.75rem] border border-[var(--line)] bg-white/72 p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-                Manual order inbox
+                Manual order operations
               </h2>
               <span className="rounded-full bg-[rgba(26,123,112,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--teal)]">
-                Phase 1
+                Phase 3
               </span>
             </div>
-            <OrderRequestInbox />
+            <div className="mt-6">
+              <AdminOrderOperations />
+            </div>
           </section>
 
           <section className="rounded-[1.75rem] border border-[var(--line)] bg-white/72 p-6">

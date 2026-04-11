@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import { ImagePlus, PackageSearch } from "lucide-react";
+import { VendorOrderQueue } from "@/components/vendor-order-queue";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
 import { getIntegrationStatus } from "@/lib/integrations";
-import { sellerChecklist, vendorDashboardHighlights, vendorOrders } from "@/lib/marketplace";
+import { sellerChecklist, vendorDashboardHighlights } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
   title: "Vendor Dashboard",
   description: "Seller-side dashboard starter for the marketplace.",
 };
+
+export const dynamic = "force-dynamic";
 
 export default function VendorDashboardPage() {
   const integrationStatus = getIntegrationStatus();
@@ -24,8 +27,8 @@ export default function VendorDashboardPage() {
               Seller operations with room for real product publishing flows.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-[rgba(255,255,255,0.76)]">
-              This shell is ready for role-based auth, inventory forms, image uploads,
-              and vendor-specific order management once we connect real persistence.
+              This seller workspace now covers real product publishing and vendor-filtered
+              order visibility while the marketplace is still running without online payments.
             </p>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {vendorDashboardHighlights.map((item) => (
@@ -68,32 +71,11 @@ export default function VendorDashboardPage() {
           <div className="flex items-center gap-3">
             <PackageSearch className="h-5 w-5 text-[var(--accent)]" />
             <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Recent order queue
+              Seller fulfillment queue
             </h2>
           </div>
-          <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[var(--line)]">
-            <table className="min-w-full divide-y divide-[var(--line)] text-left text-sm">
-              <thead className="bg-[rgba(16,32,25,0.04)] text-[var(--muted)]">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Order</th>
-                  <th className="px-4 py-3 font-medium">Buyer</th>
-                  <th className="px-4 py-3 font-medium">Item</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--line)] bg-white">
-                {vendorOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-4 py-4 font-semibold">{order.id}</td>
-                    <td className="px-4 py-4">{order.buyer}</td>
-                    <td className="px-4 py-4">{order.item}</td>
-                    <td className="px-4 py-4 text-[var(--teal)]">{order.status}</td>
-                    <td className="px-4 py-4 font-semibold">{order.total}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-6">
+            <VendorOrderQueue />
           </div>
         </section>
 
@@ -134,9 +116,9 @@ export default function VendorDashboardPage() {
               </div>
             ))}
             <div className="rounded-[1.25rem] border border-dashed border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-4 text-sm leading-7 text-[var(--muted)]">
-              This vendor dashboard is now in Phase 2. Sellers can upload product
-              images to Cloudinary, submit products for review, and track approval
-              status without needing payments first.
+              This vendor dashboard now spans Phase 2 and Phase 3. Sellers can upload
+              product images to Cloudinary, submit products for review, and track the
+              manual order queue that belongs to their storefront.
             </div>
           </div>
         </section>
