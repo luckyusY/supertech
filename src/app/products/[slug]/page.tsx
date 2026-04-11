@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Check, ShieldCheck, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { ChatWithSellerButton } from "@/components/chat-with-seller-button";
 import { ProductCard } from "@/components/product-card";
 import { ProductReviews } from "@/components/product-reviews";
 import {
@@ -150,6 +151,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   badge: product.badge,
                   accent: product.accent,
                 }}
+              />
+              <ChatWithSellerButton
+                vendorSlug={product.vendorSlug}
+                vendorName={vendor?.name ?? product.vendorSlug}
               />
             </div>
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-white/72 p-5">

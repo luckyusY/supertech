@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
+import { ChatProvider } from "@/components/chat-context";
 import { LiveChat } from "@/components/live-chat";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -44,6 +45,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <CartProvider>
+          <ChatProvider>
           <SmoothScroll />
           <div className="noise fixed inset-0 -z-10 opacity-40" />
           <div className="relative flex min-h-full flex-col">
@@ -63,6 +65,7 @@ export default function RootLayout({
             }}
           />
           <LiveChat />
+          </ChatProvider>
         </CartProvider>
       </body>
     </html>
