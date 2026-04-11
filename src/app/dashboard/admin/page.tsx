@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 import { AdminOrderOperations } from "@/components/admin-order-operations";
 import { ProductApprovalInbox } from "@/components/product-approval-inbox";
+import { VendorApplicationsInbox } from "@/components/vendor-applications-inbox";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { vendors, products } from "@/lib/marketplace";
 import { getOrderRequestOperationsSnapshot } from "@/lib/order-requests";
+import { getVendorApplications } from "@/lib/vendor-applications";
 import { formatPrice } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -31,9 +33,11 @@ export default async function AdminDashboardPage() {
     nextPath: "/dashboard/admin",
   });
 
-  const operationsSnapshot = hasMongoConfig()
-    ? await getOrderRequestOperationsSnapshot().catch(() => null)
-    : null;
+  const [operationsSnapshot, vendorApplications] = await Promise.all([
+    hasMongoConfig() ? getOrderRequestOperationsSnapshot().catch(() => null) : Promise.resolve(null),
+    hasMongoConfig() ? getVendorApplications().catch(() => []) : Promise.resolve([]),
+  ]);
+  const pendingApplicationsCount = vendorApplications.filter((a) => a.status === "pending").length;
 
   const metricCards = [
     {
@@ -181,6 +185,30 @@ export default async function AdminDashboardPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Vendor applications */}
+      <div className="mt-6 soft-card p-6 sm:p-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Store className="h-5 w-5 text-[var(--accent)]" />
+            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Vendor applications</h2>
+          </div>
+          {pendingApplicationsCount > 0 && (
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
+              {pendingApplicationsCount} pending
+            </span>
+          )}
+        </div>
+        <div className="mt-6">
+          <VendorApplicationsInbox
+            initialApplications={vendorApplications.map((a) => ({
+              ...a,
+              _id: String(a._id),
+              createdAt: a.createdAt.toISOString(),
+            }))}
+          />
         </div>
       </div>
 

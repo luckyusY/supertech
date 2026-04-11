@@ -205,6 +205,12 @@ export function MegaMenu() {
       >
         Request Product
       </Link>
+      <Link
+        href="/become-vendor"
+        className="rounded-full px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
+      >
+        Sell on SuperTech
+      </Link>
     </nav>
   );
 }

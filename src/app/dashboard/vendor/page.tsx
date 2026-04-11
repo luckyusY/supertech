@@ -12,7 +12,7 @@ import {
 import { VendorOrderQueue } from "@/components/vendor-order-queue";
 import { VendorPayoutSummary } from "@/components/vendor-payout-summary";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
-import { getAccessibleVendors, requirePageSession } from "@/lib/auth";
+import { getAccessibleVendorsAsync, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
 import { vendorDashboardHighlights } from "@/lib/marketplace";
 
@@ -29,7 +29,7 @@ export default async function VendorDashboardPage() {
     nextPath: "/dashboard/vendor",
   });
   const integrationStatus = getIntegrationStatus();
-  const availableVendors = getAccessibleVendors(session);
+  const availableVendors = await getAccessibleVendorsAsync(session);
   const initialVendorSlug = availableVendors[0]?.slug ?? "";
   const canSwitchVendor = session.role === "admin";
   const currentVendor = availableVendors[0];
