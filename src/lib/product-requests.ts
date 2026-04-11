@@ -45,3 +45,20 @@ export async function getProductRequests(): Promise<ProductRequest[]> {
     return [];
   }
 }
+
+export async function getProductRequestsByCustomerEmail(
+  customerEmail: string,
+): Promise<ProductRequest[]> {
+  if (!hasMongoConfig()) return [];
+  try {
+    const db = await getDatabase();
+    return await db
+      .collection<ProductRequest>("product_requests")
+      .find({ email: customerEmail.trim().toLowerCase() })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .toArray();
+  } catch {
+    return [];
+  }
+}

@@ -3,8 +3,11 @@ import { User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MegaMenu } from "@/components/mega-menu";
 import { MobileNav } from "@/components/mobile-nav";
+import { getAuthSession } from "@/lib/auth";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const session = await getAuthSession();
+
   return (
     <header className="page-shell sticky top-0 z-40 pt-4">
       <div className="soft-card flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
@@ -28,13 +31,30 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          <Link
-            href="/sign-in"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)] hover:text-[var(--foreground)]"
-            aria-label="Account"
-          >
-            <User className="h-4 w-4" />
-          </Link>
+          {session ? (
+            <Link
+              href={
+                session.role === "admin"
+                  ? "/dashboard/admin"
+                  : session.role === "vendor"
+                    ? "/dashboard/vendor"
+                    : "/account"
+              }
+              className="flex h-9 items-center gap-2 rounded-full border border-[var(--line)] px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-colors"
+              aria-label="My account"
+            >
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">{session.name.split(" ")[0]}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)] hover:text-[var(--foreground)]"
+              aria-label="Sign in"
+            >
+              <User className="h-4 w-4" />
+            </Link>
+          )}
           <CartStatusLink />
           <Link
             href="/catalog"
