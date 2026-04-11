@@ -282,7 +282,9 @@ function parseStoredSession(value: string | null): StoredAuthSession | null {
     }
 
     if (payload.role === "vendor") {
-      if (!payload.vendorSlug || !getVendorBySlug(payload.vendorSlug)) {
+      // Only require a non-empty slug — MongoDB-created vendors won't be in
+      // the static getVendorBySlug() list, so we do NOT check that here.
+      if (!payload.vendorSlug) {
         return null;
       }
     }

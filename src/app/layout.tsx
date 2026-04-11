@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
@@ -6,6 +7,7 @@ import { ChatProvider } from "@/components/chat-context";
 import { LiveChat } from "@/components/live-chat";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SiteHeaderFallback } from "@/components/site-header-fallback";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
 
@@ -46,25 +48,27 @@ export default function RootLayout({
       <body className="min-h-full">
         <CartProvider>
           <ChatProvider>
-          <SmoothScroll />
-          <div className="noise fixed inset-0 -z-10 opacity-40" />
-          <div className="relative flex min-h-full flex-col">
-            <SiteHeader />
-            <main className="flex-1">{children}</main>
-            <SiteFooter />
-          </div>
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                fontFamily: "var(--font-space-grotesk)",
-                borderRadius: "1rem",
-                border: "1px solid rgba(16,32,25,0.12)",
-                background: "rgba(255,252,246,0.95)",
-              },
-            }}
-          />
-          <LiveChat />
+            <SmoothScroll />
+            <div className="noise fixed inset-0 -z-10 opacity-40" />
+            <div className="relative flex min-h-full flex-col">
+              <Suspense fallback={<SiteHeaderFallback />}>
+                <SiteHeader />
+              </Suspense>
+              <main className="flex-1">{children}</main>
+              <SiteFooter />
+            </div>
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  fontFamily: "var(--font-space-grotesk)",
+                  borderRadius: "1rem",
+                  border: "1px solid rgba(16,32,25,0.12)",
+                  background: "rgba(255,252,246,0.95)",
+                },
+              }}
+            />
+            <LiveChat />
           </ChatProvider>
         </CartProvider>
       </body>
