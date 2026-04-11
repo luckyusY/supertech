@@ -2,15 +2,19 @@
 
 import { useState, useTransition } from "react";
 import { ProductImageUploader } from "@/components/product-image-uploader";
-import { vendors } from "@/lib/marketplace";
+import type { Vendor } from "@/lib/marketplace";
 
 type ProductSubmissionFormProps = {
+  availableVendors: Vendor[];
+  canSwitchVendor: boolean;
   vendorSlug: string;
   onVendorChange: (vendorSlug: string) => void;
   onSubmitted: () => void;
 };
 
 export function ProductSubmissionForm({
+  availableVendors,
+  canSwitchVendor,
   vendorSlug,
   onVendorChange,
   onSubmitted,
@@ -108,21 +112,32 @@ export function ProductSubmissionForm({
           </h2>
         </div>
         <div className="min-w-[220px]">
-          <label className="text-sm font-semibold" htmlFor="vendorSlug">
-            Vendor
-          </label>
-          <select
-            id="vendorSlug"
-            value={vendorSlug}
-            onChange={(event) => onVendorChange(event.target.value)}
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          >
-            {vendors.map((vendor) => (
-              <option key={vendor.slug} value={vendor.slug}>
-                {vendor.name}
-              </option>
-            ))}
-          </select>
+          {canSwitchVendor ? (
+            <>
+              <label className="text-sm font-semibold" htmlFor="vendorSlug">
+                Vendor
+              </label>
+              <select
+                id="vendorSlug"
+                value={vendorSlug}
+                onChange={(event) => onVendorChange(event.target.value)}
+                className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+              >
+                {availableVendors.map((vendor) => (
+                  <option key={vendor.slug} value={vendor.slug}>
+                    {vendor.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold">Vendor</p>
+              <div className="mt-2 rounded-[1rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-4 py-3 text-sm font-medium">
+                {availableVendors[0]?.name ?? "Assigned vendor"}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

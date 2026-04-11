@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BadgeCheck, Layers3, Wallet2 } from "lucide-react";
 import { AdminOrderOperations } from "@/components/admin-order-operations";
 import { ProductApprovalInbox } from "@/components/product-approval-inbox";
+import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { adminQueue, buildPhases, vendors } from "@/lib/marketplace";
 import { getOrderRequestOperationsSnapshot } from "@/lib/order-requests";
@@ -15,6 +16,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  const session = await requirePageSession({
+    roles: ["admin"],
+    nextPath: "/dashboard/admin",
+  });
   const operationsSnapshot =
     hasMongoConfig()
       ? await getOrderRequestOperationsSnapshot().catch(() => null)
@@ -49,6 +54,9 @@ export default async function AdminDashboardPage() {
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
               Admin oversight for approvals, manual orders, payouts, and vendor quality.
             </h1>
+            <div className="mt-4 inline-flex rounded-full border border-[var(--line)] bg-white/72 px-4 py-2 text-sm text-[var(--muted)]">
+              Signed in as {session.name}
+            </div>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {metricCards.map((card) => (
                 <div

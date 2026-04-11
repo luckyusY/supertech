@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authorizeRequest } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import {
   createProductSubmission,
@@ -6,12 +7,21 @@ import {
 } from "@/lib/product-submissions";
 
 export async function GET(request: Request) {
+  const authorization = authorizeRequest(request, ["admin", "vendor"]);
+
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   if (!hasMongoConfig()) {
     return NextResponse.json({ submissions: [] });
   }
 
   const { searchParams } = new URL(request.url);
-  const vendorSlug = searchParams.get("vendorSlug") ?? undefined;
+  const vendorSlug =
+    authorization.session.role === "vendor"
+      ? authorization.session.vendorSlug
+      : searchParams.get("vendorSlug") ?? undefined;
   const rawStatus = searchParams.get("status") ?? undefined;
   const limit = Number(searchParams.get("limit") ?? "12");
   const status =
@@ -44,6 +54,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authorization = authorizeRequest(request, ["admin", "vendor"]);
+
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   if (!hasMongoConfig()) {
     return NextResponse.json(
       {
@@ -68,8 +84,15 @@ export async function POST(request: Request) {
       heroImage: string;
       gallery: string[];
     };
+    const vendorSlug =
+      authorization.session.role === "vendor"
+        ? authorization.session.vendorSlug
+        : body.vendorSlug;
 
-    const submission = await createProductSubmission(body);
+    const submission = await createProductSubmission({
+      ...body,
+      vendorSlug: vendorSlug ?? "",
+    });
 
     return NextResponse.json(submission, { status: 201 });
   } catch (error) {

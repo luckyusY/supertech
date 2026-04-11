@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ImagePlus, PackageSearch } from "lucide-react";
 import { VendorOrderQueue } from "@/components/vendor-order-queue";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
+import { getAccessibleVendors, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
 import { sellerChecklist, vendorDashboardHighlights } from "@/lib/marketplace";
 
@@ -12,8 +14,19 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function VendorDashboardPage() {
+export default async function VendorDashboardPage() {
+  const session = await requirePageSession({
+    roles: ["vendor", "admin"],
+    nextPath: "/dashboard/vendor",
+  });
   const integrationStatus = getIntegrationStatus();
+  const availableVendors = getAccessibleVendors(session);
+  const initialVendorSlug = availableVendors[0]?.slug ?? "";
+  const canSwitchVendor = session.role === "admin";
+
+  if (!initialVendorSlug) {
+    redirect("/forbidden");
+  }
 
   return (
     <div className="page-shell py-8">
@@ -30,6 +43,12 @@ export default function VendorDashboardPage() {
               This seller workspace now covers real product publishing and vendor-filtered
               order visibility while the marketplace is still running without online payments.
             </p>
+            <div className="mt-4 inline-flex rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-[rgba(255,255,255,0.78)]">
+              Signed in as {session.name}
+              {session.role === "vendor" && availableVendors[0]
+                ? ` for ${availableVendors[0].name}`
+                : " with admin vendor-switch access"}
+            </div>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {vendorDashboardHighlights.map((item) => (
                 <div
@@ -63,7 +82,11 @@ export default function VendorDashboardPage() {
       </div>
 
       <div className="mt-8">
-        <VendorProductWorkspace />
+        <VendorProductWorkspace
+          availableVendors={availableVendors}
+          initialVendorSlug={initialVendorSlug}
+          canSwitchVendor={canSwitchVendor}
+        />
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
@@ -75,7 +98,11 @@ export default function VendorDashboardPage() {
             </h2>
           </div>
           <div className="mt-6">
-            <VendorOrderQueue />
+            <VendorOrderQueue
+              availableVendors={availableVendors}
+              initialVendorSlug={initialVendorSlug}
+              canSwitchVendor={canSwitchVendor}
+            />
           </div>
         </section>
 

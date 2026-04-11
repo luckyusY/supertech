@@ -1,17 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { vendors } from "@/lib/marketplace";
+import { useEffect, useState } from "react";
 import { ProductSubmissionForm } from "@/components/product-submission-form";
 import { VendorProductSubmissions } from "@/components/vendor-product-submissions";
+import type { Vendor } from "@/lib/marketplace";
 
-export function VendorProductWorkspace() {
-  const [vendorSlug, setVendorSlug] = useState(vendors[0]?.slug ?? "");
+type VendorProductWorkspaceProps = {
+  availableVendors: Vendor[];
+  initialVendorSlug: string;
+  canSwitchVendor: boolean;
+};
+
+export function VendorProductWorkspace({
+  availableVendors,
+  initialVendorSlug,
+  canSwitchVendor,
+}: VendorProductWorkspaceProps) {
+  const [vendorSlug, setVendorSlug] = useState(initialVendorSlug);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    setVendorSlug(initialVendorSlug);
+  }, [initialVendorSlug]);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_420px]">
       <ProductSubmissionForm
+        availableVendors={availableVendors}
+        canSwitchVendor={canSwitchVendor}
         vendorSlug={vendorSlug}
         onVendorChange={setVendorSlug}
         onSubmitted={() => setRefreshKey((current) => current + 1)}
@@ -24,8 +40,9 @@ export function VendorProductWorkspace() {
           Recent uploads for this vendor
         </h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-          Switching the vendor selector updates both the submission form and this
-          review list.
+          {canSwitchVendor
+            ? "Switching the vendor selector updates both the submission form and this review list."
+            : "This review list stays locked to the signed-in vendor account."}
         </p>
         <div className="mt-6">
           <VendorProductSubmissions vendorSlug={vendorSlug} refreshKey={refreshKey} />

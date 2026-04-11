@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { authorizeRequest } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import {
   createOrderRequest,
@@ -8,13 +9,22 @@ import {
 } from "@/lib/order-requests";
 
 export async function GET(request: Request) {
+  const authorization = authorizeRequest(request, ["admin", "vendor"]);
+
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   if (!hasMongoConfig()) {
     return NextResponse.json({ orders: [] });
   }
 
   const { searchParams } = new URL(request.url);
   const limit = Number(searchParams.get("limit") ?? "6");
-  const vendorSlug = searchParams.get("vendorSlug") ?? undefined;
+  const vendorSlug =
+    authorization.session.role === "vendor"
+      ? authorization.session.vendorSlug
+      : searchParams.get("vendorSlug") ?? undefined;
   const requestId = searchParams.get("requestId") ?? undefined;
   const statusParam = searchParams.get("status");
 
@@ -27,11 +37,24 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json({
-      orders: orders.map((order) => ({
-        ...order,
-        createdAt: order.createdAt.toISOString(),
-        updatedAt: order.updatedAt.toISOString(),
-      })),
+      orders: orders.map((order) => {
+        const serializedOrder = {
+          ...order,
+          createdAt: order.createdAt.toISOString(),
+          updatedAt: order.updatedAt.toISOString(),
+        };
+
+        if (authorization.session.role === "admin") {
+          return serializedOrder;
+        }
+
+        return {
+          ...serializedOrder,
+          customerEmail: "",
+          deliveryAddress: "",
+          internalNote: "",
+        };
+      }),
     });
   } catch {
     return NextResponse.json(

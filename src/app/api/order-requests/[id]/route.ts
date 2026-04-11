@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { authorizeRequest } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import {
   isOrderRequestStatus,
@@ -16,6 +17,12 @@ export async function PATCH(
   request: Request,
   { params }: OrderRequestDetailRouteProps,
 ) {
+  const authorization = authorizeRequest(request, ["admin"]);
+
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   if (!hasMongoConfig()) {
     return NextResponse.json(
       {

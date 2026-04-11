@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authorizeRequest } from "@/lib/auth";
 import { createUploadSignature } from "@/lib/cloudinary";
 
 type SignaturePayload = {
@@ -6,6 +7,12 @@ type SignaturePayload = {
 };
 
 export async function POST(request: Request) {
+  const authorization = authorizeRequest(request, ["admin", "vendor"]);
+
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   try {
     const body = (await request.json()) as SignaturePayload;
     const timestamp =

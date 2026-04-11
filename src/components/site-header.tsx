@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthStatusControls } from "@/components/auth-status-controls";
 import { CartStatusLink } from "@/components/cart-status-link";
 
 const navigation = [
@@ -7,8 +8,6 @@ const navigation = [
   { href: "/cart", label: "Cart" },
   { href: "/track-order", label: "Track Order" },
   { href: "/phases", label: "Phases" },
-  { href: "/dashboard/vendor", label: "Vendor Dashboard" },
-  { href: "/dashboard/admin", label: "Admin" },
 ];
 
 export function SiteHeader() {
@@ -40,6 +39,7 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <AuthStatusControls />
           <CartStatusLink />
           <Link
             href="/order"

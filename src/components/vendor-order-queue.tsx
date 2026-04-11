@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { vendors } from "@/lib/marketplace";
 import { OrderStatusBadge } from "@/components/order-status-badge";
+import type { Vendor } from "@/lib/marketplace";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 
 type OrderStatus =
@@ -49,9 +49,23 @@ type VendorQueueState =
   | { status: "error" }
   | { status: "ready"; orders: VendorOrderRecord[] };
 
-export function VendorOrderQueue() {
-  const [vendorSlug, setVendorSlug] = useState(vendors[0]?.slug ?? "");
+type VendorOrderQueueProps = {
+  availableVendors: Vendor[];
+  initialVendorSlug: string;
+  canSwitchVendor: boolean;
+};
+
+export function VendorOrderQueue({
+  availableVendors,
+  initialVendorSlug,
+  canSwitchVendor,
+}: VendorOrderQueueProps) {
+  const [vendorSlug, setVendorSlug] = useState(initialVendorSlug);
   const [state, setState] = useState<VendorQueueState>({ status: "loading" });
+
+  useEffect(() => {
+    setVendorSlug(initialVendorSlug);
+  }, [initialVendorSlug]);
 
   useEffect(() => {
     let isActive = true;
@@ -126,21 +140,32 @@ export function VendorOrderQueue() {
           </h2>
         </div>
         <div className="min-w-[240px]">
-          <label className="text-sm font-semibold" htmlFor="vendorOrderQueueVendor">
-            Vendor
-          </label>
-          <select
-            id="vendorOrderQueueVendor"
-            value={vendorSlug}
-            onChange={(event) => setVendorSlug(event.target.value)}
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          >
-            {vendors.map((vendor) => (
-              <option key={vendor.slug} value={vendor.slug}>
-                {vendor.name}
-              </option>
-            ))}
-          </select>
+          {canSwitchVendor ? (
+            <>
+              <label className="text-sm font-semibold" htmlFor="vendorOrderQueueVendor">
+                Vendor
+              </label>
+              <select
+                id="vendorOrderQueueVendor"
+                value={vendorSlug}
+                onChange={(event) => setVendorSlug(event.target.value)}
+                className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+              >
+                {availableVendors.map((vendor) => (
+                  <option key={vendor.slug} value={vendor.slug}>
+                    {vendor.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold">Vendor</p>
+              <div className="mt-2 rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm font-medium">
+                {availableVendors[0]?.name ?? "Assigned vendor"}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

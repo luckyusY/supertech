@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { authorizeRequest } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { updateProductSubmissionStatus } from "@/lib/product-submissions";
 
@@ -12,6 +13,12 @@ export async function PATCH(
   request: Request,
   { params }: ProductSubmissionDetailRouteProps,
 ) {
+  const authorization = authorizeRequest(request, ["admin"]);
+
+  if (!authorization.ok) {
+    return authorization.response;
+  }
+
   if (!hasMongoConfig()) {
     return NextResponse.json(
       {
