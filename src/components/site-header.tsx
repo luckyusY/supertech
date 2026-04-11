@@ -3,6 +3,7 @@ import { User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MegaMenu } from "@/components/mega-menu";
 import { MobileNav } from "@/components/mobile-nav";
+import { UserMenu } from "@/components/user-menu";
 import { getAuthSession } from "@/lib/auth";
 
 export async function SiteHeader() {
@@ -32,20 +33,11 @@ export async function SiteHeader() {
         {/* Right actions */}
         <div className="flex items-center gap-2">
           {session ? (
-            <Link
-              href={
-                session.role === "admin"
-                  ? "/dashboard/admin"
-                  : session.role === "vendor"
-                    ? "/dashboard/vendor"
-                    : "/account"
-              }
-              className="flex h-9 items-center gap-2 rounded-full border border-[var(--line)] px-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white transition-colors"
-              aria-label="My account"
-            >
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">{session.name.split(" ")[0]}</span>
-            </Link>
+            <UserMenu
+              name={session.name}
+              role={session.role}
+              dashboardPath={session.dashboardPath}
+            />
           ) : (
             <Link
               href="/sign-in"
