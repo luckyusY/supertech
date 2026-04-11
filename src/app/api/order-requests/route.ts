@@ -42,8 +42,12 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as {
-      productSlug: string;
-      quantity: number;
+      productSlug?: string;
+      quantity?: number;
+      items?: {
+        productSlug: string;
+        quantity: number;
+      }[];
       customerName: string;
       customerEmail: string;
       customerPhone: string;

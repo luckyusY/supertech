@@ -4,7 +4,11 @@ import Link from "next/link";
 import { MapPin, Package2, Star } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/product-card";
-import { getVendorBySlug, getVendorProducts, vendors } from "@/lib/marketplace";
+import {
+  getPublicVendorBySlug,
+  getPublicVendorProducts,
+  getPublicVendors,
+} from "@/lib/public-marketplace";
 
 type VendorPageProps = {
   params: Promise<{
@@ -12,7 +16,11 @@ type VendorPageProps = {
   }>;
 };
 
-export function generateStaticParams() {
+export const dynamic = "force-dynamic";
+
+export async function generateStaticParams() {
+  const vendors = await getPublicVendors();
+
   return vendors.map((vendor) => ({
     slug: vendor.slug,
   }));
@@ -22,7 +30,7 @@ export async function generateMetadata({
   params,
 }: VendorPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const vendor = getVendorBySlug(slug);
+  const vendor = await getPublicVendorBySlug(slug);
 
   if (!vendor) {
     return {
@@ -38,13 +46,13 @@ export async function generateMetadata({
 
 export default async function VendorPage({ params }: VendorPageProps) {
   const { slug } = await params;
-  const vendor = getVendorBySlug(slug);
+  const vendor = await getPublicVendorBySlug(slug);
 
   if (!vendor) {
     notFound();
   }
 
-  const vendorProducts = getVendorProducts(vendor.slug);
+  const vendorProducts = await getPublicVendorProducts(vendor.slug);
 
   return (
     <div className="page-shell py-8">
@@ -128,6 +136,10 @@ export default async function VendorPage({ params }: VendorPageProps) {
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
               Products from {vendor.name}
             </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
+              Approved submissions from this vendor now publish directly into this
+              storefront alongside the original seeded catalog.
+            </p>
           </div>
           <Link
             href="/dashboard/vendor"

@@ -72,7 +72,7 @@ export default function PhasesPage() {
               Current focus
             </p>
             <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
-              Phase 2 is live: vendors can submit products for admin approval.
+              Phase 3 is active: customers can now build a quote cart before payments go live.
             </p>
           </div>
           <Link

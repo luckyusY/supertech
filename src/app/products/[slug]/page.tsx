@@ -3,13 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, ShieldCheck, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductCard } from "@/components/product-card";
 import {
-  getProductBySlug,
-  getVendorBySlug,
-  getVendorProducts,
-  products,
-} from "@/lib/marketplace";
+  getPublicProductBySlug,
+  getPublicProducts,
+  getPublicVendorBySlug,
+  getPublicVendorProducts,
+} from "@/lib/public-marketplace";
 import { formatPrice } from "@/lib/utils";
 
 type ProductPageProps = {
@@ -18,7 +19,11 @@ type ProductPageProps = {
   }>;
 };
 
-export function generateStaticParams() {
+export const dynamic = "force-dynamic";
+
+export async function generateStaticParams() {
+  const products = await getPublicProducts();
+
   return products.map((product) => ({
     slug: product.slug,
   }));
@@ -28,7 +33,7 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getPublicProductBySlug(slug);
 
   if (!product) {
     return {
@@ -44,14 +49,14 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getPublicProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const vendor = getVendorBySlug(product.vendorSlug);
-  const relatedProducts = getVendorProducts(product.vendorSlug)
+  const vendor = await getPublicVendorBySlug(product.vendorSlug);
+  const relatedProducts = (await getPublicVendorProducts(product.vendorSlug))
     .filter((item) => item.slug !== product.slug)
     .slice(0, 3);
 
@@ -121,7 +126,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
                 <Star className="h-4 w-4 fill-current text-[var(--accent)]" />
-                {product.rating.toFixed(1)} | {product.reviewCount} reviews
+                {product.reviewCount > 0
+                  ? `${product.rating.toFixed(1)} | ${product.reviewCount} reviews`
+                  : "New approved listing"}
               </span>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -131,6 +138,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
               >
                 Order from us
               </Link>
+              <AddToCartButton
+                item={{
+                  slug: product.slug,
+                  name: product.name,
+                  vendorSlug: product.vendorSlug,
+                  vendorName: vendor?.name ?? product.vendorSlug,
+                  heroImage: product.heroImage,
+                  price: product.price,
+                  badge: product.badge,
+                  accent: product.accent,
+                }}
+              />
               <Link
                 href="/phases"
                 className="inline-flex items-center justify-center rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
@@ -138,6 +157,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 See build phases
               </Link>
             </div>
+            <p className="text-sm leading-7 text-[var(--muted)]">
+              Need more than one item? Add products to the quote cart and send a
+              single manual request while payments are still offline.
+            </p>
             <div className="rounded-[1.6rem] border border-[var(--line)] bg-white/72 p-5">
               <div className="space-y-3 text-sm text-[var(--muted)]">
                 <div className="flex items-center gap-3">
@@ -146,7 +169,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-4 w-4 text-[var(--teal)]" />
-                  Marketplace purchase protection and vendor quality review
+                  Marketplace review gate before products go live to customers
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheck className="h-4 w-4 text-[var(--teal)]" />

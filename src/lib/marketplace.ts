@@ -101,24 +101,26 @@ export const buildPhases: BuildPhase[] = [
     id: "phase-2",
     step: "Phase 2",
     title: "Catalog operations",
-    status: "active",
+    status: "done",
     description:
-      "Give vendors and admins the ability to create, review, and publish products from the dashboard.",
+      "Give vendors and admins the ability to create, review, and publish products from the dashboard into the live storefront.",
     deliverables: [
       "Vendor product CRUD",
       "Cloudinary image uploads from dashboard forms",
       "Admin approval workflow for new listings",
+      "Automatic publishing into the public catalog after approval",
     ],
   },
   {
     id: "phase-3",
     step: "Phase 3",
     title: "Cart and checkout",
-    status: "next",
+    status: "active",
     description:
-      "Move from manual requests to a proper cart and customer checkout once payment rails are ready.",
+      "Move from manual requests to a real cart and customer checkout, starting with quote-cart flows until payment rails are ready.",
     deliverables: [
       "Cart state and checkout summary",
+      "Manual cart quote requests before payments",
       "Address book and shipping options",
       "Payment provider integration",
     ],

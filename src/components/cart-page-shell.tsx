@@ -1,0 +1,477 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { useCart } from "@/components/cart-provider";
+import { formatPrice } from "@/lib/utils";
+
+type CartOrderSuccess = {
+  requestId: string;
+  productName: string;
+  vendorName: string;
+  estimatedTotal: number;
+  itemCount: number;
+};
+
+const contactOptions = [
+  { value: "phone", label: "Phone call" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "email", label: "Email" },
+] as const;
+
+const paymentOptions = [
+  { value: "cash_on_delivery", label: "Cash on delivery" },
+  { value: "mobile_money", label: "Mobile money" },
+  { value: "bank_transfer", label: "Bank transfer" },
+  { value: "manual_arrangement", label: "Manual arrangement" },
+] as const;
+
+export function CartPageShell() {
+  const { isReady, items, itemCount, subtotal, clearCart, removeItem, updateQuantity } =
+    useCart();
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [contactPreference, setContactPreference] = useState("whatsapp");
+  const [paymentPreference, setPaymentPreference] = useState("cash_on_delivery");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState<CartOrderSuccess | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
+    if (items.length === 0) {
+      setError("Add at least one item to the cart before requesting a quote.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/order-requests", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: items.map((item) => ({
+              productSlug: item.slug,
+              quantity: item.quantity,
+            })),
+            customerName,
+            customerEmail,
+            customerPhone,
+            city,
+            deliveryAddress,
+            contactPreference,
+            paymentPreference,
+            notes,
+          }),
+        });
+
+        const result = (await response.json()) as
+          | { error: string }
+          | CartOrderSuccess;
+
+        if (!response.ok || "error" in result) {
+          throw new Error("error" in result ? result.error : "Unable to send cart quote.");
+        }
+
+        setSuccess(result);
+        clearCart();
+        setCustomerName("");
+        setCustomerEmail("");
+        setCustomerPhone("");
+        setCity("");
+        setDeliveryAddress("");
+        setContactPreference("whatsapp");
+        setPaymentPreference("cash_on_delivery");
+        setNotes("");
+      } catch (submissionError) {
+        setError(
+          submissionError instanceof Error
+            ? submissionError.message
+            : "Unable to send cart quote.",
+        );
+      }
+    });
+  }
+
+  if (success) {
+    return (
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
+        <section className="soft-card p-6 sm:p-8 lg:p-10">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
+            Cart request submitted
+          </p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            Your manual quote request is in the queue.
+          </h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
+            We now have your cart, delivery details, and preferred payment option.
+            The team will confirm stock and next steps manually.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {[
+              { label: "Request ID", value: success.requestId },
+              { label: "Items", value: `${success.itemCount} items` },
+              { label: "Vendor coverage", value: success.vendorName },
+              { label: "Estimated total", value: formatPrice(success.estimatedTotal) },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[1.4rem] border border-[var(--line)] bg-white/72 p-4"
+              >
+                <p className="text-sm text-[var(--muted)]">{item.label}</p>
+                <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setSuccess(null)}
+              className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
+            >
+              Start another cart
+            </button>
+            <Link
+              href="/catalog"
+              className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
+            >
+              Keep browsing
+            </Link>
+          </div>
+        </section>
+
+        <aside className="dark-card p-6 sm:p-8">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
+            Next step
+          </p>
+          <div className="mt-6 space-y-4 text-sm leading-7 text-[rgba(255,255,255,0.76)]">
+            <p>Your cart request is stored in MongoDB and visible in the admin inbox.</p>
+            <p>The team will confirm stock, delivery timing, and the exact payment path manually.</p>
+            <p>This keeps multi-item ordering live before card or mobile payment gateways are added.</p>
+          </div>
+        </aside>
+      </div>
+    );
+  }
+
+  if (!isReady) {
+    return (
+      <div className="soft-card p-6 sm:p-8 lg:p-10">
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
+          Quote cart
+        </p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+          Loading your cart...
+        </h1>
+        <p className="mt-4 text-base leading-7 text-[var(--muted)]">
+          Pulling the latest cart state from this browser so you can continue the
+          manual quote flow.
+        </p>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="soft-card p-6 sm:p-8 lg:p-10">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.6rem] bg-[rgba(16,32,25,0.06)]">
+            <ShoppingBag className="h-7 w-7 text-[var(--accent)]" />
+          </div>
+          <p className="mt-6 font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
+            Quote cart
+          </p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            Add products to the cart first.
+          </h1>
+          <p className="mt-4 text-base leading-7 text-[var(--muted)]">
+            This cart is designed for manual quote requests while payments are still
+            offline. Add products from any product page, then come back here to send
+            one customer request for the full basket.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              href="/catalog"
+              className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
+            >
+              Browse catalog
+            </Link>
+            <Link
+              href="/order"
+              className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
+            >
+              Single-product order page
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
+      <section className="soft-card p-6 sm:p-8 lg:p-10">
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
+          Manual quote cart
+        </p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+          Build a basket now, confirm payment later.
+        </h1>
+        <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
+          This is the bridge between the current manual-order phase and the future
+          payment checkout. Customers can group items, send one request, and let your
+          team confirm everything manually.
+        </p>
+
+        <div className="mt-8 space-y-4">
+          {items.map((item) => (
+            <div
+              key={item.slug}
+              className="grid gap-4 overflow-hidden rounded-[1.6rem] border border-[var(--line)] bg-white sm:grid-cols-[140px_minmax(0,1fr)]"
+            >
+              <div className="relative min-h-[160px]">
+                <Image
+                  src={item.heroImage}
+                  alt={item.name}
+                  fill
+                  className="object-cover"
+                  sizes="140px"
+                />
+              </div>
+              <div className="p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm text-[var(--muted)]">{item.vendorName}</p>
+                    <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em]">
+                      {item.name}
+                    </h2>
+                    <p className="mt-2 text-sm text-[var(--muted)]">{item.badge}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.slug)}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)]"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </button>
+                </div>
+                <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="inline-flex items-center gap-3 rounded-full border border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.slug, item.quantity - 1)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-[2rem] text-center text-sm font-semibold">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.slug, item.quantity + 1)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <p className="text-sm text-[var(--muted)]">
+                      {formatPrice(item.price)} each
+                    </p>
+                    <p className="mt-1 text-2xl font-semibold tracking-[-0.04em]">
+                      {formatPrice(item.price * item.quantity)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <aside className="space-y-6">
+        <section className="dark-card p-6 sm:p-8">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
+            Basket summary
+          </p>
+          <div className="mt-6 space-y-4">
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/6 p-4">
+              <p className="text-sm text-[rgba(255,255,255,0.62)]">Items</p>
+              <p className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
+                {itemCount}
+              </p>
+            </div>
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/6 p-4">
+              <p className="text-sm text-[rgba(255,255,255,0.62)]">Estimated total</p>
+              <p className="mt-2 text-3xl font-semibold tracking-[-0.04em]">
+                {formatPrice(subtotal)}
+              </p>
+            </div>
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/6 p-4 text-sm leading-7 text-[rgba(255,255,255,0.76)]">
+              This cart does not charge anyone online yet. It turns the basket into a
+              manual quote request that your team can confirm by phone, WhatsApp, or email.
+            </div>
+          </div>
+        </section>
+
+        <form onSubmit={handleSubmit} className="soft-card p-6 sm:p-8">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
+            Customer details
+          </p>
+          <div className="mt-6 space-y-5">
+            <div>
+              <label className="text-sm font-semibold" htmlFor="cartCustomerName">
+                Full name
+              </label>
+              <input
+                id="cartCustomerName"
+                value={customerName}
+                onChange={(event) => setCustomerName(event.target.value)}
+                required
+                className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+              />
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="text-sm font-semibold" htmlFor="cartCustomerEmail">
+                  Email address
+                </label>
+                <input
+                  id="cartCustomerEmail"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(event) => setCustomerEmail(event.target.value)}
+                  required
+                  className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold" htmlFor="cartCustomerPhone">
+                  Phone number
+                </label>
+                <input
+                  id="cartCustomerPhone"
+                  value={customerPhone}
+                  onChange={(event) => setCustomerPhone(event.target.value)}
+                  required
+                  className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                />
+              </div>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className="text-sm font-semibold" htmlFor="cartCity">
+                  City
+                </label>
+                <input
+                  id="cartCity"
+                  value={city}
+                  onChange={(event) => setCity(event.target.value)}
+                  required
+                  className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold" htmlFor="cartContactPreference">
+                  Best contact method
+                </label>
+                <select
+                  id="cartContactPreference"
+                  value={contactPreference}
+                  onChange={(event) => setContactPreference(event.target.value)}
+                  className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                >
+                  {contactOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-semibold" htmlFor="cartDeliveryAddress">
+                Delivery address
+              </label>
+              <textarea
+                id="cartDeliveryAddress"
+                value={deliveryAddress}
+                onChange={(event) => setDeliveryAddress(event.target.value)}
+                rows={4}
+                required
+                className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold" htmlFor="cartPaymentPreference">
+                Preferred payment method
+              </label>
+              <select
+                id="cartPaymentPreference"
+                value={paymentPreference}
+                onChange={(event) => setPaymentPreference(event.target.value)}
+                className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+              >
+                {paymentOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-semibold" htmlFor="cartNotes">
+                Notes
+              </label>
+              <textarea
+                id="cartNotes"
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={5}
+                placeholder="Preferred delivery timing, bundling notes, or special instructions."
+                className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+              />
+            </div>
+          </div>
+
+          {error ? (
+            <div className="mt-6 rounded-[1rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="mt-8 flex flex-col gap-3">
+            <button
+              type="submit"
+              disabled={isPending}
+              className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPending ? "Sending quote request..." : "Send manual quote request"}
+            </button>
+            <button
+              type="button"
+              onClick={clearCart}
+              className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold"
+            >
+              Clear cart
+            </button>
+          </div>
+        </form>
+      </aside>
+    </div>
+  );
+}

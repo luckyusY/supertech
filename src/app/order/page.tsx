@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock3, MessagesSquare, ShieldCheck } from "lucide-react";
 import { OrderRequestForm } from "@/components/order-request-form";
-import { getVendorBySlug, products } from "@/lib/marketplace";
+import { getPublicProducts, getPublicVendorBySlug } from "@/lib/public-marketplace";
 
 type OrderPageProps = {
   searchParams: Promise<{
@@ -16,15 +16,20 @@ export const metadata: Metadata = {
     "Submit a manual order request while the marketplace is still in the pre-payment phase.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function OrderPage({ searchParams }: OrderPageProps) {
   const { product } = await searchParams;
-  const formProducts = products.map((item) => ({
-    slug: item.slug,
-    name: item.name,
-    vendorName: getVendorBySlug(item.vendorSlug)?.name ?? item.vendorSlug,
-    price: item.price,
-    badge: item.badge,
-  }));
+  const publicProducts = await getPublicProducts();
+  const formProducts = await Promise.all(
+    publicProducts.map(async (item) => ({
+      slug: item.slug,
+      name: item.name,
+      vendorName: (await getPublicVendorBySlug(item.vendorSlug))?.name ?? item.vendorSlug,
+      price: item.price,
+      badge: item.badge,
+    })),
+  );
 
   const initialProductSlug =
     formProducts.find((item) => item.slug === product)?.slug ?? formProducts[0]?.slug;
@@ -42,7 +47,8 @@ export default async function OrderPage({ searchParams }: OrderPageProps) {
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
             This flow captures the product, quantity, contact information, delivery
             details, and preferred payment method so you can confirm everything
-            manually.
+            manually. Newly approved vendor products are available here too, so
+            customers can order from the live catalog before checkout is built.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
@@ -90,7 +96,7 @@ export default async function OrderPage({ searchParams }: OrderPageProps) {
               "Customer submits a request with product, address, and payment preference.",
               "The request is saved in MongoDB so it is visible from the admin side.",
               "You confirm availability, delivery timing, and payment manually.",
-              "Phase 2 now lets vendors submit new products while checkout is still pending.",
+              "Phase 3 also adds a quote cart for customers who want to request multiple items at once.",
             ].map((item, index) => (
               <div
                 key={item}

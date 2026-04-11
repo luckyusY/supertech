@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { SectionHeading } from "@/components/section-heading";
-import { products } from "@/lib/marketplace";
+import { getPublicCategories, getPublicProducts } from "@/lib/public-marketplace";
 
 type CatalogPageProps = {
   searchParams: Promise<{
@@ -13,13 +13,18 @@ type CatalogPageProps = {
 
 export const metadata: Metadata = {
   title: "Catalog",
-  description: "Browse seeded multivendor inventory across the marketplace.",
+  description: "Browse live marketplace inventory across approved sellers and seeded products.",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const { category } = await searchParams;
+  const [products, categories] = await Promise.all([
+    getPublicProducts(),
+    getPublicCategories(),
+  ]);
 
-  const categories = ["All", ...new Set(products.map((product) => product.category))];
   const selectedCategory = category && categories.includes(category) ? category : "All";
   const filteredProducts =
     selectedCategory === "All"
@@ -32,8 +37,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         <div className="flex flex-col gap-8 lg:flex-row lg:justify-between">
           <SectionHeading
             eyebrow="Marketplace catalog"
-            title="A clean browse flow is the heartbeat of every ecommerce marketplace."
-            description="The catalog route is already structured for product cards, category filters, and fast navigation into seller-owned product pages."
+            title="Approved seller products now show up in the live storefront automatically."
+            description="The catalog is no longer seed-only. Admin-approved seller submissions are merged into the customer-facing inventory alongside the original starter products."
           />
           <div className="min-w-[240px] rounded-[1.5rem] border border-[var(--line)] bg-white/80 p-5">
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
@@ -79,7 +84,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
               Next milestone
             </p>
             <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
-              Add search, price sorting, and inventory backed by MongoDB queries.
+              Add search, price sorting, and richer vendor storefront filters.
             </p>
           </div>
           <Link

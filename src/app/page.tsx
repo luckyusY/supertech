@@ -12,16 +12,19 @@ import { SectionHeading } from "@/components/section-heading";
 import { StackStatus } from "@/components/stack-status";
 import { VendorCard } from "@/components/vendor-card";
 import {
+  buildPhases,
   categoryHighlights,
-  getFeaturedProducts,
-  getTopVendors,
   marketplaceMetrics,
-  sellerChecklist,
 } from "@/lib/marketplace";
+import { getPublicFeaturedProducts, getPublicTopVendors } from "@/lib/public-marketplace";
 
-export default function Home() {
-  const featuredProducts = getFeaturedProducts();
-  const topVendors = getTopVendors();
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const [featuredProducts, topVendors] = await Promise.all([
+    getPublicFeaturedProducts(),
+    getPublicTopVendors(),
+  ]);
 
   return (
     <div className="pb-18">
@@ -41,9 +44,8 @@ export default function Home() {
                   Build the marketplace customers trust and vendors enjoy using.
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-[var(--muted)] sm:text-xl">
-                  SuperTech starts with a premium storefront, vendor-first dashboard
-                  shells, and the right deployment stack for Vercel, MongoDB, and
-                  Cloudinary.
+                  Approved seller products now flow into the live storefront while
+                  the rest of the marketplace keeps growing in phases.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -51,7 +53,7 @@ export default function Home() {
                   href="/catalog"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
                 >
-                  Explore the catalog
+                  Explore the live catalog
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
@@ -98,9 +100,9 @@ export default function Home() {
                     },
                     {
                       icon: Database,
-                      title: "Mongo-ready data layer",
+                      title: "Mongo-backed approvals",
                       description:
-                        "Server-only connection helper and collection strategy for vendors, products, and orders.",
+                        "Approved seller submissions now appear in the live storefront automatically.",
                     },
                     {
                       icon: ImagePlus,
@@ -131,8 +133,8 @@ export default function Home() {
         <div className="soft-card p-6 sm:p-8">
           <SectionHeading
             eyebrow="Curated storefront"
-            title="Featured inventory across fast-growing vendors."
-            description="Use this as the visual bar for the final customer experience: strong product cards, clear merchant identity, and checkout-ready pricing."
+            title="Featured inventory now mixes starter products with approved seller submissions."
+            description="This homepage section is fed by the same public catalog layer as the customer storefront, so vendor-approved products can start appearing without another code pass."
           />
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {featuredProducts.map((product) => (
@@ -146,22 +148,22 @@ export default function Home() {
       <section className="page-shell py-8">
         <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
           <div className="dark-card p-6 sm:p-8">
-            <SectionHeading
-              eyebrow="Seller rollout"
-              title="Vendor experience matters as much as the storefront."
-              description="These are the first workflows to keep sharp as we wire real auth, product creation, and order fulfillment."
-              invert
-            />
+          <SectionHeading
+            eyebrow="Seller rollout"
+            title="The build keeps moving in phases instead of stalling on payments."
+            description="Phase 1 launched manual customer orders, Phase 2 shipped seller publishing, and Phase 3 now starts the cart flow with manual quote requests before payments."
+            invert
+          />
             <div className="mt-8 space-y-3">
-              {sellerChecklist.map((item, index) => (
+              {buildPhases.slice(0, 3).map((phase, index) => (
                 <div
-                  key={item}
+                  key={phase.id}
                   className="rounded-[1.2rem] border border-white/10 bg-white/6 px-4 py-3 text-sm text-[rgba(255,255,255,0.76)]"
                 >
                   <span className="mr-3 font-mono text-[var(--gold)]">
                     0{index + 1}
                   </span>
-                  {item}
+                  {phase.title} - {phase.status}
                 </div>
               ))}
             </div>
@@ -170,7 +172,7 @@ export default function Home() {
             <SectionHeading
               eyebrow="Vendor directory"
               title="Strong sellers make the marketplace feel alive."
-              description="Each vendor gets a clear identity, service expectations, and inventory that can later map to dedicated dashboards or subdomains."
+              description="Each vendor gets a clear identity, service expectations, and a public storefront that now grows as their approved products go live."
             />
             <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {topVendors.map((vendor) => (
@@ -186,7 +188,7 @@ export default function Home() {
           <SectionHeading
             eyebrow="Marketplace lanes"
             title="Use structured categories to make navigation feel editorial, not cluttered."
-            description="This first pass keeps the catalog broad enough for electronics while still giving each collection a point of view."
+            description="The base collections stay broad enough for electronics, while seller-approved products can now start populating them in the real storefront."
           />
           <div className="mt-8 grid gap-5 lg:grid-cols-3">
             {categoryHighlights.map((category) => (
@@ -227,19 +229,19 @@ export default function Home() {
               icon: ShieldCheck,
               title: "Vendor approvals",
               description:
-                "Admin flow is already mapped for onboarding review, fee plans, and operational checks.",
+                "Admin approval now acts as the publishing gate into the customer-facing storefront.",
             },
             {
               icon: Database,
               title: "Mongo collections",
               description:
-                "Products, vendors, carts, payouts, and orders can share a single Atlas free-tier cluster during MVP.",
+                "Products, submissions, carts, payouts, and orders can share a single Atlas free-tier cluster during MVP.",
             },
             {
               icon: ImagePlus,
               title: "Cloudinary delivery",
               description:
-                "Every product image can be transformed on demand for grid cards, detail pages, and seller uploads.",
+                "Every seller image can flow from upload widget to approval queue to public product card.",
             },
           ].map((card) => (
             <div key={card.title} className="soft-card p-6">

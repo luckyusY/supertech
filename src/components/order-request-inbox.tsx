@@ -7,9 +7,11 @@ type OrderRequestSummary = {
   id: string;
   requestId: string;
   status: string;
+  requestType: "single_product" | "cart_quote";
   productName: string;
   vendorName: string;
   quantity: number;
+  itemCount: number;
   estimatedTotal: number;
   customerName: string;
   city: string;
@@ -93,7 +95,9 @@ export function OrderRequestInbox() {
             <div>
               <p className="text-lg font-semibold tracking-[-0.03em]">{request.requestId}</p>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                {request.customerName} ordered {request.quantity} x {request.productName}
+                {request.requestType === "cart_quote"
+                  ? `${request.customerName} requested ${request.quantity} units across ${request.itemCount} items`
+                  : `${request.customerName} ordered ${request.quantity} x ${request.productName}`}
               </p>
               <p className="mt-1 text-sm text-[var(--muted)]">
                 {request.vendorName} | {request.city}
@@ -115,6 +119,9 @@ export function OrderRequestInbox() {
             </span>
             <span className="rounded-full bg-[rgba(16,32,25,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
               {request.contactPreference}
+            </span>
+            <span className="rounded-full bg-[rgba(16,32,25,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+              {request.itemCount} {request.itemCount === 1 ? "item" : "items"}
             </span>
           </div>
         </div>

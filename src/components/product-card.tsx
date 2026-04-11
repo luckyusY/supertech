@@ -57,7 +57,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
           <div className="flex items-center gap-1 rounded-full bg-[var(--accent-soft)] px-3 py-1 text-sm font-semibold text-[var(--foreground)]">
             <Star className="h-3.5 w-3.5 fill-current" />
-            {product.rating.toFixed(1)}
+            {product.reviewCount > 0 ? product.rating.toFixed(1) : "New"}
           </div>
         </div>
       </div>

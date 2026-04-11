@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { CartStatusLink } from "@/components/cart-status-link";
 
 const navigation = [
   { href: "/catalog", label: "Catalog" },
   { href: "/vendors", label: "Vendors" },
+  { href: "/cart", label: "Cart" },
   { href: "/phases", label: "Phases" },
   { href: "/dashboard/vendor", label: "Vendor Dashboard" },
   { href: "/dashboard/admin", label: "Admin" },
@@ -36,12 +38,15 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link
-          href="/order"
-          className="rounded-full bg-[var(--foreground)] px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          Order now
-        </Link>
+        <div className="flex items-center gap-2">
+          <CartStatusLink />
+          <Link
+            href="/order"
+            className="rounded-full bg-[var(--foreground)] px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            Order now
+          </Link>
+        </div>
       </div>
     </header>
   );
