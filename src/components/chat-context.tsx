@@ -2,10 +2,23 @@
 
 import { createContext, useCallback, useContext, useState } from "react";
 
+export type ProductContext = {
+  name: string;
+  price: number;
+  vendorName: string;
+  category: string;
+  description: string;
+  features: string[];
+  stockLabel: string;
+  shipWindow: string;
+  slug: string;
+};
+
 export type ChatConfig = {
   room: string;
   title: string;
   subtitle?: string;
+  productContext?: ProductContext;
 };
 
 type ChatContextValue = {
@@ -17,7 +30,11 @@ type ChatContextValue = {
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
-const DEFAULT: ChatConfig = { room: "support", title: "Live Support", subtitle: "We typically reply in minutes" };
+const DEFAULT: ChatConfig = {
+  room: "support",
+  title: "Live Support",
+  subtitle: "Ask us anything — we reply fast",
+};
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
