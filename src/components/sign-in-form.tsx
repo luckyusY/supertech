@@ -20,7 +20,7 @@ export function SignInForm({ ready, nextPath }: SignInFormProps) {
     setError("");
 
     if (!ready) {
-      setError("Auth is not configured yet. Add AUTH_SECRET and AUTH_DEMO_USERS_JSON first.");
+      setError("Login is temporarily unavailable. Please try again shortly.");
       return;
     }
 
@@ -97,7 +97,7 @@ export function SignInForm({ ready, nextPath }: SignInFormProps) {
         disabled={isPending || !ready}
         className="w-full rounded-full bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? "Logging in..." : "Log in"}
       </button>
     </form>
   );

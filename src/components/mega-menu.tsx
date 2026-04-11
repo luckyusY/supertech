@@ -16,6 +16,7 @@ import {
   Star,
   Zap,
 } from "lucide-react";
+import { vendors as marketplaceVendors } from "@/lib/marketplace";
 
 const categories = [
   { name: "Home Control", href: "/catalog?category=Home+Control", icon: Home, desc: "Smart hubs, sensors & lighting" },
@@ -33,14 +34,11 @@ const collections = [
   { name: "Deals", href: "/catalog", icon: Tag },
 ];
 
-const topVendors = [
-  { name: "Aurora Labs", slug: "aurora-labs", tag: "Home Control" },
-  { name: "Signal Mobile", slug: "signal-mobile", tag: "Mobile" },
-  { name: "Pixel Foundry", slug: "pixel-foundry", tag: "Creator" },
-  { name: "Wave Audio", slug: "wave-audio", tag: "Audio" },
-  { name: "Orbit Play", slug: "orbit-play", tag: "Gaming" },
-  { name: "Flex Wearables", slug: "flex-wearables", tag: "Wearables" },
-];
+const topVendors = marketplaceVendors.map((vendor) => ({
+  name: vendor.name,
+  slug: vendor.slug,
+  tag: vendor.categories[0] ?? "Seller",
+}));
 
 type DropdownKey = "shop" | "vendors" | null;
 
@@ -200,10 +198,10 @@ export function MegaMenu() {
         Track Order
       </Link>
       <Link
-        href="/phases"
+        href="/request-product"
         className="rounded-full px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--foreground)]"
       >
-        Roadmap
+        Request Product
       </Link>
     </nav>
   );

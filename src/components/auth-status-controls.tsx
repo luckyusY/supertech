@@ -22,7 +22,7 @@ function getWorkspaceLabel(session: AuthSession) {
     case "admin":
       return "Admin";
     case "vendor":
-      return "Workspace";
+      return "Seller";
     case "customer":
       return "Account";
     default:
@@ -37,7 +37,7 @@ function getRoleLabel(session: AuthSession) {
     case "vendor":
       return "Vendor";
     case "customer":
-      return "Customer";
+      return session.name.split(" ")[0];
     default:
       return "User";
   }
@@ -93,23 +93,25 @@ export function AuthStatusControls() {
   }
 
   if (state.status === "loading") {
-    return (
-      <div className="hidden items-center gap-2 lg:flex">
-        <div className="rounded-full border border-[var(--line)] bg-white/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-          Checking access
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (state.status === "error" || !state.session) {
     return (
-      <Link
-        href="/sign-in"
-        className="rounded-full border border-[var(--line)] bg-white/70 px-4 py-2.5 text-sm font-semibold text-[var(--foreground)]"
-      >
-        Sign in
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link
+          href="/signup"
+          className="rounded-full border border-[var(--line)] bg-white/70 px-4 py-2.5 text-sm font-semibold text-[var(--foreground)]"
+        >
+          Sign up
+        </Link>
+        <Link
+          href="/login"
+          className="rounded-full bg-[var(--foreground)] px-4 py-2.5 text-sm font-semibold text-white"
+        >
+          Log in
+        </Link>
+      </div>
     );
   }
 

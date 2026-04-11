@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { X, Menu, Home, Smartphone, Monitor, Gamepad2, Headphones, Watch, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -17,12 +18,65 @@ const categories = [
 const quickLinks = [
   { label: "All products", href: "/catalog" },
   { label: "All vendors", href: "/vendors" },
+  { label: "Request product", href: "/request-product" },
   { label: "Track order", href: "/track-order" },
   { label: "Cart", href: "/cart" },
 ];
 
+type MobileSession = {
+  email: string;
+  role: "admin" | "vendor" | "customer";
+  name: string;
+  dashboardPath: string;
+};
+
 export function MobileNav() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [session, setSession] = useState<MobileSession | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadSession() {
+      try {
+        const response = await fetch("/api/auth/session", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to load session.");
+        }
+
+        const payload = (await response.json()) as { session: MobileSession | null };
+
+        if (isActive) {
+          setSession(payload.session);
+        }
+      } catch {
+        if (isActive) {
+          setSession(null);
+        }
+      }
+    }
+
+    void loadSession();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  function handleSignOut() {
+    startTransition(async () => {
+      await fetch("/api/auth/sign-out", { method: "POST" });
+      setSession(null);
+      setOpen(false);
+      router.refresh();
+      router.push("/");
+    });
+  }
 
   return (
     <>
@@ -111,6 +165,52 @@ export function MobileNav() {
                         <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
                       </Link>
                     ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-[var(--line)] px-5 py-5">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-[var(--muted)]">Account</p>
+                  <div className="mt-3 space-y-1">
+                    {session ? (
+                      <>
+                        <Link
+                          href={session.dashboardPath}
+                          onClick={() => setOpen(false)}
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                        >
+                          {session.role === "customer" ? "My account" : "Workspace"}
+                          <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={handleSignOut}
+                          className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)] disabled:opacity-60"
+                        >
+                          {isPending ? "Signing out..." : "Sign out"}
+                          <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/login"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                        >
+                          Log in
+                          <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
+                        </Link>
+                        <Link
+                          href="/signup"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                        >
+                          Create account
+                          <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
