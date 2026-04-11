@@ -1,10 +1,45 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { ImagePlus, Package, Send, Tag, Truck } from "lucide-react";
 import { ProductImageUploader } from "@/components/product-image-uploader";
 import type { Vendor } from "@/lib/marketplace";
 
-type ProductSubmissionFormProps = {
+// Must match the categories used across the public site catalog
+const SITE_CATEGORIES = [
+  "Home Control",
+  "Mobile Essentials",
+  "Creator Gear",
+  "Gaming",
+  "Audio",
+  "Wearables",
+] as const;
+
+const BADGE_OPTIONS = [
+  "New listing",
+  "Best seller",
+  "Limited stock",
+  "Editor's pick",
+  "Sale",
+  "Pre-order",
+];
+
+const STOCK_OPTIONS = [
+  "In stock",
+  "Limited stock",
+  "Only 3 left",
+  "Pre-order",
+  "Out of stock",
+];
+
+const SHIP_OPTIONS = [
+  "Ships within 24h",
+  "Ships within 48h",
+  "Ships within 3–5 days",
+  "Ships within 1 week",
+];
+
+type Props = {
   availableVendors: Vendor[];
   canSwitchVendor: boolean;
   vendorSlug: string;
@@ -18,7 +53,7 @@ export function ProductSubmissionForm({
   vendorSlug,
   onVendorChange,
   onSubmitted,
-}: ProductSubmissionFormProps) {
+}: Props) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
@@ -55,9 +90,7 @@ export function ProductSubmissionForm({
       try {
         const response = await fetch("/api/product-submissions", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             vendorSlug,
             name,
@@ -68,225 +101,263 @@ export function ProductSubmissionForm({
             stockLabel,
             shipWindow,
             description,
-            features: features
-              .split(",")
-              .map((feature) => feature.trim())
-              .filter(Boolean),
+            features: features.split("\n").map((f) => f.trim()).filter(Boolean),
             heroImage: images[0] ?? "",
             gallery: images.slice(1),
           }),
         });
 
-        const result = (await response.json()) as
-          | { error: string }
-          | { submissionId: string; name: string };
+        const result = (await response.json()) as { error?: string; submissionId?: string; name?: string };
 
-        if (!response.ok || "error" in result) {
-          throw new Error(
-            "error" in result ? result.error : "Unable to submit product.",
-          );
+        if (!response.ok || result.error) {
+          throw new Error(result.error ?? "Unable to submit product.");
         }
 
-        setSuccessMessage("Product submitted for admin review.");
+        setSuccessMessage(`"${result.name ?? name}" submitted for admin review.`);
         resetForm();
         onSubmitted();
-      } catch (submissionError) {
-        setError(
-          submissionError instanceof Error
-            ? submissionError.message
-            : "Unable to submit product.",
-        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unable to submit product.");
       }
     });
   }
 
+  const inputClass =
+    "w-full rounded-[0.9rem] border border-[var(--line)] bg-white/80 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30";
+  const selectClass =
+    "w-full rounded-[0.9rem] border border-[var(--line)] bg-white/80 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 cursor-pointer";
+
   return (
-    <form onSubmit={handleSubmit} className="soft-card p-6 sm:p-8">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-            Seller product composer
-          </p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
-            Submit a product for review
-          </h2>
-        </div>
-        <div className="min-w-[220px]">
-          {canSwitchVendor ? (
-            <>
-              <label className="text-sm font-semibold" htmlFor="vendorSlug">
-                Vendor
-              </label>
+    <form onSubmit={handleSubmit} className="soft-card overflow-hidden">
+      {/* Header */}
+      <div className="border-b border-[var(--line)] bg-[rgba(16,32,25,0.02)] p-6 sm:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
+              Product listing
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+              Add a product for review
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Once submitted, an admin will review and publish it to the catalog.
+            </p>
+          </div>
+
+          {/* Vendor selector */}
+          <div className="w-full sm:w-56">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Selling as
+            </p>
+            {canSwitchVendor ? (
               <select
-                id="vendorSlug"
                 value={vendorSlug}
-                onChange={(event) => onVendorChange(event.target.value)}
-                className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
+                onChange={(e) => onVendorChange(e.target.value)}
+                className={`mt-2 ${selectClass}`}
               >
-                {availableVendors.map((vendor) => (
-                  <option key={vendor.slug} value={vendor.slug}>
-                    {vendor.name}
-                  </option>
+                {availableVendors.map((v) => (
+                  <option key={v.slug} value={v.slug}>{v.name}</option>
                 ))}
               </select>
-            </>
-          ) : (
-            <>
-              <p className="text-sm font-semibold">Vendor</p>
-              <div className="mt-2 rounded-[1rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-4 py-3 text-sm font-medium">
-                {availableVendors[0]?.name ?? "Assigned vendor"}
+            ) : (
+              <div className="mt-2 rounded-[0.9rem] border border-[var(--line)] bg-[rgba(16,32,25,0.04)] px-4 py-3 text-sm font-semibold">
+                {availableVendors[0]?.name ?? "Your store"}
               </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-8 grid gap-5 lg:grid-cols-2">
-        <div>
-          <label className="text-sm font-semibold" htmlFor="name">
-            Product name
-          </label>
-          <input
-            id="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold" htmlFor="category">
-            Category
-          </label>
-          <input
-            id="category"
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            required
-            placeholder="Creator Gear"
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold" htmlFor="price">
-            Price
-          </label>
-          <input
-            id="price"
-            type="number"
-            min="1"
-            step="0.01"
-            value={price}
-            onChange={(event) => setPrice(event.target.value)}
-            required
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold" htmlFor="compareAt">
-            Compare-at price
-          </label>
-          <input
-            id="compareAt"
-            type="number"
-            min="1"
-            step="0.01"
-            value={compareAt}
-            onChange={(event) => setCompareAt(event.target.value)}
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold" htmlFor="badge">
-            Badge
-          </label>
-          <input
-            id="badge"
-            value={badge}
-            onChange={(event) => setBadge(event.target.value)}
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold" htmlFor="stockLabel">
-            Stock label
-          </label>
-          <input
-            id="stockLabel"
-            value={stockLabel}
-            onChange={(event) => setStockLabel(event.target.value)}
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <label className="text-sm font-semibold" htmlFor="shipWindow">
-            Shipping window
-          </label>
-          <input
-            id="shipWindow"
-            value={shipWindow}
-            onChange={(event) => setShipWindow(event.target.value)}
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <label className="text-sm font-semibold" htmlFor="description">
-            Description
-          </label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            required
-            rows={5}
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <label className="text-sm font-semibold" htmlFor="features">
-            Features
-          </label>
-          <textarea
-            id="features"
-            value={features}
-            onChange={(event) => setFeatures(event.target.value)}
-            rows={3}
-            placeholder="Hidden cable channel, Tool-free tilt, Desk clamp mount"
-            className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <label className="text-sm font-semibold">Product images</label>
-          <div className="mt-3">
-            <ProductImageUploader images={images} onChange={setImages} />
+            )}
           </div>
         </div>
       </div>
 
-      {error ? (
-        <div className="mt-6 rounded-[1rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
-          {error}
+      <div className="p-6 sm:p-8">
+        {/* Section: Basic info */}
+        <div className="flex items-center gap-2">
+          <Package className="h-4 w-4 text-[var(--accent)]" />
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Product details
+          </p>
         </div>
-      ) : null}
 
-      {successMessage ? (
-        <div className="mt-6 rounded-[1rem] border border-[rgba(26,123,112,0.24)] bg-[rgba(26,123,112,0.08)] px-4 py-3 text-sm text-[var(--teal)]">
-          {successMessage}
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-sm font-semibold">
+              Product name <span className="text-[var(--accent)]">*</span>
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="e.g. Wireless Noise-Cancelling Headphones"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">
+              Category <span className="text-[var(--accent)]">*</span>
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              className={selectClass}
+            >
+              <option value="">Select a category</option>
+              {SITE_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Badge label</label>
+            <select
+              value={badge}
+              onChange={(e) => setBadge(e.target.value)}
+              className={selectClass}
+            >
+              {BADGE_OPTIONS.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">
+              Price (USD) <span className="text-[var(--accent)]">*</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              required
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">
+              Compare-at price{" "}
+              <span className="font-normal text-[var(--muted)]">(strikethrough, optional)</span>
+            </label>
+            <input
+              type="number"
+              min="1"
+              step="0.01"
+              value={compareAt}
+              onChange={(e) => setCompareAt(e.target.value)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-sm font-semibold">
+              Description <span className="text-[var(--accent)]">*</span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              rows={4}
+              placeholder="What does this product do? Who is it for? What makes it worth buying?"
+              className={`${inputClass} resize-none`}
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-sm font-semibold">
+              Key features{" "}
+              <span className="font-normal text-[var(--muted)]">(one per line, up to 8)</span>
+            </label>
+            <textarea
+              value={features}
+              onChange={(e) => setFeatures(e.target.value)}
+              rows={5}
+              placeholder={"Active noise cancellation\n40h battery life\nUSB-C fast charging\nFoldable design"}
+              className={`${inputClass} resize-none font-mono text-xs leading-6`}
+            />
+          </div>
         </div>
-      ) : null}
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="max-w-2xl text-sm leading-7 text-[var(--muted)]">
-          Products submitted here stay in review until the admin approves them.
-          This keeps the catalog clean while you are still shaping the seller flow.
+        {/* Section: Availability */}
+        <div className="mt-8 flex items-center gap-2 border-t border-[var(--line)] pt-6">
+          <Truck className="h-4 w-4 text-[var(--accent)]" />
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Availability &amp; shipping
+          </p>
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Stock status</label>
+            <select
+              value={stockLabel}
+              onChange={(e) => setStockLabel(e.target.value)}
+              className={selectClass}
+            >
+              {STOCK_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Shipping window</label>
+            <select
+              value={shipWindow}
+              onChange={(e) => setShipWindow(e.target.value)}
+              className={selectClass}
+            >
+              {SHIP_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Section: Images */}
+        <div className="mt-8 flex items-center gap-2 border-t border-[var(--line)] pt-6">
+          <ImagePlus className="h-4 w-4 text-[var(--accent)]" />
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+            Product images
+          </p>
+        </div>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          First image becomes the hero. Add up to 4 total.
         </p>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isPending ? "Submitting..." : "Submit product"}
-        </button>
+        <div className="mt-4">
+          <ProductImageUploader images={images} onChange={setImages} />
+        </div>
+
+        {/* Feedback */}
+        {error && (
+          <div className="mt-6 flex items-start gap-3 rounded-[0.9rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3">
+            <Tag className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
+            <p className="text-sm text-[var(--accent)]">{error}</p>
+          </div>
+        )}
+        {successMessage && (
+          <div className="mt-6 rounded-[0.9rem] border border-[rgba(26,123,112,0.25)] bg-[rgba(26,123,112,0.08)] px-4 py-3 text-sm font-medium text-[var(--teal)]">
+            ✓ {successMessage}
+          </div>
+        )}
+
+        {/* Submit */}
+        <div className="mt-8 flex flex-col gap-3 border-t border-[var(--line)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-[var(--muted)]">
+            Products go live after admin approval — usually within 24 hours.
+          </p>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" />
+            {isPending ? "Submitting..." : "Submit for review"}
+          </button>
+        </div>
       </div>
     </form>
   );

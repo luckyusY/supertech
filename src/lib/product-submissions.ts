@@ -105,7 +105,12 @@ function toSummary(record: ProductSubmissionRecord): ProductSubmissionSummary {
 }
 
 export async function createProductSubmission(input: CreateProductSubmissionInput) {
-  const vendor = getVendorBySlug(input.vendorSlug);
+  // Check static vendors first, then fall back to MongoDB-created vendors
+  let vendor = getVendorBySlug(input.vendorSlug) as { slug: string; name: string } | null;
+  if (!vendor && input.vendorSlug) {
+    const { getMongoVendorBySlug } = await import("@/lib/mongodb-vendors");
+    vendor = await getMongoVendorBySlug(input.vendorSlug);
+  }
 
   if (!vendor) {
     throw new Error("Selected vendor could not be found.");
