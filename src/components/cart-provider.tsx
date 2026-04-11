@@ -4,6 +4,10 @@ import { createContext, useContext, useSyncExternalStore } from "react";
 
 const CART_STORAGE_KEY = "supertech-marketplace-cart";
 const CART_SYNC_EVENT = "supertech-marketplace-cart-sync";
+const EMPTY_CART: CartItem[] = [];
+
+let cachedCartRaw: string | null | undefined;
+let cachedCartSnapshot: CartItem[] = EMPTY_CART;
 
 export type CartItem = {
   slug: string;
@@ -30,25 +34,53 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
+function normalizeCartItems(value: unknown) {
+  if (!Array.isArray(value)) {
+    return EMPTY_CART;
+  }
+
+  const sanitized = value.filter(
+    (item): item is CartItem =>
+      typeof item === "object" &&
+      item !== null &&
+      "slug" in item &&
+      typeof item.slug === "string" &&
+      item.slug.length > 0 &&
+      "quantity" in item &&
+      typeof item.quantity === "number" &&
+      Number.isFinite(item.quantity),
+  );
+
+  return sanitized.length > 0 ? sanitized : EMPTY_CART;
+}
+
 function getStoredCart() {
   if (typeof window === "undefined") {
-    return [] as CartItem[];
+    return EMPTY_CART;
   }
 
   try {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
 
-    if (!raw) {
-      return [] as CartItem[];
+    if (raw === cachedCartRaw) {
+      return cachedCartSnapshot;
     }
 
-    const parsed = JSON.parse(raw) as CartItem[];
+    cachedCartRaw = raw;
 
-    return Array.isArray(parsed)
-      ? parsed.filter((item) => item.slug && Number.isFinite(item.quantity))
-      : [];
+    if (!raw) {
+      cachedCartSnapshot = EMPTY_CART;
+      return cachedCartSnapshot;
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+    cachedCartSnapshot = normalizeCartItems(parsed);
+
+    return cachedCartSnapshot;
   } catch {
-    return [] as CartItem[];
+    cachedCartRaw = null;
+    cachedCartSnapshot = EMPTY_CART;
+    return cachedCartSnapshot;
   }
 }
 
@@ -73,10 +105,18 @@ function commitCart(items: CartItem[]) {
     return;
   }
 
-  if (items.length === 0) {
+  const nextItems = items.length > 0 ? items : EMPTY_CART;
+
+  if (nextItems.length === 0) {
     window.localStorage.removeItem(CART_STORAGE_KEY);
+    cachedCartRaw = null;
+    cachedCartSnapshot = EMPTY_CART;
   } else {
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    const raw = JSON.stringify(nextItems);
+
+    window.localStorage.setItem(CART_STORAGE_KEY, raw);
+    cachedCartRaw = raw;
+    cachedCartSnapshot = nextItems;
   }
 
   window.dispatchEvent(new Event(CART_SYNC_EVENT));
@@ -87,7 +127,7 @@ export function CartProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const items = useSyncExternalStore(subscribeToCart, getStoredCart, () => []);
+  const items = useSyncExternalStore(subscribeToCart, getStoredCart, () => EMPTY_CART);
   const isReady = useSyncExternalStore(
     () => () => undefined,
     () => true,
