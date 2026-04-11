@@ -31,25 +31,6 @@ export async function createProductRequest(
   return request;
 }
 
-export async function getProductRequestsByCustomerEmail({
-  customerEmail,
-}: {
-  customerEmail: string;
-}): Promise<ProductRequest[]> {
-  if (!hasMongoConfig()) return [];
-  try {
-    const db = await getDatabase();
-    return await db
-      .collection<ProductRequest>("product_requests")
-      .find({ email: customerEmail.toLowerCase() })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .toArray();
-  } catch {
-    return [];
-  }
-}
-
 export async function getProductRequests(): Promise<ProductRequest[]> {
   if (!hasMongoConfig()) return [];
   try {
