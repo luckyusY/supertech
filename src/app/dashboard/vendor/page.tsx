@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ImagePlus, PackageSearch, Wallet } from "lucide-react";
+import {
+  CheckCircle2,
+  ImagePlus,
+  Package,
+  PackageSearch,
+  ShoppingBag,
+  Star,
+  Wallet,
+} from "lucide-react";
 import { VendorOrderQueue } from "@/components/vendor-order-queue";
 import { VendorPayoutSummary } from "@/components/vendor-payout-summary";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
 import { getAccessibleVendors, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
-import { sellerChecklist, vendorDashboardHighlights } from "@/lib/marketplace";
+import { vendorDashboardHighlights } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
   title: "Vendor Dashboard",
-  description: "Seller-side dashboard starter for the marketplace.",
+  description: "Manage your products, orders, and payouts.",
 };
 
 export const dynamic = "force-dynamic";
@@ -24,65 +32,95 @@ export default async function VendorDashboardPage() {
   const availableVendors = getAccessibleVendors(session);
   const initialVendorSlug = availableVendors[0]?.slug ?? "";
   const canSwitchVendor = session.role === "admin";
+  const currentVendor = availableVendors[0];
 
   if (!initialVendorSlug) {
     redirect("/forbidden");
   }
 
+  const highlightIcons = [ShoppingBag, Package, Star];
+
   return (
     <div className="page-shell py-8">
-      <div className="dark-card overflow-hidden p-6 sm:p-8 lg:p-10">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+      {/* Header */}
+      <div className="soft-card p-6 sm:p-8 lg:p-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
-              Vendor workspace
+            <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
+              Seller workspace
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-              Seller operations with room for real product publishing flows.
+              {currentVendor ? currentVendor.name : session.name}
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[rgba(255,255,255,0.76)]">
-              This seller workspace now covers real product publishing and vendor-filtered
-              order visibility while the marketplace is still running without online payments.
+            <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+              {session.role === "admin"
+                ? "You have admin access to all vendor workspaces."
+                : `Manage your products, fulfill orders, and track your earnings.`}
             </p>
-            <div className="mt-4 inline-flex rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-[rgba(255,255,255,0.78)]">
-              Signed in as {session.name}
-              {session.role === "vendor" && availableVendors[0]
-                ? ` for ${availableVendors[0].name}`
-                : " with admin vendor-switch access"}
-            </div>
+
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {vendorDashboardHighlights.map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-[1.35rem] border border-white/10 bg-white/6 p-4"
-                >
-                  <p className="text-sm text-[rgba(255,255,255,0.62)]">{item.label}</p>
-                  <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
+              {vendorDashboardHighlights.map((item, i) => {
+                const Icon = highlightIcons[i] ?? Package;
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-5"
+                  >
+                    <Icon className="h-5 w-5 text-[var(--accent)]" />
+                    <p className="mt-4 text-sm text-[var(--muted)]">{item.label}</p>
+                    <p className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{item.value}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <div className="rounded-[1.7rem] border border-white/10 bg-white/6 p-5">
+
+          {/* Quick info panel */}
+          <div className="dark-card p-6">
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.55)]">
-              Publishing checklist
+              Account
             </p>
-            <div className="mt-5 space-y-3">
-              {sellerChecklist.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[1.2rem] border border-white/10 bg-white/6 px-4 py-3 text-sm text-[rgba(255,255,255,0.76)]"
-                >
-                  {item}
-                </div>
-              ))}
+            <div className="mt-4 space-y-3">
+              <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
+                <p className="text-xs text-[rgba(255,255,255,0.5)]">Signed in as</p>
+                <p className="mt-0.5 font-semibold text-white">{session.name}</p>
+              </div>
+              {currentVendor && (
+                <>
+                  <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
+                    <p className="text-xs text-[rgba(255,255,255,0.5)]">Store</p>
+                    <p className="mt-0.5 font-semibold text-white">{currentVendor.name}</p>
+                  </div>
+                  <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
+                    <p className="text-xs text-[rgba(255,255,255,0.5)]">Location</p>
+                    <p className="mt-0.5 font-semibold text-white">{currentVendor.location}</p>
+                  </div>
+                  <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
+                    <p className="text-xs text-[rgba(255,255,255,0.5)]">Fulfillment rate</p>
+                    <p className="mt-0.5 font-semibold text-[var(--teal)]">{currentVendor.fulfillmentRate}</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Upload status */}
+            <div className="mt-4 rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <ImagePlus className="h-4 w-4 text-[rgba(255,255,255,0.55)]" />
+                <p className="text-xs text-[rgba(255,255,255,0.5)]">Image uploads</p>
+              </div>
+              <p className="mt-1 text-sm font-semibold text-white">
+                {integrationStatus.cloudinaryServer.configured
+                  ? "Ready"
+                  : "Not configured"}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-8">
+      {/* Product workspace */}
+      <div className="mt-6">
         <VendorProductWorkspace
           availableVendors={availableVendors}
           initialVendorSlug={initialVendorSlug}
@@ -90,13 +128,12 @@ export default async function VendorDashboardPage() {
         />
       </div>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+      {/* Order queue + onboarding */}
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_340px]">
         <section className="soft-card p-6 sm:p-8">
           <div className="flex items-center gap-3">
             <PackageSearch className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Seller fulfillment queue
-            </h2>
+            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Order queue</h2>
           </div>
           <div className="mt-6">
             <VendorOrderQueue
@@ -109,59 +146,36 @@ export default async function VendorDashboardPage() {
 
         <section className="soft-card p-6 sm:p-8">
           <div className="flex items-center gap-3">
-            <ImagePlus className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Upload readiness
-            </h2>
+            <CheckCircle2 className="h-5 w-5 text-[var(--accent)]" />
+            <h2 className="text-xl font-semibold tracking-[-0.04em]">Seller checklist</h2>
           </div>
-          <div className="mt-6 space-y-4">
+          <div className="mt-5 space-y-3">
             {[
-              {
-                label: "Cloudinary server",
-                value: integrationStatus.cloudinaryServer.configured
-                  ? "Signed uploads ready"
-                  : "Missing server credentials",
-              },
-              {
-                label: "Cloudinary client",
-                value: integrationStatus.cloudinaryClient.configured
-                  ? "Delivery URL ready"
-                  : "Expose cloud name for client widgets",
-              },
-              {
-                label: "Upload endpoint",
-                value: "/api/cloudinary/sign",
-              },
-            ].map((item) => (
+              "Products reviewed and brand-checked",
+              "Product images uploaded via gallery",
+              "Orders routed with fulfillment expectations set",
+              "Payout method confirmed with marketplace",
+            ].map((item, i) => (
               <div
-                key={item.label}
-                className="rounded-[1.25rem] border border-[var(--line)] bg-white/70 p-4"
+                key={item}
+                className="flex items-start gap-3 rounded-[1.2rem] border border-[var(--line)] bg-white/72 px-4 py-3 text-sm"
               >
-                <p className="text-sm text-[var(--muted)]">{item.label}</p>
-                <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
-                  {item.value}
-                </p>
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(26,123,112,0.12)] text-xs font-bold text-[var(--teal)]">
+                  {i + 1}
+                </span>
+                <span>{item}</span>
               </div>
             ))}
-            <div className="rounded-[1.25rem] border border-dashed border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-4 text-sm leading-7 text-[var(--muted)]">
-              This vendor dashboard now spans Phase 2 and Phase 3. Sellers can upload
-              product images to Cloudinary, submit products for review, and track the
-              manual order queue that belongs to their storefront.
-            </div>
           </div>
         </section>
       </div>
 
-      <div className="mt-8">
+      {/* Payouts */}
+      <div className="mt-6">
         <section className="soft-card p-6 sm:p-8">
           <div className="flex items-center gap-3">
             <Wallet className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Payouts &amp; commissions
-            </h2>
-            <span className="ml-auto rounded-full bg-[rgba(16,32,25,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Phase 4
-            </span>
+            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Payouts &amp; commissions</h2>
           </div>
           <div className="mt-6">
             <VendorPayoutSummary />
