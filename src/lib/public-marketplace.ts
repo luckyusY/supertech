@@ -7,6 +7,7 @@ import {
   type Product,
   type Vendor,
 } from "@/lib/marketplace";
+import { getMongoVendors } from "@/lib/mongodb-vendors";
 import { getProductSubmissions, type ProductSubmissionSummary } from "@/lib/product-submissions";
 
 function mapApprovedSubmissionToProduct(submission: ProductSubmissionSummary): Product {
@@ -77,9 +78,12 @@ export async function getPublicVendorProducts(vendorSlug: string) {
 }
 
 export const getPublicVendors = cache(async () => {
-  const approvedSubmissions = await getApprovedSubmissions();
+  const [approvedSubmissions, mongoVendors] = await Promise.all([
+    getApprovedSubmissions(),
+    getMongoVendors(),
+  ]);
 
-  return seedVendors.map((vendor) => {
+  const seedWithSubmissions = seedVendors.map((vendor) => {
     const approvedForVendor = approvedSubmissions.filter(
       (submission) => submission.vendorSlug === vendor.slug,
     );
@@ -94,6 +98,12 @@ export const getPublicVendors = cache(async () => {
       categories: Array.from(categories),
     } satisfies Vendor;
   });
+
+  // Merge MongoDB-created vendors (approved applications), excluding any that clash with seed slugs
+  const seedSlugs = new Set(seedVendors.map((v) => v.slug));
+  const newVendors = mongoVendors.filter((v) => !seedSlugs.has(v.slug));
+
+  return [...seedWithSubmissions, ...newVendors];
 });
 
 export async function getPublicVendorBySlug(slug: string) {

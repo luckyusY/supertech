@@ -63,3 +63,17 @@ export async function authenticateMongoUser(email: string, password: string): Pr
   if (!verifyPassword(password, user.passwordHash)) return null;
   return user;
 }
+
+export async function promoteToVendor(email: string, vendorSlug: string): Promise<boolean> {
+  if (!hasMongoConfig()) return false;
+  try {
+    const db = await getDatabase();
+    const result = await db.collection<User>("users").updateOne(
+      { email: email.trim().toLowerCase() },
+      { $set: { role: "vendor", vendorSlug } },
+    );
+    return result.modifiedCount > 0;
+  } catch {
+    return false;
+  }
+}

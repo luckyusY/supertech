@@ -7,6 +7,7 @@ import {
   Package,
   PackageSearch,
   ShieldCheck,
+  Store,
   User,
 } from "lucide-react";
 import { requirePageSession } from "@/lib/auth";
@@ -78,12 +79,20 @@ export default async function AccountPage() {
                 <Package className="h-4 w-4" />
                 Request a product
               </Link>
-              {isVendorOrAdmin && (
+              {isVendorOrAdmin ? (
                 <Link
                   href={session.role === "admin" ? "/dashboard/admin" : "/dashboard/vendor"}
                   className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/72 px-5 py-2.5 text-sm font-semibold"
                 >
                   Go to dashboard →
+                </Link>
+              ) : (
+                <Link
+                  href="/become-vendor"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/72 px-5 py-2.5 text-sm font-semibold"
+                >
+                  <Store className="h-4 w-4" />
+                  Become a vendor
                 </Link>
               )}
             </div>

@@ -399,6 +399,24 @@ export function getAccessibleVendors(session: AuthSession): Vendor[] {
   return [];
 }
 
+export async function getAccessibleVendorsAsync(session: AuthSession): Promise<Vendor[]> {
+  if (session.role === "admin") {
+    return vendors;
+  }
+
+  if (session.role === "vendor" && session.vendorSlug) {
+    const staticVendor = getVendorBySlug(session.vendorSlug);
+    if (staticVendor) return [staticVendor];
+
+    // Check MongoDB for dynamically created vendors
+    const { getMongoVendorBySlug } = await import("@/lib/mongodb-vendors");
+    const mongoVendor = await getMongoVendorBySlug(session.vendorSlug);
+    return mongoVendor ? [mongoVendor] : [];
+  }
+
+  return [];
+}
+
 export async function getAuthSession() {
   const cookieStore = await cookies();
   const cookieValue = cookieStore.get(AUTH_COOKIE_NAME)?.value ?? null;
