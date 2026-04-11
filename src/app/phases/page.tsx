@@ -72,14 +72,14 @@ export default function PhasesPage() {
               Current focus
             </p>
             <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
-              Phase 3 is active: customers can now build a quote cart and track requests before payments go live, while admin and vendor workspaces are protected behind signed sessions.
+              Phase 4 is active: vendor payouts, in-app notifications, admin analytics, and customer reviews are now live across the marketplace.
             </p>
           </div>
           <Link
-            href="/dashboard/vendor"
+            href="/dashboard/admin/analytics"
             className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
           >
-            Open vendor dashboard
+            View analytics
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

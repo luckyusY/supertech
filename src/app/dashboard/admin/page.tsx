@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { BadgeCheck, Layers3, Wallet2 } from "lucide-react";
+import Link from "next/link";
+import { BarChart3, BadgeCheck, Layers3, Wallet2 } from "lucide-react";
 import { AdminOrderOperations } from "@/components/admin-order-operations";
 import { ProductApprovalInbox } from "@/components/product-approval-inbox";
 import { requirePageSession } from "@/lib/auth";
@@ -168,6 +169,24 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
           </section>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 rounded-[1.75rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
+              Phase 4 · Analytics
+            </p>
+            <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
+              Full revenue breakdown, vendor commissions, and seller performance metrics.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/admin/analytics"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
+          >
+            <BarChart3 className="h-4 w-4" />
+            View analytics
+          </Link>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AuthStatusControls } from "@/components/auth-status-controls";
 import { CartStatusLink } from "@/components/cart-status-link";
+import { NotificationBell } from "@/components/notification-bell";
 
 const navigation = [
   { href: "/catalog", label: "Catalog" },
@@ -40,6 +41,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-2">
           <AuthStatusControls />
+          <NotificationBell />
           <CartStatusLink />
           <Link
             href="/order"

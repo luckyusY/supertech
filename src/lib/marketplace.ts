@@ -115,29 +115,29 @@ export const buildPhases: BuildPhase[] = [
     id: "phase-3",
     step: "Phase 3",
     title: "Cart and checkout",
-    status: "active",
+    status: "done",
     description:
-      "Move from manual requests to a real cart and customer checkout, starting with quote-cart flows until payment rails are ready.",
+      "Cart, quote flows, order tracking, and signed session auth are all live. Payment provider integration is deferred until a payment method is configured.",
     deliverables: [
       "Cart state and checkout summary",
       "Manual cart quote requests before payments",
       "Customer order tracking by request ID",
       "Signed vendor/admin access to protected workspaces",
-      "Payment provider integration",
+      "Payment provider integration (deferred — configure when ready)",
     ],
   },
   {
     id: "phase-4",
     step: "Phase 4",
     title: "Marketplace scale-up",
-    status: "planned",
+    status: "active",
     description:
-      "Add the systems that turn the MVP into a full operational marketplace for multiple sellers.",
+      "Turning the MVP into a full operational marketplace: payouts, notifications, analytics, and customer reviews are now live.",
     deliverables: [
-      "Role-based access control",
-      "Vendor payouts and commissions",
-      "Order notifications and messaging",
-      "Analytics, reviews, and seller performance tooling",
+      "Vendor payouts and commission tracking",
+      "In-app notification bell with MongoDB-backed feed",
+      "Admin analytics dashboard with revenue and seller breakdown",
+      "Customer review system with star ratings on product pages",
     ],
   },
 ] as const;

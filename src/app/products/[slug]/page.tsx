@@ -5,6 +5,7 @@ import { Check, ShieldCheck, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductCard } from "@/components/product-card";
+import { ProductReviews } from "@/components/product-reviews";
 import {
   getPublicProductBySlug,
   getPublicProducts,
@@ -212,6 +213,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
       </div>
+
+      <section className="soft-card p-6 sm:p-8">
+        <ProductReviews productSlug={product.slug} />
+      </section>
 
       <section className="mt-8 soft-card p-6 sm:p-8">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">

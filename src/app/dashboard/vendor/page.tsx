@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { ImagePlus, PackageSearch } from "lucide-react";
+import { ImagePlus, PackageSearch, Wallet } from "lucide-react";
 import { VendorOrderQueue } from "@/components/vendor-order-queue";
+import { VendorPayoutSummary } from "@/components/vendor-payout-summary";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
 import { getAccessibleVendors, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
@@ -147,6 +148,23 @@ export default async function VendorDashboardPage() {
               product images to Cloudinary, submit products for review, and track the
               manual order queue that belongs to their storefront.
             </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-8">
+        <section className="soft-card p-6 sm:p-8">
+          <div className="flex items-center gap-3">
+            <Wallet className="h-5 w-5 text-[var(--accent)]" />
+            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
+              Payouts &amp; commissions
+            </h2>
+            <span className="ml-auto rounded-full bg-[rgba(16,32,25,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Phase 4
+            </span>
+          </div>
+          <div className="mt-6">
+            <VendorPayoutSummary />
           </div>
         </section>
       </div>
