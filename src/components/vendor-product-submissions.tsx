@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { Clock, Package } from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 
 type Submission = {
@@ -22,6 +22,45 @@ type VendorProductSubmissionsProps = {
   refreshKey: number;
 };
 
+const STATUS_STYLES: Record<
+  Submission["status"],
+  { label: string; pill: string }
+> = {
+  pending_review: {
+    label: "Pending review",
+    pill: "bg-[rgba(242,191,99,0.18)] text-[#9c6b0b]",
+  },
+  approved: {
+    label: "Approved",
+    pill: "bg-[rgba(26,123,112,0.12)] text-[var(--teal)]",
+  },
+  rejected: {
+    label: "Rejected",
+    pill: "bg-[rgba(228,90,54,0.14)] text-[var(--accent)]",
+  },
+};
+
+function SubmissionThumb({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(!src);
+
+  if (failed) {
+    return (
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[0.8rem] bg-[rgba(16,32,25,0.06)]">
+        <Package className="h-5 w-5 text-[var(--muted)] opacity-50" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+      className="h-14 w-14 shrink-0 rounded-[0.8rem] object-cover"
+    />
+  );
+}
+
 export function VendorProductSubmissions({
   vendorSlug,
   refreshKey,
@@ -30,116 +69,97 @@ export function VendorProductSubmissions({
   const [state, setState] = useState<"loading" | "error" | "ready">("loading");
 
   useEffect(() => {
-    let isActive = true;
+    let active = true;
 
-    async function loadSubmissions() {
+    async function load() {
       setState("loading");
-
       try {
         const response = await fetch(
-          `/api/product-submissions?vendorSlug=${encodeURIComponent(vendorSlug)}&limit=8`,
+          `/api/product-submissions?vendorSlug=${encodeURIComponent(vendorSlug)}&limit=10`,
           { cache: "no-store" },
         );
-
-        if (!response.ok) {
-          throw new Error("Unable to load product submissions.");
-        }
-
+        if (!response.ok) throw new Error("Failed");
         const payload = (await response.json()) as { submissions: Submission[] };
-
-        if (isActive) {
+        if (active) {
           setSubmissions(payload.submissions);
           setState("ready");
         }
       } catch {
-        if (isActive) {
-          setState("error");
-        }
+        if (active) setState("error");
       }
     }
 
-    loadSubmissions();
-
-    return () => {
-      isActive = false;
-    };
+    void load();
+    return () => { active = false; };
   }, [refreshKey, vendorSlug]);
 
   if (state === "loading") {
     return (
-      <div className="rounded-[1.4rem] border border-[var(--line)] bg-white/72 p-4 text-sm text-[var(--muted)]">
-        Loading product submissions...
+      <div className="rounded-[1.2rem] border border-[var(--line)] bg-white/70 p-4 text-sm text-[var(--muted)]">
+        Loading your submissions…
       </div>
     );
   }
 
   if (state === "error") {
     return (
-      <div className="rounded-[1.4rem] border border-[var(--line)] bg-white/72 p-4 text-sm text-[var(--muted)]">
-        Unable to load product submissions right now.
+      <div className="rounded-[1.2rem] border border-[var(--line)] bg-white/70 p-4 text-sm text-[var(--muted)]">
+        Unable to load submissions right now.
       </div>
     );
   }
 
   if (submissions.length === 0) {
     return (
-      <div className="rounded-[1.4rem] border border-[var(--line)] bg-white/72 p-4 text-sm text-[var(--muted)]">
-        No submissions yet for this vendor.
+      <div className="flex flex-col items-center gap-2 rounded-[1.2rem] border border-[var(--line)] bg-white/70 p-8 text-center">
+        <Package className="h-7 w-7 text-[var(--muted)] opacity-40" />
+        <p className="text-sm font-semibold">No submissions yet</p>
+        <p className="text-xs text-[var(--muted)]">
+          Submit a product above — it will appear here after review.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {submissions.map((submission) => (
-        <div
-          key={submission.id}
-          className="overflow-hidden rounded-[1.5rem] border border-[var(--line)] bg-white"
-        >
-          <div className="grid gap-4 sm:grid-cols-[140px_minmax(0,1fr)]">
-            <div className="relative min-h-[140px]">
-              <Image
-                src={submission.heroImage}
-                alt={submission.name}
-                fill
-                className="object-cover"
-                sizes="140px"
-              />
-            </div>
-            <div className="p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                    {submission.submissionId}
+    <div className="overflow-hidden rounded-[1.2rem] border border-[var(--line)] bg-white/70">
+      <ul className="divide-y divide-[var(--line)]">
+        {submissions.map((sub) => {
+          const st = STATUS_STYLES[sub.status];
+          return (
+            <li key={sub.id} className="flex items-center gap-4 px-5 py-4">
+              {/* Thumbnail */}
+              <SubmissionThumb src={sub.heroImage} alt={sub.name} />
+
+              {/* Info */}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-0.5">
+                  <p className="truncate text-sm font-semibold leading-snug">
+                    {sub.name}
                   </p>
-                  <h3 className="mt-2 text-xl font-semibold tracking-[-0.03em]">
-                    {submission.name}
-                  </h3>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{submission.category}</p>
+                  <p className="shrink-0 text-sm font-semibold">
+                    {formatPrice(sub.price)}
+                  </p>
                 </div>
-                <div className="text-right">
+                <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
+                  {sub.category} &middot; {sub.badge}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${
-                      submission.status === "approved"
-                        ? "bg-[rgba(26,123,112,0.12)] text-[var(--teal)]"
-                        : submission.status === "rejected"
-                          ? "bg-[rgba(228,90,54,0.14)] text-[var(--accent)]"
-                          : "bg-[rgba(242,191,99,0.18)] text-[#9c6b0b]"
-                    }`}
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${st.pill}`}
                   >
-                    {submission.status.replaceAll("_", " ")}
+                    {st.label}
                   </span>
-                  <p className="mt-3 text-lg font-semibold">{formatPrice(submission.price)}</p>
+                  <span className="flex items-center gap-1 text-[10px] text-[var(--muted)]">
+                    <Clock className="h-3 w-3" />
+                    {formatDateTime(sub.createdAt)}
+                  </span>
                 </div>
               </div>
-              <div className="mt-4 flex items-center justify-between gap-4 text-sm text-[var(--muted)]">
-                <p>{submission.badge}</p>
-                <p>{formatDateTime(submission.createdAt)}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
