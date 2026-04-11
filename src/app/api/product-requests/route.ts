@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
-import { hasMongoConfig } from "@/lib/integrations";
-import {
-  createProductRequest,
-  type ProductRequestServiceType,
-} from "@/lib/product-requests";
+import { createProductRequest } from "@/lib/product-requests";
 
 type ProductRequestBody = {
-  serviceType?: ProductRequestServiceType;
+  serviceType?: string;
   productName?: string;
   category?: string;
   quantity?: number;
@@ -21,31 +17,29 @@ type ProductRequestBody = {
 };
 
 export async function POST(request: Request) {
-  if (!hasMongoConfig()) {
-    return NextResponse.json(
-      {
-        error: "MongoDB is not configured yet.",
-      },
-      { status: 503 },
-    );
-  }
-
   try {
     const body = (await request.json()) as ProductRequestBody;
 
+    if (!body.productName?.trim() || !body.customerEmail?.trim()) {
+      return NextResponse.json({ error: "Product name and email are required." }, { status: 400 });
+    }
+
     const productRequest = await createProductRequest({
-      serviceType: body.serviceType ?? "source_and_ship",
+      name: body.customerName ?? "",
+      email: body.customerEmail ?? "",
+      phone: body.customerPhone,
       productName: body.productName ?? "",
-      category: body.category ?? "",
-      quantity: Number(body.quantity ?? 1),
-      targetBudget: body.targetBudget,
-      productUrl: body.productUrl,
-      customerName: body.customerName ?? "",
-      customerEmail: body.customerEmail ?? "",
-      customerPhone: body.customerPhone ?? "",
+      category: body.category ?? body.serviceType ?? "Other",
+      description: [
+        body.notes,
+        body.productUrl ? `Link: ${body.productUrl}` : null,
+        body.quantity && body.quantity > 1 ? `Qty: ${body.quantity}` : null,
+        body.deliveryAddress ? `Delivery: ${body.deliveryAddress}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ") || body.productName ?? "",
+      budget: body.targetBudget ? `$${body.targetBudget}` : undefined,
       city: body.city ?? "",
-      deliveryAddress: body.deliveryAddress,
-      notes: body.notes,
     });
 
     return NextResponse.json(productRequest, { status: 201 });
