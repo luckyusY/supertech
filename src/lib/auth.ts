@@ -486,3 +486,10 @@ export function authorizeRequest(request: Request, roles?: AuthRole[]) {
     session,
   };
 }
+
+export async function getCurrentCustomerAccount(
+  _session: AuthSession,
+): Promise<{ city?: string } | null> {
+  // Placeholder — can be extended to pull full profile from MongoDB later
+  return null;
+}

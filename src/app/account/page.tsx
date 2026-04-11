@@ -59,7 +59,7 @@ export default async function AccountPage() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/request-product"
+              href="/request"
               className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white"
             >
               Request a product
@@ -96,20 +96,16 @@ export default async function AccountPage() {
               <div className="mt-6 space-y-4">
                 {requests.map((request) => (
                   <div
-                    key={request.id}
+                    key={String(request._id)}
                     className="rounded-[1.5rem] border border-[var(--line)] bg-white p-5"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="font-mono text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                          {request.requestId}
-                        </p>
-                        <h3 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+                        <h3 className="text-2xl font-semibold tracking-[-0.04em]">
                           {request.productName}
                         </h3>
                         <p className="mt-2 text-sm text-[var(--muted)]">
-                          {request.serviceType.replaceAll("_", " ")} | {request.quantity} item
-                          {request.quantity === 1 ? "" : "s"} | {request.city}
+                          {request.category} | {request.city}
                         </p>
                       </div>
                       <div className="text-left sm:text-right">
@@ -125,9 +121,9 @@ export default async function AccountPage() {
                         </p>
                       </div>
                     </div>
-                    {request.notes ? (
+                    {request.description ? (
                       <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-                        {request.notes}
+                        {request.description}
                       </p>
                     ) : null}
                   </div>

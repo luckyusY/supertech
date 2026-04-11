@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, PackageSearch, Truck, WalletCards } from "lucide-react";
 import { ProductRequestForm } from "@/components/product-request-form";
-import { getAuthSession, getCurrentCustomerAccount } from "@/lib/auth";
+import { getAuthSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Request a Product",
@@ -13,7 +13,6 @@ export const dynamic = "force-dynamic";
 
 export default async function RequestProductPage() {
   const session = await getAuthSession();
-  const customerAccount = session ? await getCurrentCustomerAccount(session) : null;
 
   return (
     <div className="page-shell py-8">
@@ -66,7 +65,7 @@ export default async function RequestProductPage() {
               initialCustomer={{
                 name: session?.name ?? "",
                 email: session?.email ?? "",
-                city: customerAccount?.city ?? "",
+                city: "",
               }}
             />
           </div>
@@ -100,17 +99,17 @@ export default async function RequestProductPage() {
               </p>
               <div className="mt-4 flex flex-col gap-3">
                 <Link
-                  href="/signup"
+                  href="/sign-up"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)]"
                 >
                   Create account
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="/login"
+                  href="/sign-in"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-white"
                 >
-                  Log in
+                  Sign in
                 </Link>
               </div>
             </div>
