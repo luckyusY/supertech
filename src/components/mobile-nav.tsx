@@ -19,6 +19,8 @@ const quickLinks = [
   { label: "All vendors", href: "/vendors" },
   { label: "Track order", href: "/track-order" },
   { label: "Cart", href: "/cart" },
+  { label: "Request a product", href: "/request" },
+  { label: "Sign in", href: "/sign-in" },
 ];
 
 export function MobileNav() {

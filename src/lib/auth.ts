@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { getVendorBySlug, vendors, type Vendor } from "@/lib/marketplace";
+import { hasMongoConfig } from "@/lib/integrations";
 
 export type AuthRole = "admin" | "vendor" | "customer";
 
@@ -319,8 +320,9 @@ export function getAuthSetupState(): AuthSetupState {
   const availableUsers = usingDevFallbackUsers ? DEV_FALLBACK_USERS : configuredUsers;
   const hasRuntimeSecret = Boolean(getRuntimeSecret());
 
+  // ready = true as long as there is a runtime secret (MongoDB users will handle auth if env users are empty)
   return {
-    ready: hasRuntimeSecret && availableUsers.length > 0,
+    ready: hasRuntimeSecret,
     usingDevFallbackUsers,
     hasRuntimeSecret,
     previewProfiles: availableUsers.map((user) => ({
@@ -333,11 +335,21 @@ export function getAuthSetupState(): AuthSetupState {
   };
 }
 
+export function buildSessionFromMongo(user: { email: string; role: AuthRole; name: string; vendorSlug?: string }): AuthSession {
+  return {
+    email: normalizeEmail(user.email),
+    role: user.role,
+    name: user.name,
+    vendorSlug: user.role === "vendor" ? user.vendorSlug : undefined,
+    dashboardPath: getDefaultDashboardPath(user.role),
+  };
+}
+
 export function hasConfiguredAuthUsers() {
   return getAvailableAuthUsers().length > 0;
 }
 
-export function authenticateUser(input: { email: string; password: string }) {
+export async function authenticateUser(input: { email: string; password: string }): Promise<AuthSession | null> {
   const runtimeSecret = getRuntimeSecret();
 
   if (!runtimeSecret) {
@@ -345,18 +357,25 @@ export function authenticateUser(input: { email: string; password: string }) {
   }
 
   const users = getAvailableAuthUsers();
-
-  if (users.length === 0) {
-    throw new Error("No auth users are configured. Add AUTH_DEMO_USERS_JSON first.");
-  }
-
   const normalizedEmail = normalizeEmail(input.email);
   const password = input.password.trim();
-  const user = users.find(
-    (entry) => entry.email === normalizedEmail && entry.password === password,
-  );
 
-  return user ? toAuthSession(user) : null;
+  // Check env/dev users first
+  if (users.length > 0) {
+    const user = users.find(
+      (entry) => entry.email === normalizedEmail && entry.password === password,
+    );
+    if (user) return toAuthSession(user);
+  }
+
+  // Fall back to MongoDB users
+  if (hasMongoConfig()) {
+    const { authenticateMongoUser } = await import("@/lib/users");
+    const mongoUser = await authenticateMongoUser(input.email, input.password);
+    if (mongoUser) return buildSessionFromMongo(mongoUser);
+  }
+
+  return null;
 }
 
 export function getPostSignInPath(

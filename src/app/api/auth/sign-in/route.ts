@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = authenticateUser({ email, password });
+    const session = await authenticateUser({ email, password });
 
     if (!session) {
       return NextResponse.json(

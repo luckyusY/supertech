@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MegaMenu } from "@/components/mega-menu";
 import { MobileNav } from "@/components/mobile-nav";
@@ -27,6 +28,13 @@ export function SiteHeader() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
+          <Link
+            href="/sign-in"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)] hover:text-[var(--foreground)]"
+            aria-label="Account"
+          >
+            <User className="h-4 w-4" />
+          </Link>
           <CartStatusLink />
           <Link
             href="/catalog"
