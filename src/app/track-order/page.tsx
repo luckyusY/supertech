@@ -53,7 +53,7 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
             Enter the request ID from your order confirmation and the email you used
-            when placing the order. We'll pull up the latest status instantly.
+            when placing the order. We&apos;ll pull up the latest status instantly.
           </p>
 
           <form action="/track-order" method="get" className="mt-8 soft-card p-6">
