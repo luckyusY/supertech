@@ -57,5 +57,6 @@ jobs:
             export PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH"
             cd ~/public_html
             npm install --omit=dev
-            pm2 restart supertech
+            pm2 restart ecosystem.config.cjs
+            pm2 save
             echo "Deployed successfully!"
