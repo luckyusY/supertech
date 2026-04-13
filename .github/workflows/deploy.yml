@@ -55,4 +55,4 @@ jobs:
             cd ~/public_html
             npm install --omit=dev
             pm2 restart supertech
-            echo "✅ Deployed successfully!"
+            echo "Deployed successfully!"
