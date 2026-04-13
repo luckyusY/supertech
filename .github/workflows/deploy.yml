@@ -18,6 +18,15 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            nextjs-${{ runner.os }}-
+
       - name: Install dependencies
         run: npm ci
 
@@ -40,7 +49,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: ".next/,public/"
+          source: ".next/static/,.next/server/,.next/BUILD_ID,.next/build-manifest.json,.next/app-build-manifest.json,.next/app-path-routes-manifest.json,public/"
           target: "/home/wwwsuper/public_html"
           overwrite: true
 
@@ -52,8 +61,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            export NVM_DIR="$HOME/.nvm"
-            source "$NVM_DIR/nvm.sh" --no-use
             export PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH"
             cd ~/public_html
             npm install --omit=dev
