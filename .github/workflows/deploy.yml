@@ -52,6 +52,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh" --no-use
+            export PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH"
             cd ~/public_html
             npm install --omit=dev
             pm2 restart supertech
