@@ -12,6 +12,7 @@ export type User = {
   passwordHash: string;
   role: UserRole;
   name: string;
+  phone?: string;
   vendorSlug?: string;
   createdAt: Date;
 };
@@ -29,6 +30,7 @@ export async function createUser(input: {
   password: string;
   name: string;
   role: UserRole;
+  phone?: string;
   vendorSlug?: string;
 }): Promise<User> {
   if (!hasMongoConfig()) throw new Error("MongoDB is not configured.");
@@ -40,6 +42,7 @@ export async function createUser(input: {
     passwordHash: hashPassword(input.password),
     role: input.role,
     name: input.name.trim(),
+    phone: input.phone?.trim(),
     vendorSlug: input.vendorSlug,
     createdAt: new Date(),
   };
