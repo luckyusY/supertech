@@ -3,6 +3,7 @@ import { createUser } from "@/lib/users";
 import { buildSessionFromMongo, setAuthSessionCookie } from "@/lib/auth";
 
 export async function POST(request: Request) {
+  console.log("[sign-up] MONGODB_URI set:", Boolean(process.env.MONGODB_URI), "| MONGODB_DB:", process.env.MONGODB_DB || "(using default)");
   try {
     const body = await request.json();
     const { email, password, name } = body as { email?: string; password?: string; name?: string };
