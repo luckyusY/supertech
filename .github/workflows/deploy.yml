@@ -61,7 +61,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            cd ~/public_html
-            mkdir -p tmp
-            touch tmp/restart.txt
+            # public_html symlink already points .next → public_html
+            # Ensure supertech .next symlink is in place
+            if [ ! -L ~/supertech/.next ]; then
+              rm -rf ~/supertech/.next
+              ln -s ~/public_html/.next ~/supertech/.next
+            fi
+            if [ ! -L ~/supertech/node_modules ]; then
+              rm -rf ~/supertech/node_modules
+              ln -s ~/public_html/node_modules ~/supertech/node_modules
+            fi
+            # Restart Passenger
+            mkdir -p ~/supertech/tmp
+            touch ~/supertech/tmp/restart.txt
             echo "Deployed successfully!"
