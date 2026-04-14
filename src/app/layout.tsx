@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
 import { ChatProvider } from "@/components/chat-context";
 import { LiveChat } from "@/components/live-chat";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteHeaderFallback } from "@/components/site-header-fallback";
@@ -54,8 +55,9 @@ export default function RootLayout({
               <Suspense fallback={<SiteHeaderFallback />}>
                 <SiteHeader />
               </Suspense>
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 pb-20 sm:pb-0">{children}</main>
               <SiteFooter />
+              <MobileBottomNav />
             </div>
             <Toaster
               position="bottom-right"

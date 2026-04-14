@@ -18,7 +18,7 @@ function hasValue(value?: string) {
 }
 
 export function hasMongoConfig() {
-  return hasValue(process.env.MONGODB_URI) && hasValue(process.env.MONGODB_DB);
+  return hasValue(process.env.MONGODB_URI);
 }
 
 export function hasCloudinaryServerConfig() {

@@ -25,7 +25,7 @@ export default async function Home() {
     <div className="pb-20">
       {/* Hero */}
       <section className="page-shell pt-8 pb-6 sm:pt-12">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[var(--foreground)] px-8 py-12 text-white sm:px-12 sm:py-16 lg:px-16 lg:py-20">
+        <div className="relative overflow-hidden rounded-[1.5rem] bg-[var(--foreground)] px-5 py-10 text-white sm:rounded-[2rem] sm:px-12 sm:py-16 lg:px-16 lg:py-20">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-[var(--accent)] opacity-20 blur-3xl" />
             <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-[var(--teal)] opacity-15 blur-3xl" />
@@ -43,31 +43,31 @@ export default async function Home() {
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
                 🌍 Shipping across East &amp; West Africa
               </span>
-              <h1 className="text-5xl font-semibold leading-[1.05] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
+              <h1 className="text-3xl font-semibold leading-[1.1] tracking-[-0.04em] sm:text-5xl sm:leading-[1.05] sm:tracking-[-0.05em] lg:text-7xl">
                 Premium tech, delivered to your door.
               </h1>
-              <p className="text-lg leading-8 text-white/70 sm:text-xl">
+              <p className="text-base leading-7 text-white/70 sm:text-xl sm:leading-8">
                 Shop verified sellers across home tech, mobile, audio, gaming, and wearables — all in one place.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   href="/catalog"
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5"
                 >
                   Shop the catalog <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/vendors"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm"
                 >
                   Browse sellers
                 </Link>
               </div>
-              <div className="flex flex-wrap items-center gap-6 pt-2 text-sm text-white/60">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 text-sm text-white/60">
                 <span><span className="font-semibold text-white">24</span> products</span>
-                <span className="h-4 w-px bg-white/20" />
+                <span className="hidden h-4 w-px bg-white/20 sm:block" />
                 <span><span className="font-semibold text-white">6</span> verified sellers</span>
-                <span className="h-4 w-px bg-white/20" />
+                <span className="hidden h-4 w-px bg-white/20 sm:block" />
                 <span><span className="font-semibold text-white">12+</span> cities served</span>
               </div>
             </div>
@@ -100,10 +100,10 @@ export default async function Home() {
       </section>
 
       {/* Trust badges */}
-      <section className="page-shell py-4">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section className="py-4">
+        <div className="scroll-x gap-3 px-4 sm:grid sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
           {trustBadges.map((badge) => (
-            <div key={badge.title} className="flex items-start gap-3 rounded-[1.4rem] border border-[var(--line)] bg-white/60 px-4 py-4">
+            <div key={badge.title} className="flex w-[220px] shrink-0 items-center gap-3 rounded-[1.4rem] border border-[var(--line)] bg-white/60 px-4 py-3.5 sm:w-auto sm:items-start sm:py-4">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[rgba(228,90,54,0.1)]">
                 <badge.icon className="h-4 w-4 text-[var(--accent)]" />
               </span>
@@ -117,8 +117,8 @@ export default async function Home() {
       </section>
 
       {/* Featured products */}
-      <section className="page-shell py-6">
-        <div className="soft-card p-6 sm:p-8 lg:p-10">
+      <section className="page-shell py-4 sm:py-6">
+        <div className="soft-card p-4 sm:p-8 lg:p-10">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Handpicked</p>
@@ -167,8 +167,8 @@ export default async function Home() {
       </section>
 
       {/* Vendor spotlight */}
-      <section className="page-shell py-6">
-        <div className="soft-card p-6 sm:p-8 lg:p-10">
+      <section className="page-shell py-4 sm:py-6">
+        <div className="soft-card p-4 sm:p-8 lg:p-10">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Our sellers</p>
@@ -187,8 +187,8 @@ export default async function Home() {
       </section>
 
       {/* Free delivery CTA */}
-      <section className="page-shell py-6">
-        <div className="relative overflow-hidden rounded-[2rem] border border-[rgba(26,123,112,0.2)] bg-[rgba(26,123,112,0.06)] px-8 py-10 sm:px-12 sm:py-14">
+      <section className="page-shell py-4 sm:py-6">
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-[rgba(26,123,112,0.2)] bg-[rgba(26,123,112,0.06)] px-5 py-8 sm:rounded-[2rem] sm:px-12 sm:py-14">
           <div
             className="pointer-events-none absolute right-0 top-0 h-full w-1/2 opacity-[0.05]"
             style={{
