@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   X,
 } from "lucide-react";
+import { io, Socket } from "socket.io-client";
 import { useChatContext } from "@/components/chat-context";
 import { formatPrice } from "@/lib/utils";
 
@@ -20,161 +21,130 @@ type Message = {
   createdAt: string;
 };
 
-const POLL_INTERVAL = 3000; // ms
+type SocketMessage = {
+  id: string;
+  userId: string;
+  userName: string;
+  text: string;
+  at: string;
+};
 
 export function LiveChat() {
   const { isOpen, config, openChat, closeChat } = useChatContext();
 
-  // name entry step
   const [nameInput, setNameInput] = useState("");
   const [userName, setUserName] = useState("");
   const [nameSet, setNameSet] = useState(false);
-
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [error, setError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const lastAtRef = useRef<string | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const prevRoomRef = useRef(config.room);
+  const socketRef = useRef<Socket | null>(null);
 
-  // ── polling ──────────────────────────────────────────────────────
-  const fetchMessages = useCallback(
-    async (room: string, after?: string | null) => {
-      try {
-        const url = `/api/chat-messages?room=${encodeURIComponent(room)}${after ? `&after=${encodeURIComponent(after)}` : ""}`;
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { messages: Message[] };
-        if (data.messages.length > 0) {
-          setMessages((prev) => {
-            const existingIds = new Set(prev.map((m) => m.id));
-            const fresh = data.messages.filter((m) => !existingIds.has(m.id));
-            return fresh.length > 0 ? [...prev, ...fresh] : prev;
-          });
-          lastAtRef.current = data.messages[data.messages.length - 1].createdAt;
-        }
-      } catch {
-        // silent — try again next poll
-      }
-    },
-    [],
-  );
-
-  function startPolling(room: string) {
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(
-      () => void fetchMessages(room, lastAtRef.current),
-      POLL_INTERVAL,
-    );
-  }
-
-  function stopPolling() {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }
-
-  // start/stop polling when chat opens/closes
+  // Connect socket when chat opens + name is set
   useEffect(() => {
-    if (isOpen && nameSet) {
-      void fetchMessages(config.room, null);
-      startPolling(config.room);
-    } else {
-      stopPolling();
-    }
-    return stopPolling;
+    if (!isOpen || !nameSet) return;
+
+    const socket = io({
+      path: "/api/socket",
+      transports: ["polling", "websocket"],
+    });
+
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      setConnected(true);
+      socket.emit("join", { room: config.room, userName });
+    });
+
+    socket.on("disconnect", () => setConnected(false));
+
+    socket.on("message", (msg: SocketMessage) => {
+      setMessages((prev) => {
+        const exists = prev.find((m) => m.id === msg.id);
+        if (exists) return prev;
+        return [
+          ...prev,
+          {
+            id: msg.id,
+            senderName: msg.userName,
+            senderRole: msg.userId === socket.id ? "user" : "support",
+            text: msg.text,
+            createdAt: msg.at,
+          },
+        ];
+      });
+    });
+
+    socket.on("system", (data: { message: string }) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `sys-${Date.now()}`,
+          senderName: "System",
+          senderRole: "support",
+          text: `• ${data.message}`,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+      setConnected(false);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, nameSet, config.room]);
 
-  // reset when room changes
-  useEffect(() => {
-    if (config.room !== prevRoomRef.current) {
-      prevRoomRef.current = config.room;
-      stopPolling();
-      setMessages([]);
-      lastAtRef.current = null;
-      if (nameSet) {
-        void fetchMessages(config.room, null);
-        startPolling(config.room);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config.room]);
-
-  // scroll to bottom
+  // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // focus input on open
+  // Focus input
   useEffect(() => {
     if (isOpen && nameSet) setTimeout(() => inputRef.current?.focus(), 80);
   }, [isOpen, nameSet]);
 
-  // ── handlers ─────────────────────────────────────────────────────
   function handleJoin(e: React.FormEvent) {
     e.preventDefault();
     const name = nameInput.trim();
     if (!name) return;
     setUserName(name);
     setNameSet(true);
-    // fetch history immediately after name is set
-    void fetchMessages(config.room, null);
-    startPolling(config.room);
   }
 
-  async function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || sending) return;
+  const handleSend = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      const text = input.trim();
+      if (!text || sending || !socketRef.current) return;
 
-    setInput("");
-    setError("");
-    setSending(true);
+      setSending(true);
+      setInput("");
+      setError("");
 
-    // Optimistic message
-    const tempId = `temp-${Date.now()}`;
-    const optimistic: Message = {
-      id: tempId,
-      senderName: userName,
-      senderRole: "user",
-      text,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
+      // Optimistic message
+      const tempMsg: Message = {
+        id: `temp-${Date.now()}`,
+        senderName: userName,
+        senderRole: "user",
+        text,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, tempMsg]);
 
-    try {
-      const res = await fetch("/api/chat-messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room: config.room, senderName: userName, text }),
-      });
-
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Failed to send");
-      }
-
-      const data = (await res.json()) as { message: Message };
-      // Replace optimistic with confirmed
-      setMessages((prev) =>
-        prev.map((m) => (m.id === tempId ? data.message : m)),
-      );
-      lastAtRef.current = data.message.createdAt;
-    } catch (err) {
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      setError(err instanceof Error ? err.message : "Failed to send. Try again.");
-    } finally {
+      socketRef.current.emit("message", { text });
       setSending(false);
-    }
-  }
+    },
+    [input, sending, userName],
+  );
 
-  // ── render ────────────────────────────────────────────────────────
   return (
     <>
       {/* Floating button */}
@@ -183,29 +153,30 @@ export function LiveChat() {
           onClick={() =>
             openChat({ room: "support", title: "Live Support", subtitle: "We reply within minutes" })
           }
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-xl transition-transform hover:scale-105"
+          className="fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-xl transition-transform hover:scale-105 sm:bottom-6 sm:right-6 sm:h-14 sm:w-14"
           aria-label="Open chat"
         >
-          <MessageCircle className="h-6 w-6" />
-          <span className="absolute -right-1 -top-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-green-500" />
+          <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-green-500 sm:h-3.5 sm:w-3.5" />
         </button>
       )}
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[520px] w-[350px] flex-col overflow-hidden rounded-[1.6rem] border border-[var(--line)] bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[520px] sm:w-[350px] sm:rounded-[1.6rem] sm:border sm:border-[var(--line)] sm:shadow-2xl">
 
           {/* Header */}
           <div className="flex shrink-0 items-center justify-between bg-[var(--foreground)] px-4 py-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
+              <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
                 <MessageCircle className="h-4 w-4 text-white" />
+                <span className={`absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--foreground)] ${connected ? "bg-green-400" : "bg-gray-400"}`} />
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight text-white">{config.title}</p>
-                {config.subtitle && (
-                  <p className="text-[11px] leading-tight text-white/55">{config.subtitle}</p>
-                )}
+                <p className="text-[11px] leading-tight text-white/55">
+                  {connected ? "Online" : config.subtitle}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -280,6 +251,16 @@ export function LiveChat() {
 
                 {messages.map((msg) => {
                   const isMe = msg.senderRole === "user";
+                  const isSystem = msg.senderName === "System";
+
+                  if (isSystem) {
+                    return (
+                      <p key={msg.id} className="text-center text-[10px] text-[var(--muted)]">
+                        {msg.text}
+                      </p>
+                    );
+                  }
+
                   return (
                     <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                       <div
@@ -318,12 +299,12 @@ export function LiveChat() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type a message…"
-                  disabled={sending}
+                  disabled={sending || !connected}
                   className="flex-1 rounded-full border border-[var(--line)] px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/25 disabled:opacity-60"
                 />
                 <button
                   type="submit"
-                  disabled={!input.trim() || sending}
+                  disabled={!input.trim() || sending || !connected}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white transition-opacity disabled:opacity-40"
                   aria-label="Send"
                 >

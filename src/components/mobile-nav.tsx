@@ -18,11 +18,9 @@ const categories = [
 const quickLinks = [
   { label: "All products", href: "/catalog" },
   { label: "All vendors", href: "/vendors" },
-  { label: "Request product", href: "/request-product" },
   { label: "Track order", href: "/track-order" },
   { label: "Cart", href: "/cart" },
-  { label: "Request a product", href: "/request" },
-  { label: "Sign in", href: "/sign-in" },
+  { label: "Request a product", href: "/request-product" },
 ];
 
 type MobileSession = {
@@ -196,7 +194,7 @@ export function MobileNav() {
                     ) : (
                       <>
                         <Link
-                          href="/login"
+                          href="/sign-in"
                           onClick={() => setOpen(false)}
                           className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
                         >
@@ -204,7 +202,7 @@ export function MobileNav() {
                           <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
                         </Link>
                         <Link
-                          href="/signup"
+                          href="/sign-up"
                           onClick={() => setOpen(false)}
                           className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
                         >

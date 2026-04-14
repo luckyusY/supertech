@@ -31,6 +31,17 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Safe area for phones with home bar (iPhone notch etc) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+}
+
+/* Skeleton pulse override for brand colors */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 body {
   background:
     radial-gradient(circle at top left, rgba(242, 191, 99, 0.3), transparent 24%),
@@ -54,7 +65,18 @@ a {
   margin-inline: auto;
   width: 100%;
   max-width: 82rem;
-  padding-inline: 1.5rem;
+  padding-inline: 1rem;
+}
+
+.scroll-x {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-x::-webkit-scrollbar {
+  display: none;
 }
 
 .soft-card {
@@ -129,6 +151,12 @@ a {
 }
 
 @media (min-width: 640px) {
+  .page-shell {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
   .page-shell {
     padding-inline: 2rem;
   }

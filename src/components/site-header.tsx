@@ -10,28 +10,24 @@ export async function SiteHeader() {
   const session = await getAuthSession().catch(() => null);
 
   return (
-    <header className="page-shell sticky top-0 z-40 pt-4">
-      <div className="soft-card flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
+    <header className="sticky top-0 z-40 px-3 pt-3 sm:page-shell sm:pt-4">
+      <div className="soft-card flex items-center justify-between gap-3 px-3 py-2 sm:px-5 sm:py-3">
+
         {/* Logo */}
-        <Link href="/" className="flex shrink-0 items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] bg-[var(--foreground)] text-[11px] font-bold tracking-[0.18em] text-white">
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--foreground)] text-[10px] font-bold tracking-widest text-white sm:h-9 sm:w-9">
             ST
           </div>
-          <div className="hidden sm:block">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-              SuperTech
-            </p>
-            <p className="text-sm font-semibold tracking-[-0.03em] leading-none">
-              Marketplace
-            </p>
-          </div>
+          <span className="text-sm font-semibold tracking-tight sm:text-base">
+            SuperTech
+          </span>
         </Link>
 
         {/* Mega menu — desktop only */}
         <MegaMenu />
 
         {/* Right actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {session ? (
             <UserMenu
               name={session.name}
@@ -41,19 +37,22 @@ export async function SiteHeader() {
           ) : (
             <Link
               href="/sign-in"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)] hover:text-[var(--foreground)]"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)] hover:text-[var(--foreground)]"
               aria-label="Sign in"
             >
               <User className="h-4 w-4" />
             </Link>
           )}
+
           <CartStatusLink />
+
           <Link
             href="/catalog"
             className="hidden rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white sm:inline-flex"
           >
             Shop now
           </Link>
+
           {/* Mobile hamburger */}
           <MobileNav />
         </div>

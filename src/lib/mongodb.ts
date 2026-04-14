@@ -4,14 +4,12 @@ declare global {
   var _supertechMongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-const uri = process.env.MONGODB_URI;
-const databaseName = process.env.MONGODB_DB || "supertech";
-
 export function getDatabaseName() {
-  return databaseName;
+  return process.env.MONGODB_DB || "supertech";
 }
 
 export function getMongoClient() {
+  const uri = process.env.MONGODB_URI;
   if (!uri) {
     throw new Error("Missing MONGODB_URI. Add it to .env.local before using MongoDB.");
   }
@@ -31,5 +29,5 @@ export function getMongoClient() {
 export async function getDatabase() {
   const client = await getMongoClient();
 
-  return client.db(databaseName);
+  return client.db(getDatabaseName());
 }
