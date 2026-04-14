@@ -24,8 +24,8 @@ export const dynamic = "force-dynamic";
 const statusStyles: Record<string, { label: string; className: string }> = {
   open: { label: "Open", className: "bg-blue-50 text-blue-600" },
   sourcing: { label: "Sourcing", className: "bg-amber-50 text-amber-600" },
-  found: { label: "Found", className: "bg-[rgba(26,123,112,0.1)] text-[var(--teal)]" },
-  unavailable: { label: "Unavailable", className: "bg-[rgba(16,32,25,0.06)] text-[var(--muted)]" },
+  found: { label: "Found", className: "bg-[rgba(8,145,178,0.1)] text-[var(--teal)]" },
+  unavailable: { label: "Unavailable", className: "bg-[rgba(15,23,42,0.06)] text-[var(--muted)]" },
 };
 
 export default async function AccountPage() {
@@ -207,7 +207,7 @@ export default async function AccountPage() {
           className="soft-card flex items-center justify-between gap-4 p-5 transition-shadow hover:shadow-lg"
         >
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-[rgba(228,90,54,0.1)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-[rgba(37,99,235,0.1)]">
               <Package className="h-5 w-5 text-[var(--accent)]" />
             </div>
             <div>
@@ -223,7 +223,7 @@ export default async function AccountPage() {
           className="soft-card flex items-center justify-between gap-4 p-5 transition-shadow hover:shadow-lg"
         >
           <div className="flex items-center gap-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-[rgba(26,123,112,0.1)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-[rgba(8,145,178,0.1)]">
               <PackageSearch className="h-5 w-5 text-[var(--teal)]" />
             </div>
             <div>

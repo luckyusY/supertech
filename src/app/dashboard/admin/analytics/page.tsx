@@ -70,7 +70,7 @@ export default async function AdminAnalyticsPage() {
       value: formatPrice(totalGross),
       icon: TrendingUp,
       color: "text-[var(--teal)]",
-      bg: "bg-[rgba(26,123,112,0.08)]",
+      bg: "bg-[rgba(8,145,178,0.08)]",
       sub: "Total customer spend",
     },
     {
@@ -78,7 +78,7 @@ export default async function AdminAnalyticsPage() {
       value: formatPrice(totalCommission),
       icon: BarChart3,
       color: "text-[var(--accent)]",
-      bg: "bg-[rgba(228,90,54,0.08)]",
+      bg: "bg-[rgba(37,99,235,0.08)]",
       sub: "8% of gross sales",
     },
     {
@@ -119,7 +119,7 @@ export default async function AdminAnalyticsPage() {
               Analytics
             </h1>
           </div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,123,112,0.25)] bg-[rgba(26,123,112,0.08)] px-4 py-2 text-sm font-semibold text-[var(--teal)]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(8,145,178,0.25)] bg-[rgba(8,145,178,0.08)] px-4 py-2 text-sm font-semibold text-[var(--teal)]">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--teal)]" />
             Live data
           </span>
@@ -145,7 +145,7 @@ export default async function AdminAnalyticsPage() {
         {/* Revenue split visual */}
         <div className="mt-8 rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-6">
           <p className="text-sm font-semibold text-[var(--muted)]">Revenue split</p>
-          <div className="mt-4 flex h-4 overflow-hidden rounded-full bg-[rgba(16,32,25,0.08)]">
+          <div className="mt-4 flex h-4 overflow-hidden rounded-full bg-[rgba(15,23,42,0.08)]">
             <div
               className="h-full bg-[var(--teal)] transition-all"
               style={{ width: `${((totalNet / totalGross) * 100).toFixed(1)}%` }}
@@ -180,7 +180,7 @@ export default async function AdminAnalyticsPage() {
           <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-[var(--line)]">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[var(--line)] bg-[rgba(16,32,25,0.03)]">
+                <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
                   {["Vendor", "Gross sales", "Net payout", "Commission", "Products", "Fulfillment"].map((h) => (
                     <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
                       {h}
@@ -192,7 +192,7 @@ export default async function AdminAnalyticsPage() {
                 {vendorRows.map((row, i) => (
                   <tr
                     key={row.vendorSlug}
-                    className={`border-b border-[var(--line)] last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-[rgba(16,32,25,0.015)]"}`}
+                    className={`border-b border-[var(--line)] last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-[rgba(15,23,42,0.015)]"}`}
                   >
                     <td className="px-5 py-4 font-semibold">{row.vendorName}</td>
                     <td className="px-5 py-4">{formatPrice(row.grossSales)}</td>
@@ -204,7 +204,7 @@ export default async function AdminAnalyticsPage() {
                     </td>
                     <td className="px-5 py-4">{row.activeProducts}</td>
                     <td className="px-5 py-4">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(26,123,112,0.1)] px-2.5 py-0.5 text-xs font-semibold text-[var(--teal)]">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(8,145,178,0.1)] px-2.5 py-0.5 text-xs font-semibold text-[var(--teal)]">
                         {row.fulfillmentRate}
                       </span>
                     </td>
@@ -217,14 +217,14 @@ export default async function AdminAnalyticsPage() {
 
         {/* Avg fulfillment bar */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-[1.5rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-6">
+          <div className="rounded-[1.5rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] p-6">
             <p className="text-sm font-semibold text-[var(--muted)]">
               Average fulfillment rate
             </p>
             <p className="mt-2 text-4xl font-semibold tracking-[-0.05em] text-[var(--teal)]">
               {avgFulfillment.toFixed(1)}%
             </p>
-            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-[rgba(16,32,25,0.08)]">
+            <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-[rgba(15,23,42,0.08)]">
               <div
                 className="h-full rounded-full bg-[var(--teal)]"
                 style={{ width: `${avgFulfillment}%` }}
@@ -233,7 +233,7 @@ export default async function AdminAnalyticsPage() {
             <p className="mt-2 text-xs text-[var(--muted)]">Across {vendors.length} active sellers</p>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-6">
+          <div className="rounded-[1.5rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] p-6">
             <p className="text-sm font-semibold text-[var(--muted)]">
               Average payout per vendor
             </p>

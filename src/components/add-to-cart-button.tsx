@@ -46,7 +46,7 @@ export function AddToCartButton({ item }: AddToCartButtonProps) {
         onClick={handleAddToCart}
         className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 ${
           didAdd
-            ? "bg-[rgba(26,123,112,0.12)] text-[var(--teal)]"
+            ? "bg-[rgba(8,145,178,0.12)] text-[var(--teal)]"
             : "border border-[var(--line)] bg-white text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white"
         }`}
       >

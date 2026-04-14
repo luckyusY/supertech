@@ -160,7 +160,7 @@ export default async function VendorDashboardPage() {
                 key={item}
                 className="flex items-start gap-3 rounded-[1.2rem] border border-[var(--line)] bg-white/72 px-4 py-3 text-sm"
               >
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(26,123,112,0.12)] text-xs font-bold text-[var(--teal)]">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(8,145,178,0.12)] text-xs font-bold text-[var(--teal)]">
                   {i + 1}
                 </span>
                 <span>{item}</span>

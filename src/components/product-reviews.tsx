@@ -26,7 +26,7 @@ function Stars({ rating, size = 16 }: { rating: number; size?: number }) {
         <Star
           key={i}
           style={{ width: size, height: size }}
-          className={i <= rating ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[rgba(16,32,25,0.15)]"}
+          className={i <= rating ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[rgba(15,23,42,0.15)]"}
         />
       ))}
     </span>
@@ -91,7 +91,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
   }
 
   if (loading) {
-    return <div className="h-24 animate-pulse rounded-[1.5rem] bg-[rgba(16,32,25,0.05)]" />;
+    return <div className="h-24 animate-pulse rounded-[1.5rem] bg-[rgba(15,23,42,0.05)]" />;
   }
 
   return (
@@ -120,7 +120,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
       </div>
 
       {submitted && (
-        <div className="mt-4 rounded-[1.2rem] border border-[rgba(26,123,112,0.3)] bg-[rgba(26,123,112,0.08)] px-4 py-3 text-sm text-[var(--teal)]">
+        <div className="mt-4 rounded-[1.2rem] border border-[rgba(8,145,178,0.3)] bg-[rgba(8,145,178,0.08)] px-4 py-3 text-sm text-[var(--teal)]">
           Thanks for your review!
         </div>
       )}
@@ -143,7 +143,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
               {[1, 2, 3, 4, 5].map((i) => (
                 <button key={i} type="button" onClick={() => setRating(i)} className="p-0.5">
                   <Star
-                    className={`h-6 w-6 ${i <= rating ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[rgba(16,32,25,0.2)]"}`}
+                    className={`h-6 w-6 ${i <= rating ? "fill-[var(--accent)] text-[var(--accent)]" : "text-[rgba(15,23,42,0.2)]"}`}
                   />
                 </button>
               ))}

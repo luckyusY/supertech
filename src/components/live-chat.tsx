@@ -191,9 +191,9 @@ export function LiveChat() {
 
           {/* Product context card */}
           {config.productContext && (
-            <div className="shrink-0 border-b border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-4 py-3">
+            <div className="shrink-0 border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)] px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.7rem] bg-[rgba(16,32,25,0.08)]">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.7rem] bg-[rgba(15,23,42,0.08)]">
                   <Package className="h-4 w-4 text-[var(--muted)]" />
                 </div>
                 <div className="min-w-0">
@@ -242,7 +242,7 @@ export function LiveChat() {
               {/* Messages */}
               <div className="flex-1 space-y-3 overflow-y-auto p-4">
                 {messages.length === 0 && (
-                  <div className="rounded-[0.9rem] bg-[rgba(16,32,25,0.05)] px-3 py-2.5 text-center text-xs text-[var(--muted)]">
+                  <div className="rounded-[0.9rem] bg-[rgba(15,23,42,0.05)] px-3 py-2.5 text-center text-xs text-[var(--muted)]">
                     {config.productContext
                       ? `Ask anything about ${config.productContext.name} — our team will reply shortly.`
                       : "Send a message and our support team will reply shortly."}
@@ -267,7 +267,7 @@ export function LiveChat() {
                         className={`max-w-[80%] rounded-[1rem] px-3.5 py-2.5 text-sm leading-relaxed ${
                           isMe
                             ? "rounded-br-[4px] bg-[var(--foreground)] text-white"
-                            : "rounded-bl-[4px] bg-[rgba(16,32,25,0.06)] text-[var(--foreground)]"
+                            : "rounded-bl-[4px] bg-[rgba(15,23,42,0.06)] text-[var(--foreground)]"
                         }`}
                       >
                         {!isMe && (
@@ -282,7 +282,7 @@ export function LiveChat() {
                 })}
 
                 {error && (
-                  <p className="rounded-[0.7rem] bg-[rgba(228,90,54,0.08)] px-3 py-2 text-center text-xs text-[var(--accent)]">
+                  <p className="rounded-[0.7rem] bg-[rgba(37,99,235,0.08)] px-3 py-2 text-center text-xs text-[var(--accent)]">
                     {error}
                   </p>
                 )}

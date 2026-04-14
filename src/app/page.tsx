@@ -67,7 +67,7 @@ export default async function Home() {
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   href="/catalog"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[rgba(228,90,54,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[rgba(228,90,54,0.5)]"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[rgba(37,99,235,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[rgba(37,99,235,0.5)]"
                 >
                   Shop the catalog <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -178,7 +178,7 @@ export default async function Home() {
               key={badge.title}
               className="flex w-[230px] shrink-0 items-center gap-3.5 rounded-[1.5rem] border border-[var(--line)] bg-white/70 px-4 py-4 backdrop-blur-sm transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(228,90,54,0.08)]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[rgba(37,99,235,0.08)]">
                 <badge.icon className="h-4.5 w-4.5 h-[18px] w-[18px] text-[var(--accent)]" />
               </span>
               <div>
@@ -200,7 +200,7 @@ export default async function Home() {
             </div>
             <Link
               href="/catalog"
-              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--teal)] transition-all hover:bg-[rgba(26,123,112,0.06)] sm:flex"
+              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--teal)] transition-all hover:bg-[rgba(8,145,178,0.06)] sm:flex"
             >
               View all <ArrowRight className="h-4 w-4" />
             </Link>
@@ -272,7 +272,7 @@ export default async function Home() {
             </div>
             <Link
               href="/vendors"
-              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--teal)] transition-all hover:bg-[rgba(26,123,112,0.06)] sm:flex"
+              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--teal)] transition-all hover:bg-[rgba(8,145,178,0.06)] sm:flex"
             >
               All vendors <ArrowRight className="h-4 w-4" />
             </Link>
@@ -309,7 +309,7 @@ export default async function Home() {
 
       {/* ── Free delivery CTA ──────────────────────────── */}
       <section className="page-shell py-4 pb-6 sm:py-6 sm:pb-10">
-        <div className="relative overflow-hidden rounded-[1.75rem] border border-[rgba(26,123,112,0.18)] bg-gradient-to-br from-[rgba(26,123,112,0.07)] to-[rgba(26,123,112,0.03)] px-6 py-10 sm:rounded-[2.25rem] sm:px-14 sm:py-16">
+        <div className="relative overflow-hidden rounded-[1.75rem] border border-[rgba(8,145,178,0.18)] bg-gradient-to-br from-[rgba(8,145,178,0.07)] to-[rgba(8,145,178,0.03)] px-6 py-10 sm:rounded-[2.25rem] sm:px-14 sm:py-16">
           {/* Grid */}
           <div
             className="pointer-events-none absolute right-0 top-0 h-full w-1/2 opacity-[0.05]"
@@ -324,7 +324,7 @@ export default async function Home() {
 
           <div className="relative flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,123,112,0.25)] bg-[rgba(26,123,112,0.08)] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--teal)]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(8,145,178,0.25)] bg-[rgba(8,145,178,0.08)] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--teal)]">
                 🚚 Free delivery
               </span>
               <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl lg:text-4xl">

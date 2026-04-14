@@ -36,12 +36,12 @@ export default function PhasesPage() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${
                     phase.status === "done"
-                      ? "bg-[rgba(26,123,112,0.12)] text-[var(--teal)]"
+                      ? "bg-[rgba(8,145,178,0.12)] text-[var(--teal)]"
                       : phase.status === "active"
-                        ? "bg-[rgba(242,191,99,0.18)] text-[#9c6b0b]"
+                        ? "bg-[rgba(245,158,11,0.18)] text-[#9c6b0b]"
                         : phase.status === "next"
-                          ? "bg-[rgba(228,90,54,0.1)] text-[var(--accent)]"
-                          : "bg-[rgba(16,32,25,0.06)] text-[var(--muted)]"
+                          ? "bg-[rgba(37,99,235,0.1)] text-[var(--accent)]"
+                          : "bg-[rgba(15,23,42,0.06)] text-[var(--muted)]"
                   }`}
                 >
                   {phase.status}
@@ -66,7 +66,7 @@ export default function PhasesPage() {
             </section>
           ))}
         </div>
-        <div className="mt-8 flex flex-col gap-4 rounded-[1.7rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-6 md:flex-row md:items-center md:justify-between">
+        <div className="mt-8 flex flex-col gap-4 rounded-[1.7rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] p-6 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
               Current focus

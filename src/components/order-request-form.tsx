@@ -221,7 +221,7 @@ export function OrderRequestForm({
                 className="mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm"
               />
             </div>
-            <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-4 py-3">
+            <div className="rounded-[1rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] px-4 py-3">
               <p className="text-sm text-[var(--muted)]">Estimated total</p>
               <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
                 {formatPrice(estimatedTotal)}
@@ -348,7 +348,7 @@ export function OrderRequestForm({
       </div>
 
       {error ? (
-        <div className="mt-6 rounded-[1rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
+        <div className="mt-6 rounded-[1rem] border border-[rgba(37,99,235,0.3)] bg-[rgba(37,99,235,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
           {error}
         </div>
       ) : null}

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
-import { AnnouncementBar } from "@/components/announcement-bar";
 import { CartProvider } from "@/components/cart-provider";
 import { ChatProvider } from "@/components/chat-context";
 import { LiveChat } from "@/components/live-chat";
@@ -53,7 +52,6 @@ export default function RootLayout({
             <SmoothScroll />
             <div className="noise fixed inset-0 -z-10 opacity-40" />
             <div className="relative flex min-h-full flex-col">
-              <AnnouncementBar />
               <Suspense fallback={<SiteHeaderFallback />}>
                 <SiteHeader />
               </Suspense>
@@ -67,7 +65,7 @@ export default function RootLayout({
                 style: {
                   fontFamily: "var(--font-space-grotesk)",
                   borderRadius: "1rem",
-                  border: "1px solid rgba(16,32,25,0.12)",
+                  border: "1px solid rgba(15,23,42,0.12)",
                   background: "rgba(255,252,246,0.95)",
                 },
               }}

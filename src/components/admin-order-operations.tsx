@@ -201,7 +201,7 @@ export function AdminOrderOperations() {
       </div>
 
       {actionError ? (
-        <div className="rounded-[1rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
+        <div className="rounded-[1rem] border border-[rgba(37,99,235,0.3)] bg-[rgba(37,99,235,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
           {actionError}
         </div>
       ) : null}
@@ -239,7 +239,7 @@ export function AdminOrderOperations() {
 
           <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-4">
-              <div className="rounded-[1.25rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-4">
+              <div className="rounded-[1.25rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] p-4">
                 <p className="text-sm font-semibold">Line items</p>
                 <div className="mt-3 space-y-3">
                   {order.lineItems.map((item) => (
@@ -288,7 +288,7 @@ export function AdminOrderOperations() {
               ) : null}
             </div>
 
-            <div className="rounded-[1.25rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-4">
+            <div className="rounded-[1.25rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] p-4">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <MessageSquareMore className="h-4 w-4 text-[var(--accent)]" />
                 Order control panel

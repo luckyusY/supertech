@@ -17,10 +17,10 @@ type VendorPayout = {
 };
 
 const statusStyles: Record<string, string> = {
-  paid: "bg-[rgba(26,123,112,0.12)] text-[var(--teal)]",
-  pending: "bg-[rgba(242,191,99,0.18)] text-[#9c6b0b]",
-  processing: "bg-[rgba(228,90,54,0.1)] text-[var(--accent)]",
-  on_hold: "bg-[rgba(16,32,25,0.06)] text-[var(--muted)]",
+  paid: "bg-[rgba(8,145,178,0.12)] text-[var(--teal)]",
+  pending: "bg-[rgba(245,158,11,0.18)] text-[#9c6b0b]",
+  processing: "bg-[rgba(37,99,235,0.1)] text-[var(--accent)]",
+  on_hold: "bg-[rgba(15,23,42,0.06)] text-[var(--muted)]",
 };
 
 export function VendorPayoutSummary() {
@@ -43,7 +43,7 @@ export function VendorPayoutSummary() {
     return (
       <div className="space-y-3">
         {[1, 2].map((i) => (
-          <div key={i} className="h-20 animate-pulse rounded-[1.2rem] bg-[rgba(16,32,25,0.05)]" />
+          <div key={i} className="h-20 animate-pulse rounded-[1.2rem] bg-[rgba(15,23,42,0.05)]" />
         ))}
       </div>
     );
@@ -51,7 +51,7 @@ export function VendorPayoutSummary() {
 
   if (error) {
     return (
-      <div className="rounded-[1rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
+      <div className="rounded-[1rem] border border-[rgba(37,99,235,0.3)] bg-[rgba(37,99,235,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
         {error}
       </div>
     );

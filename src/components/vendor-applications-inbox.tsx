@@ -85,7 +85,7 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
     <div className="space-y-6">
       {/* Temp password banner shown after approval */}
       {approvalResult?.tempPassword && (
-        <div className="rounded-[1.4rem] border border-[rgba(26,123,112,0.3)] bg-[rgba(26,123,112,0.06)] p-5">
+        <div className="rounded-[1.4rem] border border-[rgba(8,145,178,0.3)] bg-[rgba(8,145,178,0.06)] p-5">
           <div className="flex items-center gap-3">
             <KeyRound className="h-5 w-5 text-[var(--teal)]" />
             <p className="font-semibold text-[var(--teal)]">Vendor account created</p>
@@ -147,7 +147,7 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
                     app.status === "approved"
-                      ? "bg-[rgba(26,123,112,0.1)] text-[var(--teal)]"
+                      ? "bg-[rgba(8,145,178,0.1)] text-[var(--teal)]"
                       : "bg-red-50 text-red-600"
                   }`}
                 >
@@ -200,7 +200,7 @@ function ApplicationCard({
     <div className="rounded-[1.4rem] border border-[var(--line)] bg-white/72 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-[rgba(16,32,25,0.06)]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-[rgba(15,23,42,0.06)]">
             <Building2 className="h-5 w-5 text-[var(--muted)]" />
           </div>
           <div>

@@ -90,9 +90,9 @@ export function MegaMenu() {
                       key={cat.name}
                       href={cat.href}
                       onClick={() => setOpen(null)}
-                      className="flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 transition-colors hover:bg-[rgba(16,32,25,0.04)]"
+                      className="flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 transition-colors hover:bg-[rgba(15,23,42,0.04)]"
                     >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[rgba(16,32,25,0.06)]">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[rgba(15,23,42,0.06)]">
                         <cat.icon className="h-4 w-4 text-[var(--foreground)]" />
                       </span>
                       <span>
@@ -115,9 +115,9 @@ export function MegaMenu() {
                       key={col.name}
                       href={col.href}
                       onClick={() => setOpen(null)}
-                      className="flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 transition-colors hover:bg-[rgba(16,32,25,0.04)]"
+                      className="flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 transition-colors hover:bg-[rgba(15,23,42,0.04)]"
                     >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[rgba(228,90,54,0.1)]">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[rgba(37,99,235,0.1)]">
                         <col.icon className="h-4 w-4 text-[var(--accent)]" />
                       </span>
                       <span className="text-sm font-semibold">{col.name}</span>
@@ -169,10 +169,10 @@ export function MegaMenu() {
                     key={v.slug}
                     href={`/vendors/${v.slug}`}
                     onClick={() => setOpen(null)}
-                    className="flex items-center justify-between rounded-[0.9rem] px-3 py-2.5 transition-colors hover:bg-[rgba(16,32,25,0.04)]"
+                    className="flex items-center justify-between rounded-[0.9rem] px-3 py-2.5 transition-colors hover:bg-[rgba(15,23,42,0.04)]"
                   >
                     <span className="text-sm font-semibold">{v.name}</span>
-                    <span className="rounded-full bg-[rgba(16,32,25,0.06)] px-2.5 py-0.5 text-xs text-[var(--muted)]">
+                    <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-2.5 py-0.5 text-xs text-[var(--muted)]">
                       {v.tag}
                     </span>
                   </Link>

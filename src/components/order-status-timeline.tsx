@@ -78,8 +78,8 @@ export function OrderStatusTimeline({ status }: OrderStatusTimelineProps) {
             key={step.id}
             className={cn(
               "rounded-[1.25rem] border px-4 py-4",
-              isCompleted && "border-[rgba(26,123,112,0.2)] bg-[rgba(26,123,112,0.08)]",
-              isCurrent && "border-[rgba(228,90,54,0.22)] bg-[rgba(228,90,54,0.08)]",
+              isCompleted && "border-[rgba(8,145,178,0.2)] bg-[rgba(8,145,178,0.08)]",
+              isCurrent && "border-[rgba(37,99,235,0.22)] bg-[rgba(37,99,235,0.08)]",
               isPending && "border-[var(--line)] bg-white",
             )}
           >
@@ -89,7 +89,7 @@ export function OrderStatusTimeline({ status }: OrderStatusTimelineProps) {
                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
                   isCompleted && "bg-[var(--teal)] text-white",
                   isCurrent && "bg-[var(--accent)] text-white",
-                  isPending && "bg-[rgba(16,32,25,0.06)] text-[var(--muted)]",
+                  isPending && "bg-[rgba(15,23,42,0.06)] text-[var(--muted)]",
                 )}
               >
                 <step.icon className="h-4 w-4" />

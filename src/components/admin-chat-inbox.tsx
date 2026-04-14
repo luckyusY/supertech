@@ -153,8 +153,8 @@ export function AdminChatInbox() {
                 <button
                   key={r.room}
                   onClick={() => setActiveRoom(r.room)}
-                  className={`w-full border-b border-[var(--line)] px-4 py-3 text-left transition-colors hover:bg-[rgba(16,32,25,0.04)] ${
-                    activeRoom === r.room ? "bg-[rgba(16,32,25,0.06)]" : ""
+                  className={`w-full border-b border-[var(--line)] px-4 py-3 text-left transition-colors hover:bg-[rgba(15,23,42,0.04)] ${
+                    activeRoom === r.room ? "bg-[rgba(15,23,42,0.06)]" : ""
                   }`}
                 >
                   <div className="flex items-start justify-between gap-1">
@@ -206,7 +206,7 @@ export function AdminChatInbox() {
                         className={`max-w-[80%] rounded-[1rem] px-3.5 py-2.5 text-sm leading-relaxed ${
                           isSupport
                             ? "rounded-br-[4px] bg-[var(--foreground)] text-white"
-                            : "rounded-bl-[4px] bg-[rgba(16,32,25,0.06)]"
+                            : "rounded-bl-[4px] bg-[rgba(15,23,42,0.06)]"
                         }`}
                       >
                         {!isSupport && (

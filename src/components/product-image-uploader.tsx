@@ -70,7 +70,7 @@ export function ProductImageUploader({
       </div>
 
       {disabled ? (
-        <div className="rounded-[1rem] border border-dashed border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-4 py-4 text-sm leading-7 text-[var(--muted)]">
+        <div className="rounded-[1rem] border border-dashed border-[var(--line)] bg-[rgba(15,23,42,0.03)] px-4 py-4 text-sm leading-7 text-[var(--muted)]">
           Add `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` and `NEXT_PUBLIC_CLOUDINARY_API_KEY`
           to enable seller uploads.
         </div>

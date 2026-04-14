@@ -60,7 +60,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         className="group relative flex flex-col overflow-hidden rounded-[1.7rem] border border-[var(--line)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/[0.08]"
       >
         {/* Image area */}
-        <div className="relative aspect-[4/4.2] overflow-hidden bg-[rgba(16,32,25,0.03)]">
+        <div className="relative aspect-[4/4.2] overflow-hidden bg-[rgba(15,23,42,0.03)]">
           <Image
             src={product.heroImage}
             alt={product.name}

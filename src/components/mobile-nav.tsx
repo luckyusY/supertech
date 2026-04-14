@@ -136,10 +136,10 @@ export function MobileNav() {
                         key={cat.name}
                         href={cat.href}
                         onClick={() => setOpen(false)}
-                        className="flex items-center justify-between rounded-xl px-3 py-3 transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                        className="flex items-center justify-between rounded-xl px-3 py-3 transition-colors hover:bg-[rgba(15,23,42,0.05)]"
                       >
                         <span className="flex items-center gap-3">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(16,32,25,0.06)]">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[rgba(15,23,42,0.06)]">
                             <cat.icon className="h-4 w-4" />
                           </span>
                           <span className="text-sm font-semibold">{cat.name}</span>
@@ -159,7 +159,7 @@ export function MobileNav() {
                         key={link.label}
                         href={link.href}
                         onClick={() => setOpen(false)}
-                        className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                        className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(15,23,42,0.05)]"
                       >
                         {link.label}
                         <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
@@ -176,7 +176,7 @@ export function MobileNav() {
                         <Link
                           href={session.dashboardPath}
                           onClick={() => setOpen(false)}
-                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(15,23,42,0.05)]"
                         >
                           {session.role === "customer" ? "My account" : "Workspace"}
                           <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
@@ -185,7 +185,7 @@ export function MobileNav() {
                           type="button"
                           disabled={isPending}
                           onClick={handleSignOut}
-                          className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)] disabled:opacity-60"
+                          className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-semibold transition-colors hover:bg-[rgba(15,23,42,0.05)] disabled:opacity-60"
                         >
                           {isPending ? "Signing out..." : "Sign out"}
                           <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
@@ -196,7 +196,7 @@ export function MobileNav() {
                         <Link
                           href="/sign-in"
                           onClick={() => setOpen(false)}
-                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(15,23,42,0.05)]"
                         >
                           Log in
                           <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
@@ -204,7 +204,7 @@ export function MobileNav() {
                         <Link
                           href="/sign-up"
                           onClick={() => setOpen(false)}
-                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(16,32,25,0.05)]"
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold transition-colors hover:bg-[rgba(15,23,42,0.05)]"
                         >
                           Create account
                           <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
