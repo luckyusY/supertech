@@ -130,7 +130,7 @@ export function ProductSubmissionForm({
   return (
     <form onSubmit={handleSubmit} className="soft-card overflow-hidden">
       {/* Header */}
-      <div className="border-b border-[var(--line)] bg-[rgba(16,32,25,0.02)] p-6 sm:p-8">
+      <div className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.02)] p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
@@ -160,7 +160,7 @@ export function ProductSubmissionForm({
                 ))}
               </select>
             ) : (
-              <div className="mt-2 rounded-[0.9rem] border border-[var(--line)] bg-[rgba(16,32,25,0.04)] px-4 py-3 text-sm font-semibold">
+              <div className="mt-2 rounded-[0.9rem] border border-[var(--line)] bg-[rgba(15,23,42,0.04)] px-4 py-3 text-sm font-semibold">
                 {availableVendors[0]?.name ?? "Your store"}
               </div>
             )}
@@ -333,13 +333,13 @@ export function ProductSubmissionForm({
 
         {/* Feedback */}
         {error && (
-          <div className="mt-6 flex items-start gap-3 rounded-[0.9rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3">
+          <div className="mt-6 flex items-start gap-3 rounded-[0.9rem] border border-[rgba(37,99,235,0.3)] bg-[rgba(37,99,235,0.08)] px-4 py-3">
             <Tag className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" />
             <p className="text-sm text-[var(--accent)]">{error}</p>
           </div>
         )}
         {successMessage && (
-          <div className="mt-6 rounded-[0.9rem] border border-[rgba(26,123,112,0.25)] bg-[rgba(26,123,112,0.08)] px-4 py-3 text-sm font-medium text-[var(--teal)]">
+          <div className="mt-6 rounded-[0.9rem] border border-[rgba(8,145,178,0.25)] bg-[rgba(8,145,178,0.08)] px-4 py-3 text-sm font-medium text-[var(--teal)]">
             ✓ {successMessage}
           </div>
         )}

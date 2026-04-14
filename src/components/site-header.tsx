@@ -49,7 +49,7 @@ export async function SiteHeader() {
 
           <Link
             href="/catalog"
-            className="hidden rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-[rgba(228,90,54,0.3)] transition-all hover:shadow-[rgba(228,90,54,0.45)] hover:-translate-y-0.5 sm:inline-flex"
+            className="hidden rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-[rgba(37,99,235,0.3)] transition-all hover:shadow-[rgba(37,99,235,0.45)] hover:-translate-y-0.5 sm:inline-flex"
           >
             Shop now
           </Link>

@@ -83,7 +83,7 @@ export function BecomeVendorForm({ prefill }: Props) {
     return (
       <div className="page-shell py-16">
         <div className="soft-card mx-auto max-w-xl p-10 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(26,123,112,0.12)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(8,145,178,0.12)]">
             <CheckCircle2 className="h-8 w-8 text-[var(--teal)]" />
           </div>
           <h1 className="mt-6 text-3xl font-semibold tracking-[-0.04em]">
@@ -165,7 +165,7 @@ export function BecomeVendorForm({ prefill }: Props) {
           </h2>
 
           {isSignedIn && (
-            <div className="mt-4 flex items-center gap-3 rounded-[1rem] border border-[rgba(26,123,112,0.25)] bg-[rgba(26,123,112,0.06)] px-4 py-3">
+            <div className="mt-4 flex items-center gap-3 rounded-[1rem] border border-[rgba(8,145,178,0.25)] bg-[rgba(8,145,178,0.06)] px-4 py-3">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--teal)]" />
               <p className="text-sm text-[var(--teal)]">
                 Signed in as <strong>{prefill?.email}</strong> — your contact details are pre-filled.
@@ -200,7 +200,7 @@ export function BecomeVendorForm({ prefill }: Props) {
                   placeholder="you@example.com"
                   className={`w-full rounded-[0.9rem] border border-[var(--line)] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 ${
                     isSignedIn
-                      ? "cursor-not-allowed bg-[rgba(16,32,25,0.04)] text-[var(--muted)]"
+                      ? "cursor-not-allowed bg-[rgba(15,23,42,0.04)] text-[var(--muted)]"
                       : "bg-white/70"
                   }`}
                 />

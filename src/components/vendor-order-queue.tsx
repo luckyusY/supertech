@@ -245,7 +245,7 @@ export function VendorOrderQueue({
                 </div>
 
                 <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
-                  <div className="rounded-[1.25rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-4">
+                  <div className="rounded-[1.25rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] p-4">
                     <p className="text-sm font-semibold">Items for this vendor</p>
                     <div className="mt-3 space-y-3">
                       {vendorLineItems.map((item) => (

@@ -62,7 +62,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
                 <Link
                   href="/dashboard/admin"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(16,32,25,0.06)]"
+                  className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
                 >
                   <LayoutDashboard className="h-4 w-4 text-[var(--muted)]" />
                   Admin dashboard
@@ -70,7 +70,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
                 <Link
                   href="/dashboard/admin/analytics"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(16,32,25,0.06)]"
+                  className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
                 >
                   <BarChart3 className="h-4 w-4 text-[var(--muted)]" />
                   Analytics
@@ -82,7 +82,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
               <Link
                 href="/dashboard/vendor"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(16,32,25,0.06)]"
+                className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
               >
                 <Store className="h-4 w-4 text-[var(--muted)]" />
                 Vendor dashboard
@@ -93,7 +93,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
               <Link
                 href="/account"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(16,32,25,0.06)]"
+                className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
               >
                 <User className="h-4 w-4 text-[var(--muted)]" />
                 My account

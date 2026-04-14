@@ -64,7 +64,7 @@ export function VendorCard({ vendor, index = 0 }: VendorCardProps) {
             {vendor.categories.slice(0, 2).map((cat) => (
               <span
                 key={cat}
-                className="rounded-full bg-[rgba(16,32,25,0.05)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]"
+                className="rounded-full bg-[rgba(15,23,42,0.05)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--muted)]"
               >
                 {cat}
               </span>

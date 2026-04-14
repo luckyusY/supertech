@@ -64,7 +64,7 @@ export default async function VendorPage({ params }: VendorPageProps) {
           sizes="100vw"
           priority
         />
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(17,33,28,0.88),rgba(17,33,28,0.58))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.88),rgba(15,23,42,0.58))]" />
         <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">

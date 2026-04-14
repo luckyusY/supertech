@@ -28,15 +28,15 @@ const STATUS_STYLES: Record<
 > = {
   pending_review: {
     label: "Pending review",
-    pill: "bg-[rgba(242,191,99,0.18)] text-[#9c6b0b]",
+    pill: "bg-[rgba(245,158,11,0.18)] text-[#9c6b0b]",
   },
   approved: {
     label: "Approved",
-    pill: "bg-[rgba(26,123,112,0.12)] text-[var(--teal)]",
+    pill: "bg-[rgba(8,145,178,0.12)] text-[var(--teal)]",
   },
   rejected: {
     label: "Rejected",
-    pill: "bg-[rgba(228,90,54,0.14)] text-[var(--accent)]",
+    pill: "bg-[rgba(37,99,235,0.14)] text-[var(--accent)]",
   },
 };
 
@@ -45,7 +45,7 @@ function SubmissionThumb({ src, alt }: { src: string; alt: string }) {
 
   if (failed) {
     return (
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[0.8rem] bg-[rgba(16,32,25,0.06)]">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[0.8rem] bg-[rgba(15,23,42,0.06)]">
         <Package className="h-5 w-5 text-[var(--muted)] opacity-50" />
       </div>
     );

@@ -47,7 +47,7 @@ export default async function AdminDashboardPage() {
       value: operationsSnapshot ? formatPrice(operationsSnapshot.estimatedRevenue) : "$42,800",
       icon: TrendingUp,
       color: "text-[var(--teal)]",
-      bg: "bg-[rgba(26,123,112,0.08)]",
+      bg: "bg-[rgba(8,145,178,0.08)]",
     },
     {
       label: "Pending confirmations",
@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
       value: operationsSnapshot ? String(operationsSnapshot.activeFulfillment) : "6",
       icon: ShoppingBag,
       color: "text-[var(--accent)]",
-      bg: "bg-[rgba(228,90,54,0.08)]",
+      bg: "bg-[rgba(37,99,235,0.08)]",
     },
     {
       label: "Live products",
@@ -150,14 +150,14 @@ export default async function AdminDashboardPage() {
             <Store className="h-5 w-5 text-[var(--accent)]" />
             <h2 className="text-2xl font-semibold tracking-[-0.04em]">Vendor health</h2>
           </div>
-          <span className="rounded-full bg-[rgba(26,123,112,0.1)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
+          <span className="rounded-full bg-[rgba(8,145,178,0.1)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
             {vendors.length} sellers
           </span>
         </div>
         <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-[var(--line)]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[var(--line)] bg-[rgba(16,32,25,0.03)]">
+              <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
                 {["Vendor", "Location", "Products", "Fulfillment", "Rating"].map((h) => (
                   <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
                     {h}
@@ -169,13 +169,13 @@ export default async function AdminDashboardPage() {
               {vendors.map((vendor, i) => (
                 <tr
                   key={vendor.id}
-                  className={`border-b border-[var(--line)] last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-[rgba(16,32,25,0.015)]"}`}
+                  className={`border-b border-[var(--line)] last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-[rgba(15,23,42,0.015)]"}`}
                 >
                   <td className="px-5 py-4 font-semibold">{vendor.name}</td>
                   <td className="px-5 py-4 text-[var(--muted)]">{vendor.location}</td>
                   <td className="px-5 py-4">{vendor.activeProducts}</td>
                   <td className="px-5 py-4">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(26,123,112,0.1)] px-2.5 py-0.5 text-xs font-semibold text-[var(--teal)]">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(8,145,178,0.1)] px-2.5 py-0.5 text-xs font-semibold text-[var(--teal)]">
                       {vendor.fulfillmentRate}
                     </span>
                   </td>

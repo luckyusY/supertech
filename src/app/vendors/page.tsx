@@ -23,7 +23,7 @@ export default async function VendorsPage() {
             Every seller on SuperTech is reviewed for product quality, fulfillment reliability, and customer service before going live.
           </p>
         </div>
-        <div className="hidden shrink-0 items-center gap-2 rounded-[1.2rem] border border-[rgba(26,123,112,0.25)] bg-[rgba(26,123,112,0.06)] px-4 py-3 text-sm sm:flex">
+        <div className="hidden shrink-0 items-center gap-2 rounded-[1.2rem] border border-[rgba(8,145,178,0.25)] bg-[rgba(8,145,178,0.06)] px-4 py-3 text-sm sm:flex">
           <BadgeCheck className="h-5 w-5 text-[var(--teal)]" />
           <span className="font-semibold">{vendors.length} verified sellers</span>
         </div>

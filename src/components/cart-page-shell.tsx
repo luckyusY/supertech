@@ -198,7 +198,7 @@ export function CartPageShell() {
     return (
       <div className="soft-card p-6 sm:p-8 lg:p-10">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.6rem] bg-[rgba(16,32,25,0.06)]">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.6rem] bg-[rgba(15,23,42,0.06)]">
             <ShoppingBag className="h-7 w-7 text-[var(--accent)]" />
           </div>
           <p className="mt-6 font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
@@ -278,7 +278,7 @@ export function CartPageShell() {
                   </button>
                 </div>
                 <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="inline-flex items-center gap-3 rounded-full border border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-3 py-2">
+                  <div className="inline-flex items-center gap-3 rounded-full border border-[var(--line)] bg-[rgba(15,23,42,0.03)] px-3 py-2">
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.slug, item.quantity - 1)}
@@ -458,7 +458,7 @@ export function CartPageShell() {
           </div>
 
           {error ? (
-            <div className="mt-6 rounded-[1rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
+            <div className="mt-6 rounded-[1rem] border border-[rgba(37,99,235,0.3)] bg-[rgba(37,99,235,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
               {error}
             </div>
           ) : null}

@@ -48,7 +48,7 @@ export function StackStatus() {
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${
                   item.configured
                     ? "bg-[rgba(122,208,191,0.14)] text-[#8ef0dc]"
-                    : "bg-[rgba(228,90,54,0.14)] text-[#ffb09b]"
+                    : "bg-[rgba(37,99,235,0.14)] text-[#ffb09b]"
                 }`}
               >
                 {item.configured ? "Ready" : "Needs env"}

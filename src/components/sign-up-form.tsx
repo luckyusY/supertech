@@ -95,7 +95,7 @@ export function SignUpForm() {
         />
       </div>
       {error && (
-        <div className="rounded-[1rem] border border-[rgba(228,90,54,0.3)] bg-[rgba(228,90,54,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
+        <div className="rounded-[1rem] border border-[rgba(37,99,235,0.3)] bg-[rgba(37,99,235,0.08)] px-4 py-3 text-sm text-[var(--accent)]">
           {error}
         </div>
       )}

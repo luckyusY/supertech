@@ -23,7 +23,7 @@ function SubmissionImage({ src, alt }: { src: string; alt: string }) {
 
   if (failed) {
     return (
-      <div className="flex h-40 w-full items-center justify-center bg-[rgba(16,32,25,0.04)]">
+      <div className="flex h-40 w-full items-center justify-center bg-[rgba(15,23,42,0.04)]">
         <Package className="h-10 w-10 text-[var(--muted)] opacity-40" />
       </div>
     );
@@ -160,7 +160,7 @@ export function ProductApprovalInbox() {
 
               {/* Badge */}
               <div className="mt-3">
-                <span className="rounded-full bg-[rgba(242,191,99,0.18)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#9c6b0b]">
+                <span className="rounded-full bg-[rgba(245,158,11,0.18)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#9c6b0b]">
                   {submission.badge}
                 </span>
               </div>
@@ -171,7 +171,7 @@ export function ProductApprovalInbox() {
                   type="button"
                   disabled={busy}
                   onClick={() => void updateStatus(submission.id, "rejected")}
-                  className="flex items-center justify-center gap-1.5 rounded-full border border-[rgba(228,90,54,0.4)] py-2.5 text-sm font-semibold text-[var(--accent)] transition-opacity disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 rounded-full border border-[rgba(37,99,235,0.4)] py-2.5 text-sm font-semibold text-[var(--accent)] transition-opacity disabled:opacity-50"
                 >
                   <XCircle className="h-4 w-4" />
                   {busy ? "…" : "Reject"}

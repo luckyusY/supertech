@@ -187,7 +187,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 {product.features.map((feature) => (
                   <div
                     key={feature}
-                    className="rounded-[1.1rem] bg-[rgba(16,32,25,0.04)] px-4 py-3 text-sm font-medium"
+                    className="rounded-[1.1rem] bg-[rgba(15,23,42,0.04)] px-4 py-3 text-sm font-medium"
                   >
                     <Check className="mr-2 inline h-4 w-4 text-[var(--teal)]" />
                     {feature}

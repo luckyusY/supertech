@@ -100,7 +100,7 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
           </form>
 
           {showNotFoundMessage ? (
-            <div className="mt-6 rounded-[1.2rem] border border-[rgba(228,90,54,0.24)] bg-[rgba(228,90,54,0.08)] px-4 py-4 text-sm leading-7 text-[var(--accent)]">
+            <div className="mt-6 rounded-[1.2rem] border border-[rgba(37,99,235,0.24)] bg-[rgba(37,99,235,0.08)] px-4 py-4 text-sm leading-7 text-[var(--accent)]">
               We could not find a matching order for that request ID and email.
               Double-check the request ID from your confirmation screen and try again.
             </div>
@@ -140,7 +140,7 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
                   ].map((item) => (
                     <div
                       key={item.label}
-                      className="rounded-[1.15rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] p-4"
+                      className="rounded-[1.15rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] p-4"
                     >
                       <p className="text-sm text-[var(--muted)]">{item.label}</p>
                       <p className="mt-2 text-lg font-semibold tracking-[-0.03em]">
@@ -152,7 +152,7 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
               </div>
 
               {order.status === "cancelled" ? (
-                <div className="rounded-[1.3rem] border border-[rgba(228,90,54,0.24)] bg-[rgba(228,90,54,0.08)] px-5 py-4 text-sm leading-7 text-[var(--accent)]">
+                <div className="rounded-[1.3rem] border border-[rgba(37,99,235,0.24)] bg-[rgba(37,99,235,0.08)] px-5 py-4 text-sm leading-7 text-[var(--accent)]">
                   This request has been cancelled. If you still want the items, use the
                   catalog or order page to submit a new request.
                 </div>
@@ -169,7 +169,7 @@ export default async function TrackOrderPage({ searchParams }: TrackOrderPagePro
                     {order.lineItems.map((item) => (
                       <div
                         key={`${order.requestId}-${item.productName}-${item.vendorName}`}
-                        className="flex items-center justify-between gap-4 rounded-[1.15rem] border border-[var(--line)] bg-[rgba(16,32,25,0.03)] px-4 py-4"
+                        className="flex items-center justify-between gap-4 rounded-[1.15rem] border border-[var(--line)] bg-[rgba(15,23,42,0.03)] px-4 py-4"
                       >
                         <div>
                           <p className="font-semibold tracking-[-0.02em]">{item.productName}</p>

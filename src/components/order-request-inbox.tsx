@@ -111,16 +111,16 @@ export function OrderRequestInbox() {
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full bg-[rgba(26,123,112,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--teal)]">
+            <span className="rounded-full bg-[rgba(8,145,178,0.12)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--teal)]">
               {request.status.replaceAll("_", " ")}
             </span>
-            <span className="rounded-full bg-[rgba(16,32,25,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+            <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
               {request.paymentPreference.replaceAll("_", " ")}
             </span>
-            <span className="rounded-full bg-[rgba(16,32,25,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+            <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
               {request.contactPreference}
             </span>
-            <span className="rounded-full bg-[rgba(16,32,25,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+            <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
               {request.itemCount} {request.itemCount === 1 ? "item" : "items"}
             </span>
           </div>
