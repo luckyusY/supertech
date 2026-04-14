@@ -1,24 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --background-strong: #0f172a;
-  --foreground: #0f172a;
-  --surface: rgba(255, 252, 246, 0.8);
-  --surface-strong: rgba(15, 23, 42, 0.92);
-  --muted: #64748b;
-  --line: rgba(15, 23, 42, 0.1);
-  --accent: #2563eb;
-  --accent-soft: #dbeafe;
-  --teal: #0891b2;
-  --gold: #f59e0b;
-  --shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
-  --grid: rgba(15, 23, 42, 0.05);
+  /* Alibaba-inspired mobile color scheme */
+  --background: #f5f5f5;
+  --background-strong: #1a1a1a;
+  --foreground: #1a1a1a;
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface-strong: rgba(26, 26, 26, 0.95);
+  --muted: #666666;
+  --line: rgba(0, 0, 0, 0.08);
+  
+  /* Primary: Alibaba orange */
+  --accent: #ff6a00;
+  --accent-soft: #fff3e8;
+  --accent-hover: #e55f00;
+  
+  /* Secondary: warm red for CTAs */
+  --red: #ff4747;
+  --red-soft: #ffe8e8;
+  
+  /* Tertiary: teal for variety */
+  --teal: #00b4d8;
+  --gold: #ff8c00;
+  
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --grid: rgba(0, 0, 0, 0.04);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
   --font-sans: var(--font-space-grotesk);
   --font-mono: var(--font-ibm-plex-mono);
 }
@@ -43,11 +55,7 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
-    radial-gradient(circle at top right, rgba(8, 145, 178, 0.1), transparent 30%),
-    radial-gradient(circle at 50% 14%, rgba(245, 158, 11, 0.06), transparent 24%),
-    linear-gradient(180deg, #ffffff 0%, #f7f9fe 43%, #eef4ff 100%);
+  background: #f5f5f5;
   color: var(--foreground);
   font-family: var(--font-space-grotesk), sans-serif;
   min-height: 100vh;
@@ -60,7 +68,7 @@ a {
 }
 
 ::selection {
-  background: rgba(37, 99, 235, 0.2);
+  background: rgba(255, 106, 0, 0.2);
 }
 
 .page-shell {
@@ -82,27 +90,18 @@ a {
 }
 
 .soft-card {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.82)),
-    var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 1.75rem;
-  box-shadow:
-    0 20px 60px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .dark-card {
-  background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88)),
-    var(--surface-strong);
-  color: #fdf7ef;
-  border-radius: 1.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 28px 80px rgba(15, 23, 42, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .eyebrow {
@@ -110,13 +109,14 @@ a {
   align-items: center;
   gap: 0.55rem;
   border-radius: 999px;
-  border: 1px solid rgba(37, 99, 235, 0.18);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 106, 0, 0.2);
+  background: var(--accent-soft);
   padding: 0.4rem 0.8rem;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  color: var(--accent);
 }
 
 .noise {
@@ -191,8 +191,8 @@ a {
 @media (min-width: 768px) {
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.18); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.32); }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
 }
 
 @media (prefers-reduced-motion: reduce) {

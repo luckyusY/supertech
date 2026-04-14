@@ -61,57 +61,56 @@ const footerSignals = [
 
 export function SiteFooter() {
   return (
-    <footer className="page-shell pb-28 pt-6 sm:pb-10 sm:pt-8">
-      <div className="space-y-4">
-        <div className="dark-card relative overflow-hidden px-5 py-6 sm:px-8 sm:py-7">
+    <footer className="page-shell pb-24 pt-4 sm:pb-10 sm:pt-8">
+      <div className="space-y-3">
+        <div className="dark-card relative overflow-hidden px-4 py-5 sm:px-8 sm:py-7">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-[rgba(37,99,235,0.18)] blur-[70px]" />
-            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[rgba(8,145,178,0.16)] blur-[70px]" />
+            <div className="absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-[var(--accent)] blur-[70px]" />
+            <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[var(--gold)] blur-[70px]" />
           </div>
 
-          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
-                <Sparkles className="h-3.5 w-3.5" />
-                Premium marketplace layer
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white">
+                <Sparkles className="h-3 w-3" />
+                Premium marketplace
               </span>
-              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">
-                Buy better gear from trusted storefronts.
+              <h2 className="mt-3 text-xl font-semibold sm:text-3xl">
+                Buy better gear from trusted sellers.
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
-                SuperTech brings premium consumer tech, verified sellers, and delivery-ready
-                operations into one clean buying experience.
+              <p className="mt-2 max-w-xl text-sm leading-6 text-white/70 sm:text-base">
+                Premium tech, verified sellers, and delivery-ready operations in one clean experience.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-2.5 sm:flex-row">
               <Link
                 href="/catalog"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[var(--foreground)] transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[var(--accent)] transition-transform hover:-translate-y-0.5"
               >
                 Explore catalog
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/become-vendor"
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/8 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/12"
+                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/15"
               >
                 Sell on SuperTech
               </Link>
             </div>
           </div>
 
-          <div className="relative mt-6 grid gap-3 sm:grid-cols-3">
+          <div className="relative mt-4 grid gap-2.5 sm:grid-cols-3">
             {footerSignals.map((signal) => (
               <div
                 key={signal.title}
-                className="rounded-[1.15rem] border border-white/10 bg-white/7 px-4 py-4 backdrop-blur-sm"
+                className="rounded-lg border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-[0.9rem] bg-white/10">
-                  <signal.icon className="h-4 w-4 text-white/80" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-white/15">
+                  <signal.icon className="h-4 w-4 text-white/90" />
                 </span>
-                <p className="mt-3 text-sm font-semibold text-white">{signal.title}</p>
-                <p className="mt-1 text-sm leading-6 text-white/55">{signal.detail}</p>
+                <p className="mt-2 text-sm font-semibold text-white">{signal.title}</p>
+                <p className="mt-0.5 text-xs leading-5 text-white/60">{signal.detail}</p>
               </div>
             ))}
           </div>
@@ -119,21 +118,18 @@ export function SiteFooter() {
 
         <div className="soft-card overflow-hidden">
           <div className="sm:hidden">
-            <div className="border-b border-[var(--line)] px-5 py-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[var(--foreground)] text-[11px] font-bold tracking-[0.18em] text-white">
+            <div className="border-b border-[var(--line)] px-4 py-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent)] text-[10px] font-bold tracking-[0.18em] text-white">
                   ST
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    SuperTech
-                  </p>
-                  <p className="text-base font-semibold tracking-[-0.03em]">
-                    Marketplace
+                  <p className="text-base font-semibold">
+                    SuperTech Marketplace
                   </p>
                 </div>
               </div>
-              <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
+              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
                 Premium tech from verified sellers across East and West Africa.
               </p>
             </div>
@@ -143,16 +139,16 @@ export function SiteFooter() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="bg-white/85 px-4 py-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:text-[var(--accent)]"
+                  className="bg-white px-4 py-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:text-[var(--accent)]"
                 >
                   {link.label}
                 </Link>
               ))}
             </div>
 
-            <div className="border-t border-[var(--line)] px-5 py-4">
+            <div className="border-t border-[var(--line)] px-4 py-3">
               <p className="text-center text-xs text-[var(--muted)]">
-                © {new Date().getFullYear()} SuperTech Marketplace
+                © {new Date().getFullYear()} SuperTech
               </p>
             </div>
           </div>

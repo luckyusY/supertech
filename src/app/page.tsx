@@ -162,14 +162,13 @@ export default async function Home() {
 
   return (
     <div className="pb-20 sm:pb-0">
-      <section className="page-shell pt-5 pb-4 sm:pt-8 sm:pb-6">
-        <div className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[linear-gradient(135deg,#091528_0%,#11203f_55%,#102a43_100%)] px-5 py-10 text-white shadow-[0_30px_100px_rgba(9,21,40,0.35)] sm:rounded-[2.4rem] sm:px-10 sm:py-14 lg:px-16 lg:py-[4.5rem]">
+      <section className="page-shell pt-4 pb-3 sm:pt-8 sm:pb-6">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#ff6a00_0%,#ff8533_55%,#ff9966_100%)] px-4 py-8 text-white shadow-lg sm:rounded-[2.4rem] sm:px-10 sm:py-14 lg:px-16 lg:py-[4.5rem]">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-10 top-12 h-56 w-56 rounded-full bg-[rgba(37,99,235,0.22)] blur-[72px]" />
-            <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-[rgba(8,145,178,0.18)] blur-[86px]" />
-            <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-[rgba(245,158,11,0.12)] blur-[86px]" />
+            <div className="absolute -left-10 top-12 h-56 w-56 rounded-full bg-white/20 blur-[72px]" />
+            <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-white/15 blur-[86px]" />
             <div
-              className="absolute inset-0 opacity-[0.06]"
+              className="absolute inset-0 opacity-[0.08]"
               style={{
                 backgroundImage:
                   "linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)",
@@ -178,69 +177,65 @@ export default async function Home() {
             />
           </div>
 
-          <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_420px] lg:items-center">
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_420px] lg:items-center">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80">
-                <Sparkles className="h-3.5 w-3.5" />
-                Verified marketplace across East and West Africa
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+                <Sparkles className="h-3 w-3" />
+                Verified marketplace
               </span>
 
-              <h1 className="mt-5 text-[2.25rem] font-semibold leading-[1.02] tracking-[-0.05em] sm:text-5xl lg:text-[4.7rem]">
+              <h1 className="mt-4 text-[2rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-5xl lg:text-[4.7rem]">
                 Premium tech,
-                <br className="hidden sm:block" /> delivered with confidence.
+                <br className="hidden sm:block" /> delivered fast.
               </h1>
 
-              <p className="mt-5 max-w-2xl text-base leading-7 text-white/70 sm:text-lg sm:leading-8">
-                Shop trusted sellers across home tech, mobile, audio, gaming, and
-                wearables with a storefront that feels curated from the first click.
+              <p className="mt-4 max-w-xl text-sm leading-6 text-white/85 sm:text-lg sm:leading-8">
+                Shop trusted sellers across home tech, mobile, audio, gaming, and wearables.
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-2.5">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {featurePills.map((pill) => (
                   <span
                     key={pill.label}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-3.5 py-2 text-xs font-medium text-white/80"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium text-white/90"
                   >
-                    <pill.icon className="h-3.5 w-3.5 text-white/70" />
+                    <pill.icon className="h-3 w-3" />
                     {pill.label}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                   href="/catalog"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[rgba(37,99,235,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[rgba(37,99,235,0.5)]"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[var(--accent)] shadow-lg transition-all hover:-translate-y-0.5"
                 >
-                  Shop the catalog
+                  Shop now
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/vendors"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/15"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20"
                 >
                   Browse sellers
                 </Link>
               </div>
 
-              <dl className="mt-8 grid gap-3 sm:grid-cols-3">
+              <dl className="mt-6 grid grid-cols-3 gap-2">
                 {heroStats.map((stat) => (
                   <div
                     key={stat.label}
-                    className="rounded-[1.35rem] border border-white/10 bg-white/7 p-4 backdrop-blur-md"
+                    className="rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm"
                   >
-                    <div className="flex items-center gap-2 text-white/60">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
-                        <stat.icon className="h-4 w-4" />
-                      </span>
-                      <span className="text-[11px] uppercase tracking-[0.2em]">
+                    <div className="flex items-center gap-1.5 text-white/70">
+                      <stat.icon className="h-3.5 w-3.5" />
+                      <span className="text-[9px] uppercase tracking-[0.15em]">
                         {stat.label}
                       </span>
                     </div>
-                    <p className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
+                    <p className="mt-2 text-xl font-semibold sm:text-3xl">
                       {stat.value}
                     </p>
-                    <p className="mt-1 text-sm text-white/55">{stat.note}</p>
                   </div>
                 ))}
               </dl>
@@ -369,7 +364,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <div className="relative overflow-hidden border-y border-[var(--line)] bg-white/60 py-3 backdrop-blur-sm">
+      <div className="relative overflow-hidden border-y border-[var(--line)] bg-white py-3">
         <div className="marquee-track flex gap-0 whitespace-nowrap">
           {[...Array(3)]
             .flatMap(() => [
@@ -388,27 +383,27 @@ export default async function Home() {
                 key={`${item}-${index}`}
                 className="flex shrink-0 items-center gap-4 px-6 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]"
               >
-                <span className="h-1 w-1 rounded-full bg-[var(--accent)]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
                 {item}
               </span>
             ))}
         </div>
       </div>
 
-      <section className="page-shell py-5 sm:py-6">
+      <section className="page-shell py-4 sm:py-6">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {trustBadges.map((badge) => (
             <div
               key={badge.title}
-              className="rounded-[1.45rem] border border-[var(--line)] bg-white/78 px-4 py-4 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-sm"
+              className="rounded-xl border border-[var(--line)] bg-white px-4 py-4 shadow-sm"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[rgba(37,99,235,0.08)]">
-                <badge.icon className="h-[18px] w-[18px] text-[var(--accent)]" />
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
+                <badge.icon className="h-5 w-5 text-[var(--accent)]" />
               </span>
-              <p className="mt-4 text-sm font-semibold tracking-[-0.02em]">
+              <p className="mt-3 text-sm font-semibold">
                 {badge.title}
               </p>
-              <p className="mt-1.5 text-sm leading-6 text-[var(--muted)]">
+              <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
                 {badge.desc}
               </p>
             </div>
@@ -417,37 +412,36 @@ export default async function Home() {
       </section>
 
       <section className="page-shell py-4 sm:py-6">
-        <div className="soft-card overflow-hidden p-5 sm:p-8 lg:p-10">
+        <div className="soft-card overflow-hidden p-4 sm:p-8 lg:p-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[var(--accent)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--accent)]">
                 Handpicked for you
               </p>
-              <h2 className="mt-1.5 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl lg:text-4xl">
+              <h2 className="mt-1.5 text-xl font-semibold sm:text-3xl lg:text-4xl">
                 Featured products
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-                A tight edit of the catalog, chosen for standout quality, fast fulfillment,
-                and everyday usefulness.
+                Chosen for standout quality and fast fulfillment.
               </p>
             </div>
             <Link
               href="/catalog"
-              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--teal)] transition-all hover:bg-[rgba(8,145,178,0.06)] sm:inline-flex"
+              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--accent)] transition-all hover:bg-[var(--accent-soft)] sm:inline-flex"
             >
               View all
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {featuredProducts.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
-          <div className="mt-5 sm:hidden">
+          <div className="mt-4 sm:hidden">
             <Link
               href="/catalog"
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-[var(--line)] py-3 text-sm font-semibold transition-colors hover:bg-white/60"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] py-3 text-sm font-semibold text-white transition-colors"
             >
               View all products
               <ArrowRight className="h-4 w-4" />
@@ -457,19 +451,18 @@ export default async function Home() {
       </section>
 
       <section className="page-shell py-4 sm:py-6">
-        <div className="mb-5">
-          <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[var(--muted)]">
+        <div className="mb-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
             Browse by category
           </p>
-          <h2 className="mt-1.5 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl lg:text-4xl">
+          <h2 className="mt-1 text-xl font-semibold sm:text-3xl lg:text-4xl">
             Shop your lane
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            Explore focused product lanes that feel more like curated shelves than endless
-            catalog pages.
+            Curated product lanes, not endless catalogs.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {categoryHighlights.map((category) => {
             const Icon = categoryIcons[category.name] ?? HomeIcon;
             const style =
@@ -480,44 +473,37 @@ export default async function Home() {
               <Link
                 key={category.name}
                 href={`/catalog?category=${encodeURIComponent(category.name)}`}
-                className="group relative flex min-h-[235px] flex-col overflow-hidden rounded-[1.75rem] border border-[var(--line)] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_70px_rgba(15,23,42,0.1)]"
+                className="group relative flex min-h-[200px] flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
                 <div
-                  className="absolute inset-x-0 top-0 h-1.5"
+                  className="absolute inset-x-0 top-0 h-1"
                   style={{ background: category.accent }}
                 />
-                <div
-                  className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ backgroundColor: style.glow, opacity: 0.6 }}
-                />
 
-                <div className="relative flex items-start justify-between gap-4">
+                <div className="relative flex items-start justify-between gap-3">
                   <div
-                    className="flex h-12 w-12 items-center justify-center rounded-[1rem]"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg"
                     style={{ backgroundColor: style.iconSurface }}
                   >
                     <Icon className="h-5 w-5" style={{ color: style.iconColor }} />
                   </div>
-                  <span className="rounded-full border border-[var(--line)] bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  <span className="rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--muted)]">
                     {category.count} products
                   </span>
                 </div>
 
-                <div className="relative mt-6 flex flex-1 flex-col">
-                  <h3 className="text-xl font-semibold tracking-[-0.03em]">
+                <div className="relative mt-4 flex flex-1 flex-col">
+                  <h3 className="text-lg font-semibold">
                     {category.name}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  <p className="mt-1.5 text-sm leading-6 text-[var(--muted)]">
                     {category.description}
                   </p>
 
-                  <div className="mt-auto flex items-center justify-between pt-6">
-                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--teal)] transition-all group-hover:gap-3">
+                  <div className="mt-auto flex items-center justify-between pt-4">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] transition-all group-hover:gap-2.5">
                       Shop now
                       <ArrowRight className="h-4 w-4" />
-                    </span>
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
-                      Curated lane
                     </span>
                   </div>
                 </div>
@@ -528,29 +514,28 @@ export default async function Home() {
       </section>
 
       <section className="page-shell py-4 sm:py-6">
-        <div className="soft-card overflow-hidden p-5 sm:p-8 lg:p-10">
+        <div className="soft-card overflow-hidden p-4 sm:p-8 lg:p-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[var(--muted)]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
                 Our sellers
               </p>
-              <h2 className="mt-1.5 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl lg:text-4xl">
+              <h2 className="mt-1 text-xl font-semibold sm:text-3xl lg:text-4xl">
                 Meet the vendors
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-                These are the storefronts powering the marketplace right now, each with its
-                own specialty and fulfillment rhythm.
+                Verified storefronts with their own specialty and fulfillment rhythm.
               </p>
             </div>
             <Link
               href="/vendors"
-              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--teal)] transition-all hover:bg-[rgba(8,145,178,0.06)] sm:inline-flex"
+              className="hidden items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--accent)] transition-all hover:bg-[var(--accent-soft)] sm:inline-flex"
             >
               All vendors
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {topVendors.map((vendor, index) => (
               <VendorCard key={vendor.id} vendor={vendor} index={index} />
             ))}
@@ -563,15 +548,15 @@ export default async function Home() {
           {marketSignals.map((signal) => (
             <div
               key={signal.title}
-              className="rounded-[1.4rem] border border-[var(--line)] bg-white/75 px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-sm"
+              className="rounded-xl border border-[var(--line)] bg-white px-4 py-4 shadow-sm"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-[0.95rem] bg-[rgba(15,23,42,0.05)]">
-                <signal.icon className="h-[18px] w-[18px] text-[var(--foreground)]" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
+                <signal.icon className="h-4 w-4 text-[var(--accent)]" />
               </span>
-              <h3 className="mt-4 text-lg font-semibold tracking-[-0.03em]">
+              <h3 className="mt-3 text-base font-semibold">
                 {signal.title}
               </h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              <p className="mt-1.5 text-sm leading-6 text-[var(--muted)]">
                 {signal.desc}
               </p>
             </div>
@@ -580,44 +565,35 @@ export default async function Home() {
       </section>
 
       <section className="page-shell py-4 pb-6 sm:py-6 sm:pb-10">
-        <div className="relative overflow-hidden rounded-[1.85rem] border border-[rgba(8,145,178,0.16)] bg-[linear-gradient(135deg,rgba(8,145,178,0.08),rgba(255,255,255,0.96),rgba(37,99,235,0.08))] px-6 py-8 shadow-[0_22px_70px_rgba(15,23,42,0.08)] sm:rounded-[2.25rem] sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--accent)] bg-gradient-to-br from-[var(--accent)] to-[#ff9966] px-5 py-8 shadow-lg sm:rounded-[2rem] sm:px-10 sm:py-10 lg:px-14 lg:py-12">
           <div className="pointer-events-none absolute inset-0">
-            <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-[rgba(8,145,178,0.1)] blur-[80px]" />
-            <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-[rgba(37,99,235,0.08)] blur-[96px]" />
-            <div
-              className="absolute inset-y-0 right-0 w-1/2 opacity-[0.06]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(var(--teal) 1px, transparent 1px), linear-gradient(90deg, var(--teal) 1px, transparent 1px)",
-                backgroundSize: "2rem 2rem",
-              }}
-            />
+            <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-white/20 blur-[80px]" />
+            <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-white/15 blur-[96px]" />
           </div>
 
-          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(8,145,178,0.2)] bg-white/75 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--teal)]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
                 <Truck className="h-3.5 w-3.5" />
                 Free delivery over $100
               </span>
-              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl lg:text-4xl">
-                Build a better setup without paying more for the last mile.
+              <h2 className="mt-3 text-xl font-semibold sm:text-3xl lg:text-4xl">
+                Build a better setup, pay less.
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">
-                Mix and match products from different sellers, place one request, and let the
-                logistics layer do the heavy lifting on qualifying orders.
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/85 sm:text-base">
+                Mix products from different sellers, track fulfillment, and get same-city delivery.
               </p>
 
-              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
                 {[
-                  "Combine products across storefronts in one cart flow.",
-                  "Track fulfillment updates without chasing multiple sellers.",
-                  "Use live chat for pre-order questions and support.",
-                  "Get same-city delivery on qualifying orders where available.",
+                  "Combine products across sellers in one cart.",
+                  "Track fulfillment without chasing multiple sellers.",
+                  "Live chat for pre-order questions.",
+                  "Same-city delivery on qualifying orders.",
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-[var(--foreground)]">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/85 text-[var(--teal)] shadow-sm">
-                      <Check className="h-3.5 w-3.5" />
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-white">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/25">
+                      <Check className="h-3 w-3" />
                     </span>
                     <span className="leading-6">{item}</span>
                   </li>
@@ -626,31 +602,31 @@ export default async function Home() {
             </div>
 
             <div className="grid gap-3">
-              <div className="rounded-[1.2rem] border border-white/70 bg-white/80 px-4 py-4 shadow-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+              <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">
                   Threshold
                 </p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
+                <p className="mt-1 text-2xl font-semibold">
                   {formatPrice(100)}
                 </p>
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  Qualifying orders unlock delivery coverage.
+                <p className="mt-0.5 text-xs text-white/70">
+                  Free delivery on qualifying orders
                 </p>
               </div>
-              <div className="rounded-[1.2rem] border border-white/70 bg-white/80 px-4 py-4 shadow-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">
+              <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">
                   Support
                 </p>
-                <p className="mt-2 text-xl font-semibold tracking-[-0.03em]">
-                  Live chat and order help
+                <p className="mt-1 text-base font-semibold">
+                  Live chat & order help
                 </p>
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  Buyers can get real answers before and after placing an order.
+                <p className="mt-0.5 text-xs text-white/70">
+                  Real answers before & after ordering
                 </p>
               </div>
               <Link
                 href="/catalog"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-black/15 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[var(--accent)] shadow-lg transition-all hover:-translate-y-0.5"
               >
                 Start shopping
                 <ArrowRight className="h-4 w-4" />
