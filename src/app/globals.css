@@ -150,6 +150,41 @@ a {
   }
 }
 
+/* Announcement bar marquee */
+.announcement-scroll {
+  animation: marquee-scroll 28s linear infinite;
+  will-change: transform;
+}
+.announcement-scroll:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Marquee ticker */
+.marquee-track {
+  animation: marquee-scroll 35s linear infinite;
+  will-change: transform;
+}
+
+/* Smooth ring focus */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Better scrollbar on desktop */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(16,32,25,0.18); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(16,32,25,0.32); }
+}
+
 @media (min-width: 640px) {
   .page-shell {
     padding-inline: 1.5rem;
