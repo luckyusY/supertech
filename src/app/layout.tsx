@@ -25,11 +25,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "SuperTech — Premium Tech Marketplace",
+    default: "SuperTech - Premium Tech Marketplace",
     template: "%s | SuperTech",
   },
   description:
-    "Shop premium tech from verified sellers across East and West Africa. Home control, mobile, audio, gaming, wearables — delivered fast.",
+    "Shop premium tech from verified sellers across East and West Africa. Home control, mobile, audio, gaming, and wearables delivered fast.",
   openGraph: {
     siteName: "SuperTech Marketplace",
     type: "website",

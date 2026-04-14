@@ -1,3 +1,7 @@
+import path from "node:path";
+
+const projectRoot = path.resolve(process.cwd());
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -10,6 +14,10 @@ const nextConfig = {
         hostname: "res.cloudinary.com",
       },
     ],
+  },
+  outputFileTracingRoot: projectRoot,
+  turbopack: {
+    root: projectRoot,
   },
 };
 

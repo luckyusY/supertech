@@ -1,28 +1,39 @@
 import Link from "next/link";
-import { User } from "lucide-react";
+import { ArrowRight, ShieldCheck, User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MegaMenu } from "@/components/mega-menu";
 import { MobileNav } from "@/components/mobile-nav";
 
-/** Shown while the async SiteHeader is loading its session. */
 export function SiteHeaderFallback() {
   return (
-    <header className="page-shell sticky top-0 z-40 pt-4">
-      <div className="soft-card flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
-        <Link href="/" className="flex shrink-0 items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[0.9rem] bg-[var(--foreground)] text-[11px] font-bold tracking-[0.18em] text-white">
-            ST
+    <header className="sticky top-0 z-50 px-3 pt-3 sm:page-shell sm:pt-4">
+      <div className="soft-card flex items-center justify-between gap-3 border border-white/75 bg-[rgba(255,255,255,0.84)] px-3 py-2.5 shadow-[0_18px_55px_rgba(15,23,42,0.08)] sm:px-4 sm:py-3">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex shrink-0 items-center gap-3">
+            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-[1rem] bg-[var(--foreground)] sm:h-10 sm:w-10">
+              <span className="text-[10px] font-bold tracking-[0.22em] text-white">ST</span>
+              <div className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-[var(--accent)] opacity-90" />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
+                SuperTech
+              </p>
+              <p className="text-sm font-semibold tracking-[-0.03em]">Marketplace</p>
+            </div>
+          </Link>
+
+          <span className="hidden xl:inline-flex items-center gap-2 rounded-full border border-[rgba(15,23,42,0.08)] bg-white/80 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
+            <ShieldCheck className="h-3.5 w-3.5 text-[var(--accent)]" />
+            Verified sellers
+          </span>
+        </div>
+
+        <div className="hidden md:flex flex-1 justify-center px-4">
+          <div className="rounded-full border border-[rgba(15,23,42,0.08)] bg-white/70 px-2 py-1 shadow-sm">
+            <MegaMenu />
           </div>
-          <div className="hidden sm:block">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-              SuperTech
-            </p>
-            <p className="text-sm font-semibold tracking-[-0.03em] leading-none">
-              Marketplace
-            </p>
-          </div>
-        </Link>
-        <MegaMenu />
+        </div>
+
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] text-[var(--muted)]">
             <User className="h-4 w-4" />
@@ -30,9 +41,10 @@ export function SiteHeaderFallback() {
           <CartStatusLink />
           <Link
             href="/catalog"
-            className="hidden rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white sm:inline-flex"
+            className="hidden items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white sm:inline-flex"
           >
             Shop now
+            <ArrowRight className="h-4 w-4" />
           </Link>
           <MobileNav />
         </div>

@@ -23,11 +23,22 @@ try {
   console.log("No .env.local found, using system env vars");
 }
 
-const dev = process.env.NODE_ENV !== "production";
+const lifecycleEvent = process.env.npm_lifecycle_event;
+const explicitNodeEnv = process.env.NODE_ENV;
+const dev = explicitNodeEnv
+  ? explicitNodeEnv !== "production"
+  : lifecycleEvent !== "start";
 const hostname = "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
 
-const app = next({ dev, hostname, port });
+process.env.NODE_ENV ??= dev ? "development" : "production";
+
+const app = next({
+  dev,
+  hostname,
+  port,
+  webpack: dev,
+});
 const handle = app.getRequestHandler();
 
 await app.prepare();
