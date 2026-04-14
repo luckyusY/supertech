@@ -61,8 +61,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            # public_html symlink already points .next → public_html
-            # Ensure supertech .next symlink is in place
+            # Ensure supertech symlinks point to public_html (built artifacts)
             if [ ! -L ~/supertech/.next ]; then
               rm -rf ~/supertech/.next
               ln -s ~/public_html/.next ~/supertech/.next
@@ -71,7 +70,6 @@ jobs:
               rm -rf ~/supertech/node_modules
               ln -s ~/public_html/node_modules ~/supertech/node_modules
             fi
-            # Restart Passenger
-            mkdir -p ~/supertech/tmp
-            touch ~/supertech/tmp/restart.txt
+            # Kill lsnode so LiteSpeed restarts it with new code on next request
+            pkill -f "lsnode:/home/wwwsuper/supertech" || true
             echo "Deployed successfully!"
