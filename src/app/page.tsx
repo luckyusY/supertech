@@ -6,7 +6,6 @@ import {
   Gamepad2,
   Headphones,
   Home as HomeIcon,
-  MapPin,
   Monitor,
   Package,
   ShieldCheck,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { VendorCard } from "@/components/vendor-card";
+import { HeroSlider } from "@/components/hero-slider";
 import { categoryHighlights } from "@/lib/marketplace";
 import {
   getPublicFeaturedProducts,
@@ -71,12 +71,6 @@ const marketSignals = [
   },
 ] as const;
 
-const featurePills = [
-  { icon: ShieldCheck, label: "Verified storefronts" },
-  { icon: Truck, label: "Same-city delivery" },
-  { icon: Headphones, label: "Live support" },
-] as const;
-
 const categoryIcons: Record<string, typeof HomeIcon> = {
   "Home Control": HomeIcon,
   "Mobile Essentials": Smartphone,
@@ -90,32 +84,26 @@ const categoryStyles = {
   "Home Control": {
     iconSurface: "rgba(228, 90, 54, 0.14)",
     iconColor: "#e45a36",
-    glow: "rgba(228, 90, 54, 0.18)",
   },
   "Mobile Essentials": {
     iconSurface: "rgba(26, 123, 112, 0.14)",
     iconColor: "#1a7b70",
-    glow: "rgba(26, 123, 112, 0.18)",
   },
   "Creator Gear": {
     iconSurface: "rgba(17, 33, 28, 0.14)",
     iconColor: "#11211c",
-    glow: "rgba(17, 33, 28, 0.18)",
   },
   Gaming: {
     iconSurface: "rgba(242, 191, 99, 0.18)",
     iconColor: "#a65d11",
-    glow: "rgba(242, 191, 99, 0.2)",
   },
   Audio: {
     iconSurface: "rgba(91, 58, 140, 0.14)",
     iconColor: "#5b3a8c",
-    glow: "rgba(91, 58, 140, 0.18)",
   },
   Wearables: {
     iconSurface: "rgba(26, 92, 123, 0.14)",
     iconColor: "#1a5c7b",
-    glow: "rgba(26, 92, 123, 0.18)",
   },
 } as const;
 
@@ -139,278 +127,45 @@ export default async function Home() {
       icon: Package,
       value: formatCompactNumber(publicProducts.length),
       label: "live products",
-      note: "Curated instead of crowded.",
     },
     {
       icon: ShieldCheck,
       value: formatCompactNumber(publicVendors.length),
       label: "verified sellers",
-      note: "Reviewed before launch.",
     },
     {
       icon: TrendingUp,
       value: `${averageFulfillment.toFixed(1)}%`,
       label: "avg. fulfillment",
-      note: "Across active vendors.",
     },
   ] as const;
 
-  const liveLocations = new Set(publicVendors.map((vendor) => vendor.location)).size;
-  const liveCategories = new Set(publicProducts.map((product) => product.category)).size;
-  const showcaseProduct = featuredProducts[0];
-  const secondaryProduct = featuredProducts[1];
-
   return (
     <div className="pb-20 sm:pb-0">
-      <section className="page-shell pt-4 pb-3 sm:pt-8 sm:pb-6">
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#ff6a00_0%,#ff8533_55%,#ff9966_100%)] px-4 py-8 text-white shadow-lg sm:rounded-[2.4rem] sm:px-10 sm:py-14 lg:px-16 lg:py-[4.5rem]">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-10 top-12 h-56 w-56 rounded-full bg-white/20 blur-[72px]" />
-            <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-white/15 blur-[86px]" />
-            <div
-              className="absolute inset-0 opacity-[0.08]"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)",
-                backgroundSize: "2.75rem 2.75rem",
-              }}
-            />
-          </div>
-
-          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_420px] lg:items-center">
-            <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
-                <Sparkles className="h-3 w-3" />
-                Verified marketplace
-              </span>
-
-              <h1 className="mt-4 text-[2rem] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-5xl lg:text-[4.7rem]">
-                Premium tech,
-                <br className="hidden sm:block" /> delivered fast.
-              </h1>
-
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white/85 sm:text-lg sm:leading-8">
-                Shop trusted sellers across home tech, mobile, audio, gaming, and wearables.
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                {featurePills.map((pill) => (
-                  <span
-                    key={pill.label}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-medium text-white/90"
-                  >
-                    <pill.icon className="h-3 w-3" />
-                    {pill.label}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link
-                  href="/catalog"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[var(--accent)] shadow-lg transition-all hover:-translate-y-0.5"
-                >
-                  Shop now
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/vendors"
-                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20"
-                >
-                  Browse sellers
-                </Link>
-              </div>
-
-              <dl className="mt-6 grid grid-cols-3 gap-2">
-                {heroStats.map((stat) => (
-                  <div
-                    key={stat.label}
-                    className="rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm"
-                  >
-                    <div className="flex items-center gap-1.5 text-white/70">
-                      <stat.icon className="h-3.5 w-3.5" />
-                      <span className="text-[9px] uppercase tracking-[0.15em]">
-                        {stat.label}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xl font-semibold sm:text-3xl">
-                      {stat.value}
-                    </p>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            {showcaseProduct ? (
-              <div className="hidden lg:flex lg:flex-col lg:gap-3">
-                <div className="overflow-hidden rounded-[1.7rem] border border-white/12 bg-white/8 p-3 shadow-2xl shadow-black/25 backdrop-blur-md">
-                  <div className="relative aspect-[4/3.2] overflow-hidden rounded-[1.35rem]">
-                    <Image
-                      src={showcaseProduct.heroImage}
-                      alt={showcaseProduct.name}
-                      fill
-                      className="object-cover transition-transform duration-700 hover:scale-105"
-                      sizes="440px"
-                      priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                    <span
-                      className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white"
-                      style={{ backgroundColor: showcaseProduct.accent }}
-                    >
-                      {showcaseProduct.badge}
-                    </span>
-                    <div className="absolute inset-x-0 bottom-0 p-5">
-                      <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">
-                        {showcaseProduct.category}
-                      </p>
-                      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-                        {showcaseProduct.name}
-                      </h2>
-                      <p className="mt-2 max-w-xs text-sm leading-6 text-white/72">
-                        {showcaseProduct.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 px-1 pt-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">
-                          Starting at
-                        </p>
-                        <p className="mt-1 text-3xl font-semibold tracking-[-0.05em] text-[var(--gold)]">
-                          {formatPrice(showcaseProduct.price)}
-                        </p>
-                      </div>
-                      <Link
-                        href={`/products/${showcaseProduct.slug}`}
-                        className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition-transform hover:-translate-y-0.5"
-                      >
-                        View product
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-[1rem] border border-white/10 bg-white/6 px-4 py-3">
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">
-                          Shipping
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-white/90">
-                          {showcaseProduct.shipWindow}
-                        </p>
-                      </div>
-                      <div className="rounded-[1rem] border border-white/10 bg-white/6 px-4 py-3">
-                        <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">
-                          Availability
-                        </p>
-                        <p className="mt-1 text-sm font-semibold text-white/90">
-                          {showcaseProduct.stockLabel}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-[1.15fr_0.85fr] gap-3">
-                  {secondaryProduct ? (
-                    <div className="flex items-center gap-3 rounded-[1.2rem] border border-white/10 bg-white/7 px-3.5 py-3 backdrop-blur-sm">
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[0.85rem]">
-                        <Image
-                          src={secondaryProduct.heroImage}
-                          alt={secondaryProduct.name}
-                          fill
-                          className="object-cover"
-                          sizes="48px"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-white">
-                          {secondaryProduct.name}
-                        </p>
-                        <p className="text-[11px] text-white/50">
-                          {secondaryProduct.category}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-sm font-semibold text-[var(--gold)]">
-                        {formatPrice(secondaryProduct.price)}
-                      </p>
-                    </div>
-                  ) : (
-                    <div />
-                  )}
-
-                  <div className="rounded-[1.2rem] border border-white/10 bg-white/7 px-4 py-3 backdrop-blur-sm">
-                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-white/50">
-                      <MapPin className="h-3.5 w-3.5" />
-                      Marketplace reach
-                    </div>
-                    <div className="mt-2 flex items-end justify-between gap-3">
-                      <div>
-                        <p className="text-2xl font-semibold tracking-[-0.04em] text-white">
-                          {liveLocations}
-                        </p>
-                        <p className="text-xs text-white/55">
-                          live cities and {liveCategories} core categories
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
+      {/* Hero with sliding images */}
+      <section className="page-shell pt-3 pb-3 sm:pt-6 sm:pb-5">
+        <HeroSlider stats={heroStats} />
       </section>
 
-      <div className="relative overflow-hidden border-y border-[var(--line)] bg-white py-3">
-        <div className="marquee-track flex gap-0 whitespace-nowrap">
-          {[...Array(3)]
-            .flatMap(() => [
-              "Home Control",
-              "Mobile Essentials",
-              "Creator Gear",
-              "Gaming",
-              "Audio",
-              "Wearables",
-              "Free Delivery",
-              "Verified Sellers",
-              "Same-Day Dispatch",
-            ])
-            .map((item, index) => (
-              <span
-                key={`${item}-${index}`}
-                className="flex shrink-0 items-center gap-4 px-6 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                {item}
-              </span>
-            ))}
-        </div>
-      </div>
-
+      {/* Trust badges */}
       <section className="page-shell py-4 sm:py-6">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {trustBadges.map((badge) => (
             <div
               key={badge.title}
-              className="rounded-xl border border-[var(--line)] bg-white px-4 py-4 shadow-sm"
+              className="group rounded-xl border border-[var(--line)] bg-white px-4 py-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-soft)] transition-transform duration-300 group-hover:scale-110">
                 <badge.icon className="h-5 w-5 text-[var(--accent)]" />
               </span>
-              <p className="mt-3 text-sm font-semibold">
-                {badge.title}
-              </p>
-              <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                {badge.desc}
-              </p>
+              <p className="mt-3 text-sm font-semibold">{badge.title}</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{badge.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
+      {/* Featured products */}
       <section className="page-shell py-4 sm:py-6">
         <div className="soft-card overflow-hidden p-4 sm:p-8 lg:p-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -450,6 +205,7 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Categories */}
       <section className="page-shell py-4 sm:py-6">
         <div className="mb-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
@@ -473,16 +229,15 @@ export default async function Home() {
               <Link
                 key={category.name}
                 href={`/catalog?category=${encodeURIComponent(category.name)}`}
-                className="group relative flex min-h-[200px] flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                className="group relative flex min-h-[190px] flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
               >
                 <div
                   className="absolute inset-x-0 top-0 h-1"
                   style={{ background: category.accent }}
                 />
-
                 <div className="relative flex items-start justify-between gap-3">
                   <div
-                    className="flex h-10 w-10 items-center justify-center rounded-lg"
+                    className="flex h-10 w-10 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
                     style={{ backgroundColor: style.iconSurface }}
                   >
                     <Icon className="h-5 w-5" style={{ color: style.iconColor }} />
@@ -491,15 +246,11 @@ export default async function Home() {
                     {category.count} products
                   </span>
                 </div>
-
                 <div className="relative mt-4 flex flex-1 flex-col">
-                  <h3 className="text-lg font-semibold">
-                    {category.name}
-                  </h3>
+                  <h3 className="text-lg font-semibold">{category.name}</h3>
                   <p className="mt-1.5 text-sm leading-6 text-[var(--muted)]">
                     {category.description}
                   </p>
-
                   <div className="mt-auto flex items-center justify-between pt-4">
                     <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent)] transition-all group-hover:gap-2.5">
                       Shop now
@@ -513,6 +264,7 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Vendors */}
       <section className="page-shell py-4 sm:py-6">
         <div className="soft-card overflow-hidden p-4 sm:p-8 lg:p-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -543,34 +295,31 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Market signals */}
       <section className="page-shell py-4 sm:py-6">
         <div className="grid gap-3 sm:grid-cols-3">
           {marketSignals.map((signal) => (
             <div
               key={signal.title}
-              className="rounded-xl border border-[var(--line)] bg-white px-4 py-4 shadow-sm"
+              className="group rounded-xl border border-[var(--line)] bg-white px-4 py-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] transition-transform duration-300 group-hover:scale-110">
                 <signal.icon className="h-4 w-4 text-[var(--accent)]" />
               </span>
-              <h3 className="mt-3 text-base font-semibold">
-                {signal.title}
-              </h3>
-              <p className="mt-1.5 text-sm leading-6 text-[var(--muted)]">
-                {signal.desc}
-              </p>
+              <h3 className="mt-3 text-base font-semibold">{signal.title}</h3>
+              <p className="mt-1.5 text-sm leading-6 text-[var(--muted)]">{signal.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
+      {/* CTA Section */}
       <section className="page-shell py-4 pb-6 sm:py-6 sm:pb-10">
         <div className="relative overflow-hidden rounded-2xl border border-[var(--accent)] bg-gradient-to-br from-[var(--accent)] to-[#ff9966] px-5 py-8 shadow-lg sm:rounded-[2rem] sm:px-10 sm:py-10 lg:px-14 lg:py-12">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-white/20 blur-[80px]" />
             <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-white/15 blur-[96px]" />
           </div>
-
           <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
@@ -583,7 +332,6 @@ export default async function Home() {
               <p className="mt-3 max-w-xl text-sm leading-6 text-white/85 sm:text-base">
                 Mix products from different sellers, track fulfillment, and get same-city delivery.
               </p>
-
               <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
                 {[
                   "Combine products across sellers in one cart.",
@@ -600,29 +348,16 @@ export default async function Home() {
                 ))}
               </ul>
             </div>
-
             <div className="grid gap-3">
               <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">
-                  Threshold
-                </p>
-                <p className="mt-1 text-2xl font-semibold">
-                  {formatPrice(100)}
-                </p>
-                <p className="mt-0.5 text-xs text-white/70">
-                  Free delivery on qualifying orders
-                </p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">Threshold</p>
+                <p className="mt-1 text-2xl font-semibold">{formatPrice(100)}</p>
+                <p className="mt-0.5 text-xs text-white/70">Free delivery on qualifying orders</p>
               </div>
               <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">
-                  Support
-                </p>
-                <p className="mt-1 text-base font-semibold">
-                  Live chat & order help
-                </p>
-                <p className="mt-0.5 text-xs text-white/70">
-                  Real answers before & after ordering
-                </p>
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">Support</p>
+                <p className="mt-1 text-base font-semibold">Live chat & order help</p>
+                <p className="mt-0.5 text-xs text-white/70">Real answers before & after ordering</p>
               </div>
               <Link
                 href="/catalog"

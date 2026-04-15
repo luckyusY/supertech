@@ -55,11 +55,21 @@ const httpServer = createServer(async (req, res) => {
   }
 });
 
+const allowedOrigins = process.env.NEXT_PUBLIC_APP_URL
+  ? [process.env.NEXT_PUBLIC_APP_URL]
+  : ["http://localhost:3000"];
+
 const io = new Server(httpServer, {
   path: "/api/socket",
   addTrailingSlash: false,
-  cors: { origin: "*", methods: ["GET", "POST"] },
-  transports: ["polling", "websocket"],
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 // MongoDB connection for persisting chat messages

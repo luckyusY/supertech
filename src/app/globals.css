@@ -9,20 +9,20 @@
   --surface-strong: rgba(26, 26, 26, 0.95);
   --muted: #666666;
   --line: rgba(0, 0, 0, 0.08);
-  
+
   /* Primary: Alibaba orange */
   --accent: #ff6a00;
   --accent-soft: #fff3e8;
   --accent-hover: #e55f00;
-  
+
   /* Secondary: warm red for CTAs */
   --red: #ff4747;
   --red-soft: #ffe8e8;
-  
+
   /* Tertiary: teal for variety */
   --teal: #00b4d8;
   --gold: #ff8c00;
-  
+
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   --grid: rgba(0, 0, 0, 0.04);
 }
@@ -31,7 +31,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
-  --font-sans: var(--font-space-grotesk);
+  --font-sans: var(--font-inter), var(--font-space-grotesk), sans-serif;
   --font-mono: var(--font-ibm-plex-mono);
 }
 
@@ -57,9 +57,11 @@ html {
 body {
   background: #f5f5f5;
   color: var(--foreground);
-  font-family: var(--font-space-grotesk), sans-serif;
+  font-family: var(--font-inter), var(--font-space-grotesk), sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -93,7 +95,12 @@ a {
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 1rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.soft-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .dark-card {
@@ -102,6 +109,12 @@ a {
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .eyebrow {
@@ -122,7 +135,7 @@ a {
 .noise {
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230f172a' fill-opacity='0.025'%3E%3Cpath d='M36 34h1v1h-1zm7 0h1v1h-1zm14 0h1v1h-1zm49 0h1v1h-1zm28 0h1v1h-1zm14 0h1v1h-1zM14 48h1v1h-1zm49 0h1v1h-1zm35 0h1v1h-1zm28 0h1v1h-1zM7 62h1v1H7zm14 0h1v1h-1zm42 0h1v1h-1zm35 0h1v1h-1zm56 0h1v1h-1zM0 76h1v1H0zm21 0h1v1h-1zm42 0h1v1h-1zm63 0h1v1h-1zM14 90h1v1h-1zm42 0h1v1h-1zm28 0h1v1h-1zm35 0h1v1h-1zm42 0h1v1h-1zM7 104h1v1H7zm49 0h1v1h-1zm70 0h1v1h-1zM0 118h1v1H0zm21 0h1v1h-1zm42 0h1v1h-1zm56 0h1v1h-1zm35 0h1v1h-1zM14 132h1v1h-1zm49 0h1v1h-1zm35 0h1v1h-1zm28 0h1v1h-1zM36 146h1v1h-1zm35 0h1v1h-1zm49 0h1v1h-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230f172a' fill-opacity='0.025'%3E%3Cpath d='M36 34h1v1h-1zm7 0h1v1h-1zm14 0h1v1h-1zm49 0h1v1h-1zm28 0h1v1h-1zm14 0h1v1h-1zM14 48h1v1h-1zm49 0h1v1h-1zm35 0h1v1h-1zm28 0h1v1h-1zM7 62h1v1H7zm14 0h1v1h-1zm42 0h1v1h-1zm35 0h1v1h-1zm56 0h1v1h-1zM0 76h1v1H0zm21 0h1v1h-1zm42 0h1v1h-1zm63 0h1v1h-1zm14 0h1v1h-1zm42 0h1v1h-1zm28 0h1v1h-1zm35 0h1v1h-1zm42 0h1v1h-1zM7 104h1v1H7zm49 0h1v1h-1zm70 0h1v1h-1zM0 118h1v1H0zm21 0h1v1h-1zm42 0h1v1h-1zm56 0h1v1h-1zm35 0h1v1h-1zM14 132h1v1h-1zm49 0h1v1h-1zm35 0h1v1h-1zm28 0h1v1h-1zM36 146h1v1h-1zm35 0h1v1h-1zm49 0h1v1h-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
 .hero-orbit {
@@ -160,26 +173,6 @@ a {
   }
 }
 
-/* Announcement bar marquee */
-.announcement-scroll {
-  animation: marquee-scroll 28s linear infinite;
-  will-change: transform;
-}
-.announcement-scroll:hover {
-  animation-play-state: paused;
-}
-
-@keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-/* Marquee ticker */
-.marquee-track {
-  animation: marquee-scroll 35s linear infinite;
-  will-change: transform;
-}
-
 /* Smooth ring focus */
 *:focus-visible {
   outline: 2px solid var(--accent);
@@ -187,34 +180,89 @@ a {
   border-radius: 4px;
 }
 
-/* Better scrollbar on desktop */
-@media (min-width: 768px) {
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+/* Entrance animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
-
-  .float-card,
-  .announcement-scroll,
-  .marquee-track {
-    animation: none;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (min-width: 640px) {
-  .page-shell {
-    padding-inline: 1.5rem;
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+/* Image loading placeholder */
+img[data-placeholder="blur"] {
+  filter: blur(8px);
+  transition: filter 0.3s ease;
+}
+
+img.loaded[data-placeholder="blur"] {
+  filter: blur(0);
+}
+
+/* Smooth card transitions with better easing */
+.card {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Better readability */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+}
+
+/* Performance optimizations */
+img {
+  loading: lazy;
+}
+
+/* Swiper custom styles */
+.swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.4) !important;
+  opacity: 1 !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 9999px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: var(--accent) !important;
+  width: 32px !important;
+}
+
+/* Button hover effects */
+button, .button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:active, .button:active {
+  transform: scale(0.98);
+}
+
+/* Link hover effects */
+a {
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-@media (min-width: 1024px) {
-  .page-shell {
-    padding-inline: 2rem;
-  }
+.animate-spin {
+  animation: spin 1s linear infinite;
 }

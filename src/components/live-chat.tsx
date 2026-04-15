@@ -1,14 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  MessageCircle,
-  Minimize2,
-  Package,
-  Send,
-  ShoppingBag,
-  X,
-} from "lucide-react";
+import { MessageCircle, Package, Send, ShoppingBag, X } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { useChatContext } from "@/components/chat-context";
 import { formatPrice } from "@/lib/utils";
@@ -39,26 +32,56 @@ export function LiveChat() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const socketRef = useRef<Socket | null>(null);
 
-  // Connect socket when chat opens + name is set
+  // Connect socket AFTER user enters name
   useEffect(() => {
     if (!isOpen || !nameSet) return;
 
-    const socket = io({
+    setIsLoading(true);
+    setError("");
+
+    // Determine the correct URL for Socket.IO connection
+    const socketUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+
+    const socket = io(socketUrl, {
       path: "/api/socket",
-      transports: ["polling", "websocket"],
+      transports: ["websocket", "polling"],
+      timeout: 10000,
+      forceNew: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 3,
     });
 
     socketRef.current = socket;
 
+    const connectTimeout = setTimeout(() => {
+      if (!socket.connected) {
+        setError("Could not connect to chat. Please try again.");
+        setIsLoading(false);
+        socket.disconnect();
+      }
+    }, 10000);
+
     socket.on("connect", () => {
+      clearTimeout(connectTimeout);
       setConnected(true);
+      setIsLoading(false);
       socket.emit("join", { room: config.room, userName });
+    });
+
+    socket.on("connect_error", (err) => {
+      clearTimeout(connectTimeout);
+      console.error("[chat] connect_error:", err.message);
+      setError("Connection failed. Please refresh and try again.");
+      setIsLoading(false);
+      setConnected(false);
     });
 
     socket.on("disconnect", () => setConnected(false));
@@ -110,12 +133,14 @@ export function LiveChat() {
     });
 
     return () => {
+      clearTimeout(connectTimeout);
       socket.disconnect();
       socketRef.current = null;
       setConnected(false);
+      setIsLoading(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, nameSet, config.room]);
+  }, [isOpen, nameSet, config.room, userName]);
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -124,8 +149,10 @@ export function LiveChat() {
 
   // Focus input
   useEffect(() => {
-    if (isOpen && nameSet) setTimeout(() => inputRef.current?.focus(), 80);
-  }, [isOpen, nameSet]);
+    if (isOpen && nameSet && connected) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen, nameSet, connected]);
 
   function handleJoin(e: React.FormEvent) {
     e.preventDefault();
@@ -139,7 +166,7 @@ export function LiveChat() {
     (e: React.FormEvent) => {
       e.preventDefault();
       const text = input.trim();
-      if (!text || sending || !socketRef.current) return;
+      if (!text || sending || !socketRef.current || !connected) return;
 
       setSending(true);
       setInput("");
@@ -158,8 +185,18 @@ export function LiveChat() {
       socketRef.current.emit("message", { text });
       setSending(false);
     },
-    [input, sending, userName],
+    [input, sending, userName, connected],
   );
+
+  // Reset state when chat closes
+  useEffect(() => {
+    if (!isOpen) {
+      setMessages([]);
+      setConnected(false);
+      setError("");
+      setIsLoading(false);
+    }
+  }, [isOpen]);
 
   return (
     <>
@@ -169,7 +206,7 @@ export function LiveChat() {
           onClick={() =>
             openChat({ room: "support", title: "Live Support", subtitle: "We reply within minutes" })
           }
-          className="fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-xl transition-transform hover:scale-105 sm:bottom-6 sm:right-6 sm:h-14 sm:w-14"
+          className="fixed bottom-20 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-xl transition-all hover:scale-110 active:scale-95 sm:bottom-6 sm:right-6 sm:h-14 sm:w-14"
           aria-label="Open chat"
         >
           <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -179,24 +216,31 @@ export function LiveChat() {
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[520px] sm:w-[350px] sm:rounded-2xl sm:border sm:border-[var(--line)] sm:shadow-2xl">
-
+        <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[520px] sm:w-[360px] sm:rounded-2xl sm:border sm:border-[var(--line)] sm:shadow-2xl">
           {/* Header */}
           <div className="flex shrink-0 items-center justify-between bg-[var(--accent)] px-4 py-3">
             <div className="flex items-center gap-2.5">
               <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
                 <MessageCircle className="h-4 w-4 text-white" />
-                <span className={`absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--accent)] ${connected ? "bg-green-400" : "bg-gray-400"}`} />
+                <span
+                  className={`absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--accent)] ${
+                    connected ? "bg-green-400" : isLoading ? "bg-yellow-400 animate-pulse" : "bg-gray-400"
+                  }`}
+                />
               </div>
               <div>
                 <p className="text-sm font-semibold leading-tight text-white">{config.title}</p>
                 <p className="text-[11px] leading-tight text-white/70">
-                  {connected ? "Online" : "Connecting..."}
+                  {connected ? "Online" : isLoading ? "Connecting..." : "Offline"}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={closeChat} className="rounded-full p-1.5 text-white/70 hover:bg-white/10" aria-label="Close chat">
+              <button
+                onClick={closeChat}
+                className="rounded-full p-1.5 text-white/70 hover:bg-white/10"
+                aria-label="Close chat"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -232,9 +276,7 @@ export function LiveChat() {
               </div>
               <div className="text-center">
                 <p className="text-lg font-semibold">Chat with us</p>
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  What&apos;s your name?
-                </p>
+                <p className="mt-1 text-sm text-[var(--muted)]">What&apos;s your name?</p>
               </div>
               <form onSubmit={handleJoin} className="w-full space-y-3">
                 <input
@@ -252,6 +294,35 @@ export function LiveChat() {
                   Start chat
                 </button>
               </form>
+            </div>
+          ) : isLoading ? (
+            /* Loading state */
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+              <div className="flex h-12 w-12 items-center justify-center">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[var(--accent)] border-t-transparent" />
+              </div>
+              <p className="text-sm font-medium text-[var(--muted)]">Connecting to support...</p>
+            </div>
+          ) : error ? (
+            /* Error state */
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--red-soft)]">
+                <X className="h-7 w-7 text-[var(--red)]" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-[var(--foreground)]">Connection failed</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{error}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setNameSet(false);
+                  setError("");
+                }}
+                className="rounded-full bg-[var(--accent)] px-6 py-2.5 text-sm font-semibold text-white"
+              >
+                Try again
+              </button>
             </div>
           ) : (
             <>
@@ -297,11 +368,6 @@ export function LiveChat() {
                   );
                 })}
 
-                {error && (
-                  <p className="rounded-xl bg-[var(--red-soft)] px-3 py-2 text-center text-xs text-[var(--red)]">
-                    {error}
-                  </p>
-                )}
                 <div ref={bottomRef} />
               </div>
 
