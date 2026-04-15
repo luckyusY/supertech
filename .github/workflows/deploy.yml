@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npm run build:prod
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           MONGODB_DB: ${{ secrets.MONGODB_DB }}
@@ -61,6 +61,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
+            echo "Starting deployment restart..."
+            
             # Ensure supertech symlinks point to public_html (built artifacts)
             if [ ! -L ~/supertech/.next ]; then
               rm -rf ~/supertech/.next
@@ -70,6 +72,9 @@ jobs:
               rm -rf ~/supertech/node_modules
               ln -s ~/public_html/node_modules ~/supertech/node_modules
             fi
-            # Kill lsnode so LiteSpeed restarts it with new code on next request
-            pkill -f "lsnode:/home/wwwsuper/supertech" || true
-            echo "Deployed successfully!"
+            
+            # Kill lsnode in background and exit immediately
+            nohup sh -c 'sleep 2 && pkill -f "lsnode:/home/wwwsuper/supertech" || true' > /dev/null 2>&1 &
+            
+            echo "Deployed successfully! Server restarting in background..."
+            exit 0

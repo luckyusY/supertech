@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/chat-messages/reply/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"C:\\Users\\HP\\3D Objects\\supertech\\src\\app\\api\\chat-messages\\reply\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};

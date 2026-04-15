@@ -1,1 +1,0 @@
-globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/api/order-requests/[id]/route"]={"moduleLoading":{"prefix":"/_next/"},"ssrModuleMapping":{},"edgeSSRModuleMapping":{},"clientModules":{},"entryCSSFiles":{"C:\\Users\\HP\\3D Objects\\supertech\\src\\app\\api\\order-requests\\[id]\\route":[]},"rscModuleMapping":{},"edgeRscModuleMapping":{}};
