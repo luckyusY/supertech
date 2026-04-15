@@ -49,7 +49,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: ".next/static/,.next/server/,.next/BUILD_ID,.next/build-manifest.json,.next/app-build-manifest.json,.next/app-path-routes-manifest.json,public/"
+          source: ".next/static/,.next/server/,.next/BUILD_ID,.next/build-manifest.json,.next/routes-manifest.json,.next/app-path-routes-manifest.json,.next/images-manifest.json,.next/prerender-manifest.json,.next/required-server-files.json,public/"
           target: "/home/wwwsuper/public_html"
           overwrite: true
 
