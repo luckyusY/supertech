@@ -1,11 +1,9 @@
 "use client";
 
-import { animated, useSpring } from "@react-spring/web";
-import { Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Clock3, MapPin, Package, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { type MouseEvent, useRef, useEffect } from "react";
-import { toast } from "sonner";
 import { type Vendor } from "@/lib/marketplace";
 
 type VendorCardProps = {
@@ -14,115 +12,92 @@ type VendorCardProps = {
 };
 
 export function VendorCard({ vendor, index = 0 }: VendorCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  // Spring animation for entrance
-  const [springStyle, api] = useSpring(() => ({
-    from: { opacity: 0, y: 16 },
-    to: { opacity: 1, y: 0 },
-    config: { tension: 120, friction: 14 },
-    delay: index * 50,
-  }));
-
-  // Hover animation
-  const [hoverSpring, hoverApi] = useSpring(() => ({
-    y: 0,
-    scale: 1,
-    config: { tension: 200, friction: 16 },
-  }));
-
-  // Intersection observer for entrance animation
-  useEffect(() => {
-    if (cardRef.current) {
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            api.start();
-            observer.disconnect();
-          }
-        },
-        { threshold: 0.1 }
-      );
-      observer.observe(cardRef.current);
-    }
-  }, [api]);
-
-  function handleVisit(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    toast("Visiting " + vendor.name + "...", {
-      duration: 1500,
-    });
-  }
-
   return (
-    <animated.div
-      ref={cardRef}
-      style={springStyle}
-      onMouseEnter={() => hoverApi.start({ y: -4, scale: 1.02 })}
-      onMouseLeave={() => hoverApi.start({ y: 0, scale: 1 })}
-      className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-sm transition-shadow duration-300 hover:shadow-md card"
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{
+        duration: 0.42,
+        delay: index * 0.06,
+        ease: [0.25, 0.46, 0.45, 0.94],
+      }}
     >
-      <animated.div style={hoverSpring} className="flex h-full flex-col">
-        <Link
-          href={"/vendors/" + vendor.slug}
-          className="absolute inset-0 z-10 rounded-xl"
-          aria-label={`Visit ${vendor.name} vendor page`}
-        />
-
-        <div className="relative aspect-[4/4.15] overflow-hidden bg-[var(--background)]">
+      <Link
+        href={`/vendors/${vendor.slug}`}
+        className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+      >
+        <div className="relative aspect-[16/8.4] overflow-hidden">
           <Image
             src={vendor.coverImage}
             alt={vendor.name}
             fill
-            className="object-cover transition-transform duration-500"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(min-width: 1280px) 25vw, (min-width: 768px) 40vw, 100vw"
-            placeholder="blur"
-            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-            loading={index < 4 ? "eager" : "lazy"}
-            priority={index < 4}
-            fetchPriority={index < 4 ? "high" : "auto"}
-            decoding="async"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-          <div className="absolute left-2 top-2 z-20 flex flex-wrap gap-1.5">
-            <span
-              className="rounded-full px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm"
-              style={{ backgroundColor: vendor.accent }}
-            >
-              Vendor
-            </span>
+          <div
+            className="absolute bottom-2 left-2 flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-white shadow-lg"
+            style={{ backgroundColor: vendor.accent }}
+          >
+            {vendor.logoMark}
+          </div>
+
+          <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur-sm">
+            <Star className="h-3 w-3 fill-[var(--gold)] text-[var(--gold)]" />
+            {vendor.rating.toFixed(1)}
           </div>
         </div>
 
-        <div className="relative flex flex-1 flex-col p-3">
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug">
-            {vendor.name}
-          </h3>
-
-          <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-            {vendor.headline}
-          </p>
-
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <span className="rounded-full bg-[var(--background)] px-2 py-0.5 text-[10px] font-medium text-[var(--muted)]">
-              {vendor.activeProducts} products
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--accent)]">
-              <span>{vendor.fulfillmentRate}%</span>
-              <span>fulfillment</span>
-            </span>
+        <div className="flex flex-1 flex-col p-3">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold leading-tight">{vendor.name}</h3>
+            <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--muted)]">
+              {vendor.headline}
+            </p>
           </div>
 
-          <div className="mt-2 flex items-center justify-between">
-            <span className="inline-flex items-center gap-1 text-xs text-[var(--muted)]">
-              <Star className="h-3 w-3 fill-[var(--gold)] text-[var(--gold)]" />
-              {vendor.reviewCount > 0 ? vendor.rating.toFixed(1) : "New"}
+          <div className="mt-2 flex flex-wrap gap-1">
+            {vendor.categories.slice(0, 2).map((category) => (
+              <span
+                key={category}
+                className="rounded-full bg-[var(--background)] px-2 py-0.5 text-[10px] font-medium text-[var(--muted)]"
+              >
+                {category}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-[var(--background)] p-2">
+            <div>
+              <p className="inline-flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                <Clock3 className="h-3 w-3" />
+                Response
+              </p>
+              <p className="mt-0.5 text-xs font-semibold">{vendor.responseTime}</p>
+            </div>
+            <div>
+              <p className="inline-flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] text-[var(--muted)]">
+                <Package className="h-3 w-3" />
+                Products
+              </p>
+              <p className="mt-0.5 text-xs font-semibold">{vendor.activeProducts}</p>
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between text-xs text-[var(--muted)]">
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3 w-3 shrink-0" />
+              {vendor.location}
+            </span>
+            <span className="flex items-center gap-1 font-medium text-[var(--accent)]">
+              {vendor.fulfillmentRate}
+              <ArrowRight className="h-3 w-3" />
             </span>
           </div>
         </div>
-      </animated.div>
-    </animated.div>
+      </Link>
+    </motion.div>
   );
 }
