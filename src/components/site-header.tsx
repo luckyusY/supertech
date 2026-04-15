@@ -33,7 +33,7 @@ export async function SiteHeader() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {session ? (
             <UserMenu
               name={session.name}
@@ -54,7 +54,7 @@ export async function SiteHeader() {
 
           <Link
             href="/catalog"
-            className="hidden items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 sm:inline-flex"
+            className="hidden lg:inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5"
           >
             Shop now
             <ArrowRight className="h-4 w-4" />
