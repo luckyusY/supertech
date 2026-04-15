@@ -42,16 +42,33 @@ jobs:
           NEXT_PUBLIC_CLOUDINARY_API_KEY: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_API_KEY }}
           NEXT_PUBLIC_APP_URL: https://supertech.africa
 
-      - name: Upload build to server
+      - name: Upload and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          script: |
+            echo "Cleaning old build..."
+            rm -rf ~/public_html/.next
+            mkdir -p ~/public_html/.next
+            echo "Ready for new build"
+          command_timeout: 10m
+
+      - name: Upload build archive
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: ".next/static/,.next/server/,.next/BUILD_ID,.next/build-manifest.json,.next/routes-manifest.json,.next/app-path-routes-manifest.json,.next/images-manifest.json,.next/prerender-manifest.json,.next/required-server-files.json,public/"
-          target: "/home/wwwsuper/public_html"
+          source: ".next"
+          target: "/home/${{ secrets.SSH_USER }}/public_html/"
+          strip_components: 0
           overwrite: true
+          timeout: 30m
+          use_insecure_cipher: true
 
       - name: Restart app on server
         uses: appleboy/ssh-action@v1.0.3
