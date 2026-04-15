@@ -45,3 +45,4 @@ Required for real integrations:
 3. Connect Cloudinary uploads to the vendor product creation flow.
 4. Add cart, checkout, payments, and vendor payout orchestration.
 5. Protect dashboard routes with role-based access control before going live.
+"# Deployment fix - $(date)"  
