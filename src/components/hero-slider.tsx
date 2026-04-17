@@ -3,10 +3,18 @@
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck, Package, TrendingUp } from "lucide-react";
+
+type StatIconKey = "package" | "shield" | "trending";
+
+const statIcons: Record<StatIconKey, typeof Package> = {
+  package: Package,
+  shield: ShieldCheck,
+  trending: TrendingUp,
+};
 
 type Stat = {
-  icon: any;
+  iconKey: StatIconKey;
   value: string;
   label: string;
 };
@@ -183,15 +191,18 @@ export function HeroSlider({ stats }: HeroSliderProps) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             {/* Stats */}
             <dl className="grid grid-cols-3 gap-2">
-              {stats.map((stat) => (
+              {stats.map((stat) => {
+                const Icon = statIcons[stat.iconKey];
+                return (
                 <div key={stat.label} className="rounded-xl border border-white/15 bg-white/10 p-2.5 backdrop-blur-sm sm:p-3">
                   <div className="flex items-center gap-1.5 text-white/70">
-                    <stat.icon className="h-3.5 w-3.5" />
+                    <Icon className="h-3.5 w-3.5" />
                     <span className="text-[9px] uppercase tracking-[0.15em]">{stat.label}</span>
                   </div>
                   <p className="mt-1 text-lg font-semibold text-white sm:text-2xl">{stat.value}</p>
                 </div>
-              ))}
+                );
+              })}
             </dl>
 
             {/* Navigation */}

@@ -124,21 +124,21 @@ export default async function Home() {
 
   const heroStats = [
     {
-      icon: Package,
+      iconKey: "package" as const,
       value: formatCompactNumber(publicProducts.length),
       label: "live products",
     },
     {
-      icon: ShieldCheck,
+      iconKey: "shield" as const,
       value: formatCompactNumber(publicVendors.length),
       label: "verified sellers",
     },
     {
-      icon: TrendingUp,
+      iconKey: "trending" as const,
       value: `${averageFulfillment.toFixed(1)}%`,
       label: "avg. fulfillment",
     },
-  ] as const;
+  ];
 
   return (
     <div className="pb-20 sm:pb-0">
