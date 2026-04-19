@@ -9,6 +9,7 @@ import {
 } from "@/lib/marketplace";
 import { getMongoVendors } from "@/lib/mongodb-vendors";
 import { getProductSubmissions, type ProductSubmissionSummary } from "@/lib/product-submissions";
+import { getHiddenSlugs } from "@/lib/hidden-items";
 
 function mapApprovedSubmissionToProduct(submission: ProductSubmissionSummary): Product {
   const vendor = getSeedVendorBySlug(submission.vendorSlug);
@@ -51,15 +52,18 @@ const getApprovedSubmissions = cache(async () => {
 });
 
 export const getPublicProducts = cache(async () => {
-  const approvedProducts = (await getApprovedSubmissions()).map(mapApprovedSubmissionToProduct);
+  const [approvedProducts, hiddenSlugs] = await Promise.all([
+    getApprovedSubmissions().then((s) => s.map(mapApprovedSubmissionToProduct)),
+    getHiddenSlugs("product"),
+  ]);
   const productMap = new Map<string, Product>();
 
   for (const product of seedProducts) {
-    productMap.set(product.slug, product);
+    if (!hiddenSlugs.has(product.slug)) productMap.set(product.slug, product);
   }
 
   for (const product of approvedProducts) {
-    productMap.set(product.slug, product);
+    if (!hiddenSlugs.has(product.slug)) productMap.set(product.slug, product);
   }
 
   return Array.from(productMap.values());
@@ -78,12 +82,13 @@ export async function getPublicVendorProducts(vendorSlug: string) {
 }
 
 export const getPublicVendors = cache(async () => {
-  const [approvedSubmissions, mongoVendors] = await Promise.all([
+  const [approvedSubmissions, mongoVendors, hiddenSlugs] = await Promise.all([
     getApprovedSubmissions(),
     getMongoVendors(),
+    getHiddenSlugs("vendor"),
   ]);
 
-  const seedWithSubmissions = seedVendors.map((vendor) => {
+  const seedWithSubmissions = seedVendors.filter((v) => !hiddenSlugs.has(v.slug)).map((vendor) => {
     const approvedForVendor = approvedSubmissions.filter(
       (submission) => submission.vendorSlug === vendor.slug,
     );
@@ -99,9 +104,9 @@ export const getPublicVendors = cache(async () => {
     } satisfies Vendor;
   });
 
-  // Merge MongoDB-created vendors (approved applications), excluding any that clash with seed slugs
+  // Merge MongoDB-created vendors (approved applications), excluding seed slugs and hidden ones
   const seedSlugs = new Set(seedVendors.map((v) => v.slug));
-  const newVendors = mongoVendors.filter((v) => !seedSlugs.has(v.slug));
+  const newVendors = mongoVendors.filter((v) => !seedSlugs.has(v.slug) && !hiddenSlugs.has(v.slug));
 
   return [...seedWithSubmissions, ...newVendors];
 });

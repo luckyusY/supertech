@@ -119,9 +119,7 @@ export default async function ManageVendorsPage() {
                           <ExternalLink className="h-3 w-3" />
                           View
                         </Link>
-                        {!isSeed && (
-                          <AdminDeleteButton onDelete={deleteVendorAction.bind(null, vendor.slug)} />
-                        )}
+                        <AdminDeleteButton onDelete={deleteVendorAction.bind(null, vendor.slug, isSeed)} />
                       </div>
                     </td>
                   </tr>

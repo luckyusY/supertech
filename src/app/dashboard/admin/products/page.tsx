@@ -112,7 +112,7 @@ export default async function ManageProductsPage() {
                         {new Date(sub.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </td>
                       <td className="px-5 py-4">
-                        <AdminDeleteButton onDelete={deleteProductAction.bind(null, sub.id)} />
+                        <AdminDeleteButton onDelete={deleteProductAction.bind(null, sub.id, false)} />
                       </td>
                     </tr>
                   ))}
@@ -131,7 +131,7 @@ export default async function ManageProductsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
-                  {["Product", "Vendor", "Category", "Price", "Status"].map((h) => (
+                  {["Product", "Vendor", "Category", "Price", "Status", ""].map((h) => (
                     <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
                       {h}
                     </th>
@@ -168,6 +168,9 @@ export default async function ManageProductsPage() {
                       <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_STYLES.seed}`}>
                         {STATUS_LABELS.seed}
                       </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <AdminDeleteButton onDelete={deleteProductAction.bind(null, product.slug, true)} />
                     </td>
                   </tr>
                 ))}
