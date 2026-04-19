@@ -7,6 +7,8 @@ import { hasMongoConfig } from "@/lib/integrations";
 import { getProductSubmissions } from "@/lib/product-submissions";
 import { products as seedProducts } from "@/lib/marketplace";
 import { formatPrice } from "@/lib/utils";
+import { AdminDeleteButton } from "@/components/admin-delete-button";
+import { deleteProductAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Manage Products — Admin",
@@ -68,7 +70,7 @@ export default async function ManageProductsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
-                    {["Product", "Vendor", "Category", "Price", "Status", "Date"].map((h) => (
+                    {["Product", "Vendor", "Category", "Price", "Status", "Date", ""].map((h) => (
                       <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
                         {h}
                       </th>
@@ -108,6 +110,9 @@ export default async function ManageProductsPage() {
                       </td>
                       <td className="px-5 py-4 text-[var(--muted)]">
                         {new Date(sub.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </td>
+                      <td className="px-5 py-4">
+                        <AdminDeleteButton onDelete={deleteProductAction.bind(null, sub.id)} />
                       </td>
                     </tr>
                   ))}
