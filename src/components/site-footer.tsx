@@ -23,7 +23,6 @@ const helpLinks = [
   { label: "Track your order", href: "/track-order" },
   { label: "Place an order", href: "/order" },
   { label: "Cart & checkout", href: "/cart" },
-  { label: "Roadmap", href: "/phases" },
 ];
 
 const sellerLinks = [
