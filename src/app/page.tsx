@@ -315,13 +315,14 @@ export default async function Home() {
 
       {/* CTA Section */}
       <section className="page-shell py-4 pb-6 sm:py-6 sm:pb-10">
-        <div className="relative overflow-hidden rounded-2xl border border-[var(--accent)] bg-gradient-to-br from-[var(--accent)] to-[#ff9966] px-5 py-8 shadow-lg sm:rounded-[2rem] sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--accent)] bg-gradient-to-br from-[var(--accent)] to-[#ff9966] shadow-lg sm:rounded-[2rem]">
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-white/20 blur-[80px]" />
             <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-white/15 blur-[96px]" />
           </div>
-          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
-            <div>
+          <div className="relative grid lg:grid-cols-[minmax(0,1fr)_420px]">
+            {/* Left: text content */}
+            <div className="px-5 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
                 <Truck className="h-3.5 w-3.5" />
                 Free delivery over $100
@@ -347,25 +348,107 @@ export default async function Home() {
                   </li>
                 ))}
               </ul>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/catalog"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[var(--accent)] shadow-lg transition-all hover:-translate-y-0.5"
+                >
+                  Start shopping
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <div className="flex items-center gap-2 text-white/80">
+                  <div className="flex -space-x-1.5">
+                    {[
+                      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&h=40&fit=crop&crop=face",
+                      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop&crop=face",
+                      "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=40&h=40&fit=crop&crop=face",
+                    ].map((src, i) => (
+                      <div key={i} className="relative h-7 w-7 overflow-hidden rounded-full border-2 border-[var(--accent)]">
+                        <Image src={src} alt="Customer" fill className="object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                  <span className="text-xs font-medium">2,400+ happy shoppers</span>
+                </div>
+              </div>
+              {/* Info cards — visible on mobile only, hidden on lg (shown in image column) */}
+              <div className="mt-6 flex flex-wrap gap-3 lg:hidden">
+                <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">Threshold</p>
+                  <p className="mt-1 text-2xl font-semibold">{formatPrice(100)}</p>
+                  <p className="mt-0.5 text-xs text-white/70">Free delivery on qualifying orders</p>
+                </div>
+                <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">Support</p>
+                  <p className="mt-1 text-base font-semibold">Live chat & order help</p>
+                  <p className="mt-0.5 text-xs text-white/70">Real answers before & after ordering</p>
+                </div>
+              </div>
             </div>
-            <div className="grid gap-3">
-              <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">Threshold</p>
-                <p className="mt-1 text-2xl font-semibold">{formatPrice(100)}</p>
-                <p className="mt-0.5 text-xs text-white/70">Free delivery on qualifying orders</p>
+
+            {/* Right: product image collage — hidden on mobile */}
+            <div className="relative hidden lg:block">
+              {/* Main background image */}
+              <div className="absolute inset-0">
+                <Image
+                  src="https://images.unsplash.com/photo-1498049794561-7780e7231661?w=600&q=80"
+                  alt="Tech products"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#ff7b35]/80 via-[#ff7b35]/30 to-transparent" />
               </div>
-              <div className="rounded-xl border border-white/20 bg-white/15 px-4 py-3 backdrop-blur-sm">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-white/70">Support</p>
-                <p className="mt-1 text-base font-semibold">Live chat & order help</p>
-                <p className="mt-0.5 text-xs text-white/70">Real answers before & after ordering</p>
+
+              {/* Floating product thumbnails */}
+              <div className="absolute left-6 top-6 overflow-hidden rounded-2xl shadow-xl border-2 border-white/30 w-28 h-28">
+                <Image
+                  src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80"
+                  alt="Headphones"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+                  <p className="text-[9px] font-semibold text-white truncate">Headphones</p>
+                </div>
               </div>
-              <Link
-                href="/catalog"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[var(--accent)] shadow-lg transition-all hover:-translate-y-0.5"
-              >
-                Start shopping
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+
+              <div className="absolute right-6 top-6 overflow-hidden rounded-2xl shadow-xl border-2 border-white/30 w-28 h-28">
+                <Image
+                  src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=200&q=80"
+                  alt="Smartwatch"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+                  <p className="text-[9px] font-semibold text-white truncate">Smartwatch</p>
+                </div>
+              </div>
+
+              <div className="absolute left-6 bottom-6 overflow-hidden rounded-2xl shadow-xl border-2 border-white/30 w-28 h-28">
+                <Image
+                  src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=200&q=80"
+                  alt="Skincare"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
+                  <p className="text-[9px] font-semibold text-white truncate">Beauty</p>
+                </div>
+              </div>
+
+              {/* Info cards overlaid at bottom-right */}
+              <div className="absolute bottom-6 right-4 grid gap-2 w-48">
+                <div className="rounded-xl border border-white/20 bg-white/15 px-3 py-2.5 backdrop-blur-sm">
+                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/70">Threshold</p>
+                  <p className="mt-0.5 text-xl font-semibold text-white">{formatPrice(100)}</p>
+                  <p className="text-[10px] text-white/70">Free delivery on qualifying orders</p>
+                </div>
+                <div className="rounded-xl border border-white/20 bg-white/15 px-3 py-2.5 backdrop-blur-sm">
+                  <p className="text-[9px] uppercase tracking-[0.16em] text-white/70">Support</p>
+                  <p className="mt-0.5 text-sm font-semibold text-white">Live chat & order help</p>
+                  <p className="text-[10px] text-white/70">Real answers before & after ordering</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
