@@ -79,6 +79,14 @@ export async function getMongoVendorBySlug(slug: string): Promise<Vendor | null>
   }
 }
 
+export async function deleteMongoVendor(slug: string): Promise<void> {
+  const db = await getDatabase();
+  const result = await db.collection<MongoVendor>("vendors").deleteOne({ slug });
+  if (result.deletedCount === 0) {
+    throw new Error("Vendor not found.");
+  }
+}
+
 export async function getMongoVendors(): Promise<Vendor[]> {
   if (!hasMongoConfig()) return [];
   try {

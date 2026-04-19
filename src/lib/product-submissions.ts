@@ -228,3 +228,17 @@ export async function updateProductSubmissionStatus(
 
   return toSummary(result);
 }
+
+export async function deleteProductSubmission(id: string) {
+  if (!ObjectId.isValid(id)) {
+    throw new Error("Invalid product submission id.");
+  }
+
+  const database = await getDatabase();
+  const collection = database.collection<ProductSubmissionRecord>(PRODUCT_SUBMISSION_COLLECTION);
+  const result = await collection.deleteOne({ _id: new ObjectId(id) });
+
+  if (result.deletedCount === 0) {
+    throw new Error("Product submission not found.");
+  }
+}
