@@ -143,6 +143,50 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Management quick links */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {[
+          {
+            href: "/dashboard/admin/vendors",
+            icon: Store,
+            label: "Manage Vendors",
+            desc: "View, monitor and manage all sellers",
+            color: "text-[var(--teal)]",
+            bg: "bg-[rgba(8,145,178,0.08)]",
+          },
+          {
+            href: "/dashboard/admin/products",
+            icon: Package,
+            label: "Manage Products",
+            desc: "Browse and control all product listings",
+            color: "text-indigo-500",
+            bg: "bg-indigo-50",
+          },
+          {
+            href: "/dashboard/admin/analytics",
+            icon: BarChart3,
+            label: "Analytics",
+            desc: "Revenue, orders, and performance metrics",
+            color: "text-[var(--accent)]",
+            bg: "bg-[rgba(37,99,235,0.08)]",
+          },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="soft-card flex items-start gap-4 p-5 transition-shadow hover:shadow-md"
+          >
+            <div className={`inline-flex rounded-[0.75rem] p-2.5 ${item.bg}`}>
+              <item.icon className={`h-5 w-5 ${item.color}`} />
+            </div>
+            <div>
+              <p className="font-semibold">{item.label}</p>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{item.desc}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
       {/* Vendor health */}
       <div className="mt-6 soft-card p-6 sm:p-8">
         <div className="flex items-center justify-between gap-4">
