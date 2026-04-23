@@ -1,30 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  /* Alibaba-inspired mobile color scheme */
-  --background: #f5f5f5;
-  --background-strong: #1a1a1a;
-  --foreground: #1a1a1a;
-  --surface: rgba(255, 255, 255, 0.95);
-  --surface-strong: rgba(26, 26, 26, 0.95);
-  --muted: #666666;
-  --line: rgba(0, 0, 0, 0.08);
+  --background: #f1f1f2;
+  --background-strong: #313133;
+  --foreground: #313133;
+  --surface: #ffffff;
+  --surface-strong: #2b2b2d;
+  --muted: #75757a;
+  --line: #dcdde1;
 
-  /* Primary: Alibaba orange */
-  --accent: #ff6a00;
-  --accent-soft: #fff3e8;
-  --accent-hover: #e55f00;
+  --accent: #f68b1e;
+  --accent-soft: #fff4e5;
+  --accent-hover: #e07e17;
 
-  /* Secondary: warm red for CTAs */
-  --red: #ff4747;
-  --red-soft: #ffe8e8;
+  --red: #f04438;
+  --red-soft: #fde7ea;
 
-  /* Tertiary: teal for variety */
-  --teal: #00b4d8;
-  --gold: #ff8c00;
+  --teal: #276076;
+  --gold: #f9b54c;
 
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --grid: rgba(0, 0, 0, 0.04);
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --grid: rgba(49, 49, 51, 0.05);
 }
 
 @theme inline {
@@ -55,7 +51,7 @@ html {
 }
 
 body {
-  background: #f5f5f5;
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), var(--font-space-grotesk), sans-serif;
   min-height: 100vh;
@@ -70,14 +66,20 @@ a {
 }
 
 ::selection {
-  background: rgba(255, 106, 0, 0.2);
+  background: rgba(246, 139, 30, 0.18);
 }
 
 .page-shell {
   margin-inline: auto;
   width: 100%;
   max-width: 82rem;
-  padding-inline: 1rem;
+  padding-inline: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .page-shell {
+    padding-inline: 1rem;
+  }
 }
 
 .scroll-x {
@@ -92,29 +94,29 @@ a {
 }
 
 .soft-card {
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .soft-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
 .dark-card {
-  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  background: linear-gradient(180deg, #313133, #1f1f21);
   color: #ffffff;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .dark-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
 }
 
 .eyebrow {
@@ -122,7 +124,7 @@ a {
   align-items: center;
   gap: 0.55rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 106, 0, 0.2);
+  border: 1px solid rgba(246, 139, 30, 0.22);
   background: var(--accent-soft);
   padding: 0.4rem 0.8rem;
   font-size: 0.72rem;
@@ -134,8 +136,9 @@ a {
 
 .noise {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230f172a' fill-opacity='0.025'%3E%3Cpath d='M36 34h1v1h-1zm7 0h1v1h-1zm14 0h1v1h-1zm49 0h1v1h-1zm28 0h1v1h-1zm14 0h1v1h-1zM14 48h1v1h-1zm49 0h1v1h-1zm35 0h1v1h-1zm28 0h1v1h-1zM7 62h1v1H7zm14 0h1v1h-1zm42 0h1v1h-1zm35 0h1v1h-1zm56 0h1v1h-1zM0 76h1v1H0zm21 0h1v1h-1zm42 0h1v1h-1zm63 0h1v1h-1zm14 0h1v1h-1zm42 0h1v1h-1zm28 0h1v1h-1zm35 0h1v1h-1zm42 0h1v1h-1zM7 104h1v1H7zm49 0h1v1h-1zm70 0h1v1h-1zM0 118h1v1H0zm21 0h1v1h-1zm42 0h1v1h-1zm56 0h1v1h-1zm35 0h1v1h-1zM14 132h1v1h-1zm49 0h1v1h-1zm35 0h1v1h-1zm28 0h1v1h-1zM36 146h1v1h-1zm35 0h1v1h-1zm49 0h1v1h-1z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+    radial-gradient(circle at 1px 1px, rgba(49, 49, 51, 0.03) 1px, transparent 0);
+  background-size: auto, 18px 18px;
 }
 
 .hero-orbit {

@@ -11,6 +11,13 @@ import { getMongoVendors } from "@/lib/mongodb-vendors";
 import { getProductSubmissions, type ProductSubmissionSummary } from "@/lib/product-submissions";
 import { getHiddenSlugs } from "@/lib/hidden-items";
 
+export type PublicCategorySummary = {
+  name: string;
+  productCount: number;
+  vendorCount: number;
+  hidden: boolean;
+};
+
 function mapApprovedSubmissionToProduct(submission: ProductSubmissionSummary): Product {
   const vendor = getSeedVendorBySlug(submission.vendorSlug);
 
@@ -117,10 +124,36 @@ export async function getPublicVendorBySlug(slug: string) {
   return vendors.find((vendor) => vendor.slug === slug);
 }
 
-export async function getPublicCategories() {
-  const products = await getPublicProducts();
+export const getPublicCategorySummaries = cache(async () => {
+  const [products, vendors, hiddenCategories] = await Promise.all([
+    getPublicProducts(),
+    getPublicVendors(),
+    getHiddenSlugs("category"),
+  ]);
 
-  return ["All", ...new Set(products.map((product) => product.category))];
+  const productCountByCategory = new Map<string, number>();
+
+  for (const product of products) {
+    productCountByCategory.set(
+      product.category,
+      (productCountByCategory.get(product.category) ?? 0) + 1,
+    );
+  }
+
+  return Array.from(productCountByCategory.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([name, productCount]) => ({
+      name,
+      productCount,
+      vendorCount: vendors.filter((vendor) => vendor.categories.includes(name)).length,
+      hidden: hiddenCategories.has(name),
+    })) satisfies PublicCategorySummary[];
+});
+
+export async function getPublicCategories() {
+  const categories = await getPublicCategorySummaries();
+
+  return ["All", ...categories.filter((category) => !category.hidden).map((category) => category.name)];
 }
 
 export async function getPublicFeaturedProducts() {

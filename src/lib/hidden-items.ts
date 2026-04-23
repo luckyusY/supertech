@@ -2,7 +2,7 @@ import "server-only";
 import { getDatabase } from "@/lib/mongodb";
 import { hasMongoConfig } from "@/lib/integrations";
 
-type HiddenItemType = "product" | "vendor";
+type HiddenItemType = "product" | "vendor" | "category";
 
 interface HiddenItem {
   type: HiddenItemType;

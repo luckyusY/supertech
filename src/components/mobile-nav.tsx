@@ -3,17 +3,32 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { X, Menu, Home, Smartphone, Monitor, Gamepad2, Headphones, Watch, ChevronRight } from "lucide-react";
+import {
+  X,
+  Menu,
+  Home,
+  Smartphone,
+  Monitor,
+  Gamepad2,
+  Headphones,
+  Watch,
+  ChevronRight,
+  Sparkles,
+  HeartPulse,
+  Tag,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-const categories = [
-  { name: "Home Control", href: "/catalog?category=Home+Control", icon: Home },
-  { name: "Mobile Essentials", href: "/catalog?category=Mobile+Essentials", icon: Smartphone },
-  { name: "Creator Gear", href: "/catalog?category=Creator+Gear", icon: Monitor },
-  { name: "Gaming", href: "/catalog?category=Gaming", icon: Gamepad2 },
-  { name: "Audio", href: "/catalog?category=Audio", icon: Headphones },
-  { name: "Wearables", href: "/catalog?category=Wearables", icon: Watch },
-];
+const categoryIcons = {
+  "Home Control": Home,
+  "Mobile Essentials": Smartphone,
+  "Creator Gear": Monitor,
+  Gaming: Gamepad2,
+  Audio: Headphones,
+  Wearables: Watch,
+  "Beauty & Personal Care": Sparkles,
+  "Health & Wellness": HeartPulse,
+} as const;
 
 const quickLinks = [
   { label: "All products", href: "/catalog" },
@@ -30,7 +45,11 @@ type MobileSession = {
   dashboardPath: string;
 };
 
-export function MobileNav() {
+type MobileNavProps = {
+  categories: string[];
+};
+
+export function MobileNav({ categories }: MobileNavProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<MobileSession | null>(null);
@@ -131,22 +150,25 @@ export function MobileNav() {
                 <div className="px-5 py-5">
                   <p className="font-mono text-[10px] uppercase tracking-[0.26em] text-[var(--muted)]">Shop by category</p>
                   <div className="mt-3 space-y-1">
-                    {categories.map((cat) => (
+                    {categories.map((category) => {
+                      const Icon = categoryIcons[category as keyof typeof categoryIcons] ?? Tag;
+                      return (
                       <Link
-                        key={cat.name}
-                        href={cat.href}
+                        key={category}
+                        href={`/catalog?category=${encodeURIComponent(category)}`}
                         onClick={() => setOpen(false)}
                         className="flex items-center justify-between rounded-xl px-3 py-3 transition-colors hover:bg-[var(--accent-soft)]"
                       >
                         <span className="flex items-center gap-3">
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-soft)]">
-                            <cat.icon className="h-4 w-4 text-[var(--accent)]" />
+                            <Icon className="h-4 w-4 text-[var(--accent)]" />
                           </span>
-                          <span className="text-sm font-medium">{cat.name}</span>
+                          <span className="text-sm font-medium">{category}</span>
                         </span>
                         <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
                       </Link>
-                    ))}
+                    );
+                    })}
                   </div>
                 </div>
 

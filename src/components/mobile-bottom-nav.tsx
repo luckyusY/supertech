@@ -18,8 +18,7 @@ export function MobileBottomNav() {
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 sm:hidden">
-      {/* White background with top border - Alibaba style */}
-      <div className="border-t border-[var(--line)] bg-white">
+      <div className="border-t border-[var(--line)] bg-white shadow-[0_-4px_18px_rgba(0,0,0,0.08)]">
         <div className="flex items-center justify-around px-2 py-1.5 pb-safe">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
@@ -31,9 +30,9 @@ export function MobileBottomNav() {
                 href={item.href}
                 className="relative flex flex-col items-center gap-0.5 px-3 py-1"
               >
-                <span className={`relative flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+                <span className={`relative flex h-9 w-9 items-center justify-center rounded-md transition-all ${
                   isActive
-                    ? "bg-[var(--accent)] text-white"
+                    ? "bg-[var(--accent-soft)] text-[var(--accent)]"
                     : "text-[var(--muted)]"
                 }`}>
                   <item.icon className="h-5 w-5" />

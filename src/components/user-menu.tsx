@@ -40,7 +40,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex h-9 items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/72 px-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-white"
+        className="flex h-10 items-center gap-2 rounded-md border border-white/55 bg-white px-3 text-sm font-semibold text-[var(--foreground)] shadow-sm transition-colors hover:bg-[var(--accent-soft)]"
       >
         <User className="h-4 w-4" />
         <span className="hidden sm:inline">{firstName}</span>
@@ -48,21 +48,19 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-[1.2rem] border border-[var(--line)] bg-white/95 shadow-xl backdrop-blur-xl">
-          {/* User info */}
+        <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-xl">
           <div className="border-b border-[var(--line)] px-4 py-3">
             <p className="font-semibold tracking-[-0.02em]">{name}</p>
             <p className="mt-0.5 text-xs capitalize text-[var(--muted)]">{role} account</p>
           </div>
 
-          {/* Links */}
           <div className="p-1.5">
             {role === "admin" && (
               <>
                 <Link
                   href="/dashboard/admin"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--accent-soft)]"
                 >
                   <LayoutDashboard className="h-4 w-4 text-[var(--muted)]" />
                   Admin dashboard
@@ -70,7 +68,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
                 <Link
                   href="/dashboard/admin/analytics"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--accent-soft)]"
                 >
                   <BarChart3 className="h-4 w-4 text-[var(--muted)]" />
                   Analytics
@@ -82,7 +80,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
               <Link
                 href="/dashboard/vendor"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--accent-soft)]"
               >
                 <Store className="h-4 w-4 text-[var(--muted)]" />
                 Vendor dashboard
@@ -93,7 +91,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
               <Link
                 href="/account"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[rgba(15,23,42,0.06)]"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-[var(--accent-soft)]"
               >
                 <User className="h-4 w-4 text-[var(--muted)]" />
                 My account
@@ -104,7 +102,7 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
 
             <button
               onClick={signOut}
-              className="flex w-full items-center gap-3 rounded-[0.8rem] px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
             >
               <LogOut className="h-4 w-4" />
               Sign out

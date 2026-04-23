@@ -47,8 +47,8 @@ export type BuildPhase = {
 };
 
 export const marketplaceMetrics = [
-  { label: "Verified sellers", value: "6" },
-  { label: "Products listed", value: "24" },
+  { label: "Verified sellers", value: "7" },
+  { label: "Products listed", value: "31" },
   { label: "Cities served", value: "12+" },
 ] as const;
 
@@ -94,6 +94,20 @@ export const categoryHighlights = [
     accent: "linear-gradient(90deg, #1a5c7b, #4ab0d4)",
     description:
       "Smartwatches and fitness bands that track what matters most to you.",
+  },
+  {
+    name: "Beauty & Personal Care",
+    count: 4,
+    accent: "linear-gradient(90deg, #c14f7a, #f1a6c3)",
+    description:
+      "Serums, cleansers, sunscreen, and glow-focused essentials for daily routines.",
+  },
+  {
+    name: "Health & Wellness",
+    count: 3,
+    accent: "linear-gradient(90deg, #3e8f68, #9ad7b6)",
+    description:
+      "Recovery, sleep, and wellness picks that balance everyday performance.",
   },
 ] as const;
 
@@ -217,6 +231,24 @@ export const vendors: Vendor[] = [
     activeProducts: 15,
     fulfillmentRate: "99.1%",
     joined: "2025",
+  },
+  {
+    id: "vendor-luna",
+    slug: "luna-beauty",
+    name: "Luna Beauty",
+    headline: "Beauty and wellness essentials with premium formulations and clean packaging.",
+    location: "Kampala, Uganda",
+    responseTime: "Replies in 50m",
+    rating: 4.8,
+    reviewCount: 132,
+    accent: "#c14f7a",
+    coverImage:
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
+    logoMark: "LB",
+    categories: ["Beauty & Personal Care", "Health & Wellness"],
+    activeProducts: 14,
+    fulfillmentRate: "98.9%",
+    joined: "2024",
   },
   {
     id: "vendor-orbit",
@@ -877,6 +909,182 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1576243345690-4e4b79b63288?auto=format&fit=crop&w=1200&q=80",
     ],
     features: ["MIL-STD-810 rated", "Compass + altimeter", "20-day battery"],
+  },
+  // Luna Beauty · Beauty & Personal Care / Health & Wellness
+  {
+    id: "product-serum",
+    slug: "luna-vitamin-c-serum",
+    vendorSlug: "luna-beauty",
+    name: "Luna Vitamin C Serum",
+    category: "Beauty & Personal Care",
+    badge: "Glow boost",
+    description:
+      "A brightening serum with vitamin C, niacinamide, and hyaluronic acid for daily radiance.",
+    price: 34,
+    compareAt: 42,
+    rating: 4.8,
+    reviewCount: 76,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#c14f7a",
+    heroImage:
+      "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Vitamin C + niacinamide", "Brightens and hydrates", "Lightweight daily finish"],
+    featured: true,
+  },
+  {
+    id: "product-cleanser",
+    slug: "luna-hydration-cleanser",
+    vendorSlug: "luna-beauty",
+    name: "Luna Hydration Cleanser",
+    category: "Beauty & Personal Care",
+    badge: "Daily routine",
+    description:
+      "A gentle gel cleanser that removes buildup without stripping the skin barrier.",
+    price: 18,
+    compareAt: 24,
+    rating: 4.7,
+    reviewCount: 64,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#c14f7a",
+    heroImage:
+      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Low-foam gel texture", "Barrier-friendly cleanse", "Suitable for daily use"],
+  },
+  {
+    id: "product-night-cream",
+    slug: "luna-repair-night-cream",
+    vendorSlug: "luna-beauty",
+    name: "Luna Repair Night Cream",
+    category: "Beauty & Personal Care",
+    badge: "Overnight care",
+    description:
+      "A repair cream with ceramides and peptides that seals in moisture overnight.",
+    price: 29,
+    compareAt: 36,
+    rating: 4.9,
+    reviewCount: 58,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#c14f7a",
+    heroImage:
+      "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Ceramide repair complex", "Peptide support", "Rich overnight texture"],
+  },
+  {
+    id: "product-sunscreen",
+    slug: "luna-mineral-sunscreen",
+    vendorSlug: "luna-beauty",
+    name: "Luna Mineral Sunscreen SPF 50",
+    category: "Beauty & Personal Care",
+    badge: "SPF daily",
+    description:
+      "A lightweight mineral sunscreen with SPF 50 and a non-greasy finish for everyday wear.",
+    price: 26,
+    compareAt: 32,
+    rating: 4.7,
+    reviewCount: 71,
+    stockLabel: "In stock",
+    shipWindow: "Ships tomorrow",
+    accent: "#c14f7a",
+    heroImage:
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["SPF 50 mineral filter", "No white cast finish", "Everyday protection"],
+  },
+  {
+    id: "product-gummies",
+    slug: "luna-collagen-gummies",
+    vendorSlug: "luna-beauty",
+    name: "Luna Collagen Gummies",
+    category: "Health & Wellness",
+    badge: "Beauty from within",
+    description:
+      "Daily collagen gummies with biotin and vitamin E to support skin, hair, and nails.",
+    price: 22,
+    compareAt: 28,
+    rating: 4.6,
+    reviewCount: 49,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#3e8f68",
+    heroImage:
+      "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1577174881658-0f30ed549adc?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Collagen + biotin blend", "30-day supply", "Berry flavor"],
+  },
+  {
+    id: "product-tea",
+    slug: "luna-sleep-tea-blend",
+    vendorSlug: "luna-beauty",
+    name: "Luna Sleep Tea Blend",
+    category: "Health & Wellness",
+    badge: "Wind down",
+    description:
+      "A caffeine-free herbal sleep blend with chamomile, lavender, and lemon balm.",
+    price: 16,
+    rating: 4.7,
+    reviewCount: 37,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 24h",
+    accent: "#3e8f68",
+    heroImage:
+      "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1577174881658-0f30ed549adc?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1584017911766-d451b3d0e843?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Chamomile + lavender", "Caffeine free", "Evening ritual blend"],
+  },
+  {
+    id: "product-recovery-kit",
+    slug: "luna-recovery-kit",
+    vendorSlug: "luna-beauty",
+    name: "Luna Recovery Kit",
+    category: "Health & Wellness",
+    badge: "Reset kit",
+    description:
+      "A recovery bundle with aromatherapy roll-on, bath soak, and cooling eye mask.",
+    price: 31,
+    compareAt: 39,
+    rating: 4.8,
+    reviewCount: 43,
+    stockLabel: "In stock",
+    shipWindow: "Ships within 48h",
+    accent: "#3e8f68",
+    heroImage:
+      "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1577174881658-0f30ed549adc?auto=format&fit=crop&w=1200&q=80",
+    ],
+    features: ["Aromatherapy roll-on", "Mineral bath soak", "Cooling eye mask"],
   },
 ];
 

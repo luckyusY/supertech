@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   MessageCircle,
   Package,
+  Shapes,
   ShoppingBag,
   Store,
   TrendingUp,
@@ -144,7 +145,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Management quick links */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {
             href: "/dashboard/admin/vendors",
@@ -161,6 +162,14 @@ export default async function AdminDashboardPage() {
             desc: "Browse and control all product listings",
             color: "text-indigo-500",
             bg: "bg-indigo-50",
+          },
+          {
+            href: "/dashboard/admin/categories",
+            icon: Shapes,
+            label: "Manage Categories",
+            desc: "Show or hide storefront categories in navigation",
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
           },
           {
             href: "/dashboard/admin/analytics",

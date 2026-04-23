@@ -7,10 +7,12 @@ import {
   Cpu,
   Headphones,
   Home,
+  HeartPulse,
   Smartphone,
   Watch,
   Gamepad2,
   Monitor,
+  Sparkles,
   Tag,
   TrendingUp,
   Star,
@@ -24,6 +26,8 @@ const categories = [
   { name: "Gaming", href: "/catalog?category=Gaming", icon: Gamepad2, desc: "Headsets, chairs & setup gear" },
   { name: "Audio", href: "/catalog?category=Audio", icon: Headphones, desc: "Headphones, speakers & DACs" },
   { name: "Wearables", href: "/catalog?category=Wearables", icon: Watch, desc: "Smartwatches & fitness bands" },
+  { name: "Beauty & Personal Care", href: "/catalog?category=Beauty+%26+Personal+Care", icon: Sparkles, desc: "Serums, cleansers & SPF routines" },
+  { name: "Health & Wellness", href: "/catalog?category=Health+%26+Wellness", icon: HeartPulse, desc: "Recovery, sleep & wellness bundles" },
 ];
 
 const collections = [
@@ -36,6 +40,7 @@ const collections = [
 const topVendors = [
   { name: "Aurora Labs", slug: "aurora-labs", tag: "Home Control" },
   { name: "Signal Mobile", slug: "signal-mobile", tag: "Mobile" },
+  { name: "Luna Beauty", slug: "luna-beauty", tag: "Beauty" },
   { name: "Pixel Foundry", slug: "pixel-foundry", tag: "Creator" },
   { name: "Wave Audio", slug: "wave-audio", tag: "Audio" },
   { name: "Orbit Play", slug: "orbit-play", tag: "Gaming" },
