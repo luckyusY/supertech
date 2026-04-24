@@ -1,16 +1,17 @@
 import Link from "next/link";
-import { CircleHelp, PackageSearch, Search, ShieldCheck, Store, User } from "lucide-react";
+import { CircleHelp, PackageSearch, Search, ShieldCheck, Store, Truck, User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MobileNav } from "@/components/mobile-nav";
 import { UserMenu } from "@/components/user-menu";
 import { getAuthSession } from "@/lib/auth";
 import { getPublicCategories } from "@/lib/public-marketplace";
 
-const utilityLinks = [
-  { label: "Track Order", href: "/track-order" },
-  { label: "Request Product", href: "/request-product" },
-  { label: "Become a Vendor", href: "/become-vendor" },
-];
+const shopperLinks = [
+  { label: "Vendors", href: "/vendors", icon: Store },
+  { label: "Request Product", href: "/request-product", icon: PackageSearch },
+  { label: "Track Your Order", href: "/track-order", icon: Truck },
+  { label: "Become a Vendor", href: "/become-vendor", icon: ShieldCheck },
+] as const;
 
 export async function SiteHeader() {
   const [session, categories] = await Promise.all([
@@ -32,11 +33,7 @@ export async function SiteHeader() {
               <ShieldCheck className="h-3.5 w-3.5 text-[var(--accent)]" />
               Verified marketplace
             </span>
-            {utilityLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="transition-colors hover:text-[var(--foreground)]">
-                {link.label}
-              </Link>
-            ))}
+            <span>Beauty, wellness, tech, and home essentials</span>
           </div>
         </div>
       </div>
@@ -135,26 +132,54 @@ export async function SiteHeader() {
               Search
             </button>
           </form>
+
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {shopperLinks.slice(0, 3).map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/25 bg-white/12 px-3 text-xs font-semibold text-white"
+              >
+                <link.icon className="h-3.5 w-3.5" />
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="hidden border-b border-[var(--line)] bg-white lg:block">
-        <div className="page-shell flex h-11 items-center gap-6 overflow-x-auto text-sm font-semibold text-[var(--foreground)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {headerCategories.map((category) => (
+        <div className="page-shell flex h-11 items-center gap-4 overflow-x-auto text-sm font-semibold text-[var(--foreground)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <nav aria-label="Marketplace quick links" className="flex shrink-0 items-center gap-2">
+            {shopperLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-[var(--line)] bg-[var(--accent-soft)] px-2.5 text-xs font-bold text-[var(--accent)] transition-colors hover:border-[var(--accent)]"
+              >
+                <link.icon className="h-3.5 w-3.5" />
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <span className="h-5 w-px shrink-0 bg-[var(--line)]" />
+          <nav aria-label="Product categories" className="flex min-w-0 items-center gap-6">
+            {headerCategories.map((category) => (
+              <Link
+                key={category}
+                href={`/catalog?category=${encodeURIComponent(category)}`}
+                className="whitespace-nowrap py-3 transition-colors hover:text-[var(--accent)]"
+              >
+                {category}
+              </Link>
+            ))}
             <Link
-              key={category}
-              href={`/catalog?category=${encodeURIComponent(category)}`}
+              href="/vendors"
               className="whitespace-nowrap py-3 transition-colors hover:text-[var(--accent)]"
             >
-              {category}
+              Official Stores
             </Link>
-          ))}
-          <Link
-            href="/vendors"
-            className="whitespace-nowrap py-3 transition-colors hover:text-[var(--accent)]"
-          >
-            Official Stores
-          </Link>
+          </nav>
         </div>
       </div>
     </header>

@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight,
   Check,
   ChevronRight,
   Gamepad2,
@@ -19,6 +18,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { ProductCard } from "@/components/product-card";
 import {
   getPublicCategorySummaries,
@@ -189,18 +189,66 @@ export default async function Home() {
     ? publicVendors.reduce((total, vendor) => total + Number.parseFloat(vendor.fulfillmentRate), 0) / publicVendors.length
     : 0;
 
-  const stats = [
-    { label: "Live products", value: formatCompactNumber(publicProducts.length) },
-    { label: "Official stores", value: formatCompactNumber(publicVendors.length) },
-    { label: "Avg. fulfillment", value: `${averageFulfillment.toFixed(1)}%` },
+  const heroStats = [
+    { iconKey: "package", label: "Live products", value: formatCompactNumber(publicProducts.length) },
+    { iconKey: "shield", label: "Vendors", value: formatCompactNumber(publicVendors.length) },
+    { iconKey: "trending", label: "Fulfillment", value: `${averageFulfillment.toFixed(1)}%` },
+  ] as const;
+
+  const heroSlides: HeroSlide[] = [
+    {
+      title: "Flash deals from verified sellers.",
+      subtitle:
+        "Shop a dense marketplace of tech, beauty, wellness, and home essentials with clear markdowns and fast ordering.",
+      image: heroProduct.heroImage,
+      ctaText: "Shop flash sale",
+      ctaHref: "#flash-sale",
+      badge: "Marketplace savings",
+      chips: ["Flash sale", "Official stores", "Fast dispatch"],
+    },
   ];
+
+  if (beautyDeals[0]) {
+    heroSlides.push({
+      title: "Beauty and personal care is live.",
+      subtitle: `${beautyDeals[0].name} leads a new shelf for skincare, SPF, and daily routine essentials.`,
+      image: beautyDeals[0].heroImage,
+      ctaText: "Shop beauty",
+      ctaHref: "/catalog?category=Beauty+%26+Personal+Care",
+      badge: "Beauty shelf",
+      chips: ["Skincare", "SPF", "Daily routines"],
+    });
+  }
+
+  if (wellnessDeals[0]) {
+    heroSlides.push({
+      title: "Wellness picks for rest and recovery.",
+      subtitle: `${wellnessDeals[0].name} anchors wellness products for recovery, sleep, and everyday balance.`,
+      image: wellnessDeals[0].heroImage,
+      ctaText: "Shop wellness",
+      ctaHref: "/catalog?category=Health+%26+Wellness",
+      badge: "Health & wellness",
+      chips: ["Recovery", "Sleep support", "Wellness"],
+    });
+  }
+
+  heroSlides.push({
+    title: "Vendors, requests, and tracking in one place.",
+    subtitle:
+      "Browse trusted storefronts, request hard-to-find products, and follow order updates without leaving SuperTech.",
+    image: sidebarProduct.heroImage,
+    ctaText: "Browse vendors",
+    ctaHref: "/vendors",
+    badge: "Shopper tools",
+    chips: ["Vendors", "Request product", "Track order"],
+  });
 
   return (
     <div className="pb-20 sm:pb-0">
       <section className="page-shell py-4 sm:py-6">
-        <div className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)_250px]">
+        <div className="grid gap-3 lg:auto-rows-[440px] lg:grid-cols-[220px_minmax(0,1fr)_250px]">
           <aside className="hidden lg:block">
-            <div className="soft-card h-full p-3">
+            <div className="soft-card h-full overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="border-b border-[var(--line)] px-1 pb-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
                   Browse categories
@@ -230,84 +278,9 @@ export default async function Home() {
             </div>
           </aside>
 
-          <div className="soft-card relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#fff7ea] via-[#fff1d5] to-[#ffe0b0]" />
-            <div className="relative grid min-h-[320px] gap-6 p-5 sm:min-h-[360px] sm:grid-cols-[1.1fr_0.9fr] sm:p-7">
-              <div className="flex flex-col justify-between">
-                <div>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)] shadow-sm">
-                    <Zap className="h-3.5 w-3.5" />
-                    Marketplace Savings
-                  </span>
-                  <h1 className="mt-4 max-w-xl text-3xl font-black leading-tight tracking-[-0.05em] text-[var(--foreground)] sm:text-5xl">
-                    Add beauty and wellness categories to a storefront that feels like Jumia.
-                  </h1>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--muted)] sm:text-base">
-                    Dense shelves, strong deal hierarchy, verified sellers, and a broader catalog that now includes beauty and wellness alongside the existing SuperTech marketplace logic.
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Link
-                      href="#flash-sale"
-                      className="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white"
-                    >
-                      Shop flash sale
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      href="/vendors"
-                      className="inline-flex items-center gap-2 rounded-md border border-[var(--foreground)]/12 bg-white px-5 py-3 text-sm font-semibold text-[var(--foreground)]"
-                    >
-                      Explore official stores
-                    </Link>
-                  </div>
-                </div>
+          <HeroSlider stats={heroStats} slides={heroSlides} />
 
-                <div className="mt-6 grid grid-cols-3 gap-2">
-                  {stats.map((stat) => (
-                    <div key={stat.label} className="rounded-lg bg-white px-3 py-3 shadow-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                        {stat.label}
-                      </p>
-                      <p className="mt-1 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
-                        {stat.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative min-h-[220px] overflow-hidden rounded-xl bg-white shadow-[0_18px_40px_rgba(0,0,0,0.08)]">
-                <Image
-                  src={heroProduct.heroImage}
-                  alt={heroProduct.name}
-                  fill
-                  className="object-cover"
-                  sizes="(min-width: 1024px) 30vw, 100vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/80">
-                    Hero product
-                  </p>
-                  <h2 className="mt-1 line-clamp-2 text-xl font-bold tracking-[-0.03em]">
-                    {heroProduct.name}
-                  </h2>
-                  <div className="mt-2 flex items-center gap-2 text-sm">
-                    <span className="rounded bg-white/16 px-2 py-1 font-semibold">
-                      {formatPrice(heroProduct.price)}
-                    </span>
-                    {heroProduct.compareAt ? (
-                      <span className="text-white/70 line-through">
-                        {formatPrice(heroProduct.compareAt)}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-3">
+          <div className="grid gap-3 lg:h-full lg:overflow-y-auto lg:pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <PromoProductCard
               eyebrow="Today&apos;s standout"
               title={sidebarProduct.name}

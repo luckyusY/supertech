@@ -1,9 +1,16 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck, Package, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Package,
+  ShieldCheck,
+  TrendingUp,
+} from "lucide-react";
 
 type StatIconKey = "package" | "shield" | "trending";
 
@@ -19,130 +26,111 @@ type Stat = {
   label: string;
 };
 
-type Slide = {
+export type HeroSlide = {
   title: string;
   subtitle: string;
   image: string;
   ctaText: string;
   ctaHref: string;
   badge: string;
+  chips?: readonly string[];
 };
 
-const slides: Slide[] = [
+const fallbackSlides: HeroSlide[] = [
   {
-    title: "Premium tech, delivered fast.",
-    subtitle: "Shop trusted sellers across home tech, mobile, audio, gaming, and wearables.",
+    title: "Flash deals across SuperTech.",
+    subtitle: "Shop verified sellers across tech, beauty, wellness, and home essentials.",
     image: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=1200&h=600&fit=crop&q=80",
-    ctaText: "Shop now",
-    ctaHref: "/catalog",
-    badge: "Verified marketplace",
+    ctaText: "Shop flash sale",
+    ctaHref: "#flash-sale",
+    badge: "Marketplace savings",
+    chips: ["Verified sellers", "Fast requests", "Live deals"],
   },
   {
-    title: "Gaming gear that wins.",
-    subtitle: "Controllers, keyboards, headsets — everything for your next session.",
-    image: "https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=1200&h=600&fit=crop&q=80",
-    ctaText: "Browse gaming",
-    ctaHref: "/catalog?category=Gaming",
-    badge: "New arrivals",
+    title: "Beauty and wellness just landed.",
+    subtitle: "Browse skincare, recovery, sleep, and daily routine essentials in dedicated shelves.",
+    image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1200&h=600&fit=crop&q=80",
+    ctaText: "Shop beauty",
+    ctaHref: "/catalog?category=Beauty+%26+Personal+Care",
+    badge: "New categories",
+    chips: ["Beauty", "Wellness", "Personal care"],
   },
   {
-    title: "Smart home, smarter you.",
-    subtitle: "Automate your space with the latest in home control and IoT.",
-    image: "https://images.unsplash.com/photo-1558002038-1055907df827?w=1200&h=600&fit=crop&q=80",
-    ctaText: "Explore home tech",
-    ctaHref: "/catalog?category=Home+Control",
-    badge: "Trending",
-  },
-  {
-    title: "Audio that moves you.",
-    subtitle: "Headphones, speakers, and earbuds from brands you love.",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=600&fit=crop&q=80",
-    ctaText: "Shop audio",
-    ctaHref: "/catalog?category=Audio",
-    badge: "Best sellers",
+    title: "Request it. Track it. Get updates.",
+    subtitle: "Ask for products not yet listed and follow order requests from one marketplace flow.",
+    image: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=1200&h=600&fit=crop&q=80",
+    ctaText: "Request product",
+    ctaHref: "/request-product",
+    badge: "Shopper tools",
+    chips: ["Track order", "Request product", "Vendor support"],
   },
 ];
 
 type HeroSliderProps = {
   stats: readonly Stat[];
+  slides: readonly HeroSlide[];
 };
 
-export function HeroSlider({ stats }: HeroSliderProps) {
+export function HeroSlider({ stats, slides }: HeroSliderProps) {
+  const activeSlides = slides.length > 0 ? slides : fallbackSlides;
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const safeCurrent = current % activeSlides.length;
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const goToSlide = useCallback((index: number) => {
+    const nextIndex = (index + activeSlides.length) % activeSlides.length;
 
-  // Auto-advance every 5 seconds
-  useEffect(() => {
-    if (!mounted) return;
-    
-    intervalRef.current = setInterval(() => {
-      goToSlide((current + 1) % slides.length);
-    }, 5000);
-    
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [current, mounted]);
-
-  function goToSlide(index: number) {
-    if (index === current) return;
+    if (nextIndex === safeCurrent) return;
     setIsTransitioning(true);
     setTimeout(() => {
-      setCurrent(index);
+      setCurrent(nextIndex);
       setIsTransitioning(false);
-    }, 600);
-  }
+    }, 500);
+  }, [activeSlides.length, safeCurrent]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      goToSlide(safeCurrent + 1);
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [goToSlide, safeCurrent]);
 
   function prevSlide() {
-    goToSlide((current - 1 + slides.length) % slides.length);
+    goToSlide((current - 1 + activeSlides.length) % activeSlides.length);
   }
 
   function nextSlide() {
-    goToSlide((current + 1) % slides.length);
+    goToSlide((current + 1) % activeSlides.length);
   }
 
-  const slide = slides[current];
-
-  // Show loading state during SSR
-  if (!mounted) {
-    return (
-      <div className="relative h-[520px] sm:h-[480px] lg:h-[520px] bg-[var(--background)] animate-pulse rounded-2xl sm:rounded-[2rem]" />
-    );
-  }
+  const slide = activeSlides[safeCurrent] ?? activeSlides[0];
 
   return (
-    <div className="relative overflow-hidden rounded-2xl sm:rounded-[2rem]">
-      {/* Background images (pre-load all for smooth transitions) */}
-      <div className="relative h-[520px] sm:h-[480px] lg:h-[520px]">
-        {slides.map((s, index) => (
+    <div className="relative h-full overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow)]">
+      <div className="relative h-full min-h-[420px] sm:min-h-[440px]">
+        {activeSlides.map((item, index) => (
           <div
-            key={index}
-            className="absolute inset-0 transition-opacity duration-600"
-            style={{ opacity: index === current ? 1 : 0 }}
+            key={`${item.title}-${index}`}
+            className="absolute inset-0 transition-opacity duration-500"
+            style={{ opacity: index === safeCurrent ? 1 : 0 }}
           >
             <Image
-              src={s.image}
-              alt={s.title}
+              src={item.image}
+              alt={item.title}
               fill
               priority={index === 0}
               className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 1200px"
+              sizes="(min-width: 1024px) 45vw, 100vw"
             />
           </div>
         ))}
 
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/82 via-black/48 to-black/10" />
 
-        {/* Content */}
-        <div className="relative z-10 flex h-full flex-col justify-between px-6 py-6 sm:px-10 sm:py-8 lg:px-16">
-          {/* Top: Badge */}
+        <div className="relative z-10 flex h-full flex-col justify-between px-5 py-5 sm:px-7 sm:py-6 lg:px-9">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
               <ShieldCheck className="h-3 w-3" />
@@ -150,89 +138,102 @@ export function HeroSlider({ stats }: HeroSliderProps) {
             </span>
           </div>
 
-          {/* Center: Title + CTA */}
           <div className="max-w-xl">
             <h1
-              className={`text-3xl font-semibold leading-[1.08] tracking-[-0.04em] text-white transition-all duration-600 sm:text-5xl lg:text-[3.8rem] ${
+              className={`max-w-[19rem] text-2xl font-black leading-[1.08] text-white transition-all duration-500 sm:max-w-xl sm:text-5xl ${
                 isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"
               }`}
             >
               {slide.title}
             </h1>
             <p
-              className={`mt-3 max-w-md text-sm leading-6 text-white/80 transition-all duration-600 delay-100 sm:text-base ${
+              className={`mt-3 max-w-md text-sm leading-6 text-white/85 transition-all delay-100 duration-500 sm:text-base ${
                 isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"
               }`}
             >
               {slide.subtitle}
             </p>
+            {slide.chips && slide.chips.length > 0 ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {slide.chips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-md border border-white/16 bg-white/12 px-2.5 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <div
-              className={`mt-6 flex flex-wrap gap-3 transition-all duration-600 delay-200 ${
+              className={`mt-6 flex flex-wrap gap-3 transition-all delay-200 duration-500 ${
                 isTransitioning ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"
               }`}
             >
               <Link
                 href={slide.ctaHref}
-                className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                className="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl"
               >
                 {slide.ctaText}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/vendors"
-                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20"
+                className="hidden items-center gap-2 rounded-md border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 sm:inline-flex"
               >
                 Browse sellers
               </Link>
             </div>
           </div>
 
-          {/* Bottom: Stats + Navigation */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            {/* Stats */}
-            <dl className="grid grid-cols-3 gap-2">
+            <dl className="grid w-full min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
               {stats.map((stat) => {
                 const Icon = statIcons[stat.iconKey];
                 return (
-                <div key={stat.label} className="rounded-xl border border-white/15 bg-white/10 p-2.5 backdrop-blur-sm sm:p-3">
-                  <div className="flex items-center gap-1.5 text-white/70">
-                    <Icon className="h-3.5 w-3.5" />
-                    <span className="text-[9px] uppercase tracking-[0.15em]">{stat.label}</span>
+                  <div
+                    key={stat.label}
+                    className="min-w-0 rounded-lg border border-white/15 bg-white/10 p-2.5 backdrop-blur-sm sm:p-3"
+                  >
+                    <div className="flex min-w-0 items-center gap-1.5 text-white/70">
+                      <Icon className="h-3.5 w-3.5" />
+                      <span className="truncate text-[9px] uppercase tracking-[0.15em]">
+                        {stat.label}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-lg font-semibold text-white sm:text-2xl">
+                      {stat.value}
+                    </p>
                   </div>
-                  <p className="mt-1 text-lg font-semibold text-white sm:text-2xl">{stat.value}</p>
-                </div>
                 );
               })}
             </dl>
 
-            {/* Navigation */}
             <div className="flex items-center gap-3">
-              {/* Dots */}
               <div className="flex gap-2">
-                {slides.map((_, i) => (
+                {activeSlides.map((_, index) => (
                   <button
-                    key={i}
-                    onClick={() => goToSlide(i)}
+                    key={index}
+                    onClick={() => goToSlide(index)}
                     className={`h-2 rounded-full transition-all duration-300 ${
-                      i === current ? "w-8 bg-[var(--accent)]" : "w-2 bg-white/40 hover:bg-white/60"
+                      index === safeCurrent ? "w-8 bg-[var(--accent)]" : "w-2 bg-white/40 hover:bg-white/60"
                     }`}
-                    aria-label={`Go to slide ${i + 1}`}
+                    aria-label={`Go to slide ${index + 1}`}
                   />
                 ))}
               </div>
 
-              {/* Arrows */}
               <div className="hidden gap-1.5 sm:flex">
                 <button
                   onClick={prevSlide}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+                  className="flex h-9 w-9 items-center justify-center rounded-md border border-white/20 bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20"
                   aria-label="Previous slide"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button
                   onClick={nextSlide}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+                  className="flex h-9 w-9 items-center justify-center rounded-md border border-white/20 bg-white/10 text-white backdrop-blur-sm transition-all hover:bg-white/20"
                   aria-label="Next slide"
                 >
                   <ChevronRight className="h-4 w-4" />
