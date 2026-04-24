@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Heart, ShoppingBag, Star } from "lucide-react";
+import { Heart, MessageCircle, ShoppingBag, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, type MouseEvent } from "react";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useCart } from "@/components/cart-provider";
 import { getVendorBySlug, type Product } from "@/lib/marketplace";
 import { formatPrice } from "@/lib/utils";
+import { getWhatsAppHref } from "@/lib/whatsapp";
 
 type ProductCardProps = {
   product: Product;
@@ -54,6 +55,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const discount = product.compareAt
     ? Math.round((1 - product.price / product.compareAt) * 100)
     : null;
+  const vendorName = vendor?.name ?? product.vendorSlug;
+  const whatsappHref = getWhatsAppHref(
+    vendor?.whatsappNumber ?? product.vendorWhatsAppNumber,
+    `Hello ${vendorName}, I am interested in ${product.name} on SuperTech.`,
+  );
 
   return (
     <motion.article
@@ -140,15 +146,28 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           <span>({product.reviewCount})</span>
         </div>
 
-        <button
-          type="button"
-          onClick={handleQuickAdd}
-          className="relative z-20 mt-2.5 inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-[var(--accent)] px-2.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-hover)] sm:mt-3 sm:h-auto sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
-        >
-          <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span className="sm:hidden">Add</span>
-          <span className="hidden sm:inline">Add to cart</span>
-        </button>
+        <div className="relative z-20 mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-3 sm:gap-2">
+          <button
+            type="button"
+            onClick={handleQuickAdd}
+            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-md bg-[var(--accent)] px-2 text-[11px] font-semibold text-white transition-colors hover:bg-[var(--accent-hover)] sm:h-auto sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
+          >
+            <ShoppingBag className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            <span className="truncate sm:hidden">Add</span>
+            <span className="hidden truncate sm:inline">Add to cart</span>
+          </button>
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Chat with ${vendorName} on WhatsApp about ${product.name}`}
+            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-md bg-[#1fae5b] px-2 text-[11px] font-semibold text-white transition-colors hover:bg-[#178d49] sm:h-auto sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
+          >
+            <MessageCircle className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            <span className="truncate sm:hidden">Chat</span>
+            <span className="hidden truncate sm:inline">WhatsApp</span>
+          </a>
+        </div>
       </div>
     </motion.article>
   );

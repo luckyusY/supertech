@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { ObjectId, type UpdateFilter } from "mongodb";
 import { getDatabase } from "@/lib/mongodb";
 import { getVendorBySlug } from "@/lib/marketplace";
 import { slugify } from "@/lib/utils";
@@ -19,6 +19,8 @@ export type CreateProductSubmissionInput = {
   heroImage: string;
   gallery: string[];
 };
+
+export type UpdateProductSubmissionInput = Omit<CreateProductSubmissionInput, "vendorSlug">;
 
 export type ProductSubmissionRecord = {
   _id?: ObjectId;
@@ -76,8 +78,61 @@ function generateSubmissionId() {
   return `PS-${datePart}-${randomPart}`;
 }
 
-function normalizeFeatures(features: string[]) {
+function normalizeFeatures(features: string[] = []) {
+  if (!Array.isArray(features)) {
+    return [];
+  }
+
   return features.map((feature) => feature.trim()).filter(Boolean).slice(0, 8);
+}
+
+function normalizeSubmissionDetails(input: UpdateProductSubmissionInput) {
+  const name = input.name?.trim();
+  const category = input.category?.trim();
+  const description = input.description?.trim();
+  const heroImage = input.heroImage?.trim();
+  const price = Number(input.price);
+  const compareAt = input.compareAt ? Number(input.compareAt) : undefined;
+  const badge = input.badge?.trim() || "New listing";
+  const stockLabel = input.stockLabel?.trim() || "In stock";
+  const shipWindow = input.shipWindow?.trim() || "Ships within 48h";
+  const features = normalizeFeatures(input.features);
+  const gallery = [
+    heroImage,
+    ...(Array.isArray(input.gallery)
+      ? input.gallery.map((image) => image.trim()).filter(Boolean)
+      : []),
+  ]
+    .filter((image): image is string => Boolean(image))
+    .slice(0, 4);
+
+  if (!name || !category || !description) {
+    throw new Error("Name, category, and description are required.");
+  }
+
+  if (!heroImage) {
+    throw new Error("Upload at least one product image before saving.");
+  }
+
+  if (!Number.isFinite(price) || price <= 0) {
+    throw new Error("Price must be greater than 0.");
+  }
+
+  return {
+    slug: slugify(name),
+    name,
+    category,
+    price,
+    compareAt:
+      compareAt && Number.isFinite(compareAt) && compareAt > price ? compareAt : undefined,
+    badge,
+    stockLabel,
+    shipWindow,
+    description,
+    features,
+    heroImage,
+    gallery,
+  };
 }
 
 function toSummary(record: ProductSubmissionRecord): ProductSubmissionSummary {
@@ -116,50 +171,25 @@ export async function createProductSubmission(input: CreateProductSubmissionInpu
     throw new Error("Selected vendor could not be found.");
   }
 
-  const name = input.name.trim();
-  const category = input.category.trim();
-  const description = input.description.trim();
-  const heroImage = input.heroImage.trim();
-  const price = Number(input.price);
-  const compareAt = input.compareAt ? Number(input.compareAt) : undefined;
-  const badge = input.badge.trim() || "New listing";
-  const stockLabel = input.stockLabel.trim() || "In stock";
-  const shipWindow = input.shipWindow.trim() || "Ships within 48h";
-  const features = normalizeFeatures(input.features);
-  const gallery = [heroImage, ...input.gallery.map((image) => image.trim()).filter(Boolean)]
-    .filter(Boolean)
-    .slice(0, 4);
-
-  if (!name || !category || !description) {
-    throw new Error("Name, category, and description are required.");
-  }
-
-  if (!heroImage) {
-    throw new Error("Upload at least one product image before submitting.");
-  }
-
-  if (!Number.isFinite(price) || price <= 0) {
-    throw new Error("Price must be greater than 0.");
-  }
+  const details = normalizeSubmissionDetails(input);
 
   const now = new Date();
   const record: ProductSubmissionRecord = {
     submissionId: generateSubmissionId(),
-    slug: slugify(name),
+    slug: details.slug,
     vendorSlug: vendor.slug,
     vendorName: vendor.name,
-    name,
-    category,
-    price,
-    compareAt:
-      compareAt && Number.isFinite(compareAt) && compareAt > price ? compareAt : undefined,
-    badge,
-    stockLabel,
-    shipWindow,
-    description,
-    features,
-    heroImage,
-    gallery,
+    name: details.name,
+    category: details.category,
+    price: details.price,
+    compareAt: details.compareAt,
+    badge: details.badge,
+    stockLabel: details.stockLabel,
+    shipWindow: details.shipWindow,
+    description: details.description,
+    features: details.features,
+    heroImage: details.heroImage,
+    gallery: details.gallery,
     status: "pending_review",
     createdAt: now,
     updatedAt: now,
@@ -219,6 +249,50 @@ export async function updateProductSubmissionStatus(
         updatedAt: new Date(),
       },
     },
+    { returnDocument: "after" },
+  );
+
+  if (!result) {
+    throw new Error("Product submission not found.");
+  }
+
+  return toSummary(result);
+}
+
+export async function updateProductSubmissionDetails(
+  id: string,
+  input: UpdateProductSubmissionInput,
+  options: { vendorSlug?: string } = {},
+) {
+  if (!ObjectId.isValid(id)) {
+    throw new Error("Invalid product submission id.");
+  }
+
+  const details = normalizeSubmissionDetails(input);
+  const database = await getDatabase();
+  const collection = database.collection<ProductSubmissionRecord>(PRODUCT_SUBMISSION_COLLECTION);
+  const query: Record<string, unknown> = { _id: new ObjectId(id) };
+
+  if (options.vendorSlug) {
+    query.vendorSlug = options.vendorSlug;
+  }
+
+  const { compareAt, ...requiredDetails } = details;
+  const update: UpdateFilter<ProductSubmissionRecord> = {
+    $set: {
+      ...requiredDetails,
+      ...(compareAt ? { compareAt } : {}),
+      updatedAt: new Date(),
+    },
+  };
+
+  if (!compareAt) {
+    update.$unset = { compareAt: "" };
+  }
+
+  const result = await collection.findOneAndUpdate(
+    query,
+    update,
     { returnDocument: "after" },
   );
 

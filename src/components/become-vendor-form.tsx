@@ -18,17 +18,13 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
+import { PRODUCT_LISTING_CATEGORIES } from "@/lib/product-listing-options";
 
 const CATEGORIES = [
-  "Home Control",
-  "Mobile Essentials",
-  "Creator Gear",
-  "Gaming",
-  "Audio",
-  "Wearables",
+  ...PRODUCT_LISTING_CATEGORIES,
   "Accessories",
   "Other",
-];
+] as const;
 
 type Props = {
   prefill?: {
@@ -209,16 +205,23 @@ export function BecomeVendorForm({ prefill }: Props) {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-semibold">Phone (optional)</span>
+                <span className="mb-1.5 block text-sm font-semibold">
+                  WhatsApp number <span className="text-[var(--accent)]">*</span>
+                </span>
                 <div className="relative">
                   <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
                   <input
+                    type="tel"
                     value={form.phone}
                     onChange={(e) => update("phone", e.target.value)}
-                    placeholder="+234 or +250 ..."
+                    required
+                    placeholder="+250 783 998 231"
                     className="w-full rounded-[0.9rem] border border-[var(--line)] bg-white/70 py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
                   />
                 </div>
+                <span className="mt-1.5 block text-xs text-[var(--muted)]">
+                  Customers will message this number from product cards.
+                </span>
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-sm font-semibold">Website (optional)</span>

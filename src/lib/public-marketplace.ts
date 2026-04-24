@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { hasMongoConfig } from "@/lib/integrations";
 import {
+  categoryHighlights,
   getVendorBySlug as getSeedVendorBySlug,
   products as seedProducts,
   vendors as seedVendors,
@@ -8,6 +9,7 @@ import {
   type Vendor,
 } from "@/lib/marketplace";
 import { getMongoVendors } from "@/lib/mongodb-vendors";
+import { PRODUCT_LISTING_CATEGORIES } from "@/lib/product-listing-options";
 import { getProductSubmissions, type ProductSubmissionSummary } from "@/lib/product-submissions";
 import { getHiddenSlugs } from "@/lib/hidden-items";
 
@@ -18,8 +20,11 @@ export type PublicCategorySummary = {
   hidden: boolean;
 };
 
-function mapApprovedSubmissionToProduct(submission: ProductSubmissionSummary): Product {
-  const vendor = getSeedVendorBySlug(submission.vendorSlug);
+function mapApprovedSubmissionToProduct(
+  submission: ProductSubmissionSummary,
+  vendor?: Vendor,
+): Product {
+  const sourceVendor = vendor ?? getSeedVendorBySlug(submission.vendorSlug);
 
   return {
     id: `approved-${submission.id}`,
@@ -35,10 +40,11 @@ function mapApprovedSubmissionToProduct(submission: ProductSubmissionSummary): P
     reviewCount: 0,
     stockLabel: submission.stockLabel,
     shipWindow: submission.shipWindow,
-    accent: vendor?.accent ?? "#102019",
+    accent: sourceVendor?.accent ?? "#102019",
     heroImage: submission.heroImage,
     gallery: submission.gallery.length > 0 ? submission.gallery : [submission.heroImage],
     features: submission.features,
+    vendorWhatsAppNumber: sourceVendor?.whatsappNumber,
     featured: false,
   };
 }
@@ -59,15 +65,25 @@ const getApprovedSubmissions = cache(async () => {
 });
 
 export const getPublicProducts = cache(async () => {
-  const [approvedProducts, hiddenSlugs] = await Promise.all([
-    getApprovedSubmissions().then((s) => s.map(mapApprovedSubmissionToProduct)),
+  const [approvedSubmissions, hiddenSlugs, mongoVendors] = await Promise.all([
+    getApprovedSubmissions(),
     getHiddenSlugs("product"),
+    getMongoVendors(),
   ]);
+  const vendorMap = new Map<string, Vendor>();
   const productMap = new Map<string, Product>();
+
+  for (const vendor of [...seedVendors, ...mongoVendors]) {
+    vendorMap.set(vendor.slug, vendor);
+  }
 
   for (const product of seedProducts) {
     if (!hiddenSlugs.has(product.slug)) productMap.set(product.slug, product);
   }
+
+  const approvedProducts = approvedSubmissions.map((submission) =>
+    mapApprovedSubmissionToProduct(submission, vendorMap.get(submission.vendorSlug)),
+  );
 
   for (const product of approvedProducts) {
     if (!hiddenSlugs.has(product.slug)) productMap.set(product.slug, product);
@@ -156,10 +172,33 @@ export async function getPublicCategories() {
   return ["All", ...categories.filter((category) => !category.hidden).map((category) => category.name)];
 }
 
+export async function getProductListingCategories() {
+  const categories = await getPublicCategorySummaries().catch(() => []);
+  const orderedNames = [
+    ...PRODUCT_LISTING_CATEGORIES,
+    ...categoryHighlights.map((category) => category.name),
+    ...categories.map((category) => category.name),
+  ];
+
+  return Array.from(new Set(orderedNames)).filter(Boolean);
+}
+
 export async function getPublicFeaturedProducts() {
-  const approvedProducts = (await getApprovedSubmissions())
+  const [approvedSubmissions, mongoVendors] = await Promise.all([
+    getApprovedSubmissions(),
+    getMongoVendors(),
+  ]);
+  const vendorMap = new Map<string, Vendor>();
+
+  for (const vendor of [...seedVendors, ...mongoVendors]) {
+    vendorMap.set(vendor.slug, vendor);
+  }
+
+  const approvedProducts = approvedSubmissions
     .slice(0, 2)
-    .map(mapApprovedSubmissionToProduct);
+    .map((submission) =>
+      mapApprovedSubmissionToProduct(submission, vendorMap.get(submission.vendorSlug)),
+    );
   const featuredSeedProducts = seedProducts.filter((product) => product.featured);
   const featuredMap = new Map<string, Product>();
 

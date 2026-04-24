@@ -2,6 +2,7 @@ import "server-only";
 import { hasMongoConfig } from "@/lib/integrations";
 import { getDatabase } from "@/lib/mongodb";
 import type { Vendor } from "@/lib/marketplace";
+import { resolveWhatsAppNumber } from "@/lib/whatsapp";
 
 export type MongoVendor = Omit<Vendor, "id"> & { email: string };
 
@@ -18,6 +19,7 @@ export async function createMongoVendor(input: {
   location: string;
   category: string;
   description: string;
+  whatsappNumber: string;
 }): Promise<{ slug: string }> {
   const db = await getDatabase();
 
@@ -41,6 +43,7 @@ export async function createMongoVendor(input: {
     accent: "#102019",
     coverImage: "",
     logoMark: "",
+    whatsappNumber: resolveWhatsAppNumber(input.whatsappNumber),
     categories: [input.category],
     activeProducts: 0,
     fulfillmentRate: "—",
@@ -69,6 +72,7 @@ export async function getMongoVendorBySlug(slug: string): Promise<Vendor | null>
       accent: doc.accent,
       coverImage: doc.coverImage,
       logoMark: doc.logoMark,
+      whatsappNumber: doc.whatsappNumber,
       categories: doc.categories,
       activeProducts: doc.activeProducts,
       fulfillmentRate: doc.fulfillmentRate,
@@ -104,6 +108,7 @@ export async function getMongoVendors(): Promise<Vendor[]> {
       accent: doc.accent,
       coverImage: doc.coverImage,
       logoMark: doc.logoMark,
+      whatsappNumber: doc.whatsappNumber,
       categories: doc.categories,
       activeProducts: doc.activeProducts,
       fulfillmentRate: doc.fulfillmentRate,

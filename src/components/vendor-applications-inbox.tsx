@@ -222,7 +222,7 @@ function ApplicationCard({
         </div>
         {app.phone && (
           <div className="text-[var(--muted)]">
-            <span className="font-medium text-[var(--foreground)]">Phone:</span> {app.phone}
+            <span className="font-medium text-[var(--foreground)]">WhatsApp:</span> {app.phone}
           </div>
         )}
         <div className="flex items-center gap-1.5 text-[var(--muted)]">

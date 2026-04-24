@@ -9,12 +9,14 @@ type VendorProductWorkspaceProps = {
   availableVendors: Vendor[];
   initialVendorSlug: string;
   canSwitchVendor: boolean;
+  categories: string[];
 };
 
 export function VendorProductWorkspace({
   availableVendors,
   initialVendorSlug,
   canSwitchVendor,
+  categories,
 }: VendorProductWorkspaceProps) {
   const [vendorSlug, setVendorSlug] = useState(initialVendorSlug);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -29,6 +31,7 @@ export function VendorProductWorkspace({
         availableVendors={availableVendors}
         canSwitchVendor={canSwitchVendor}
         vendorSlug={vendorSlug}
+        categories={categories}
         onVendorChange={setVendorSlug}
         onSubmitted={() => setRefreshKey((current) => current + 1)}
       />
@@ -45,7 +48,12 @@ export function VendorProductWorkspace({
             : "This review list stays locked to the signed-in vendor account."}
         </p>
         <div className="mt-6">
-          <VendorProductSubmissions vendorSlug={vendorSlug} refreshKey={refreshKey} />
+          <VendorProductSubmissions
+            vendorSlug={vendorSlug}
+            refreshKey={refreshKey}
+            categories={categories}
+            onUpdated={() => setRefreshKey((current) => current + 1)}
+          />
         </div>
       </div>
     </div>

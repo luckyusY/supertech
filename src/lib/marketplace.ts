@@ -10,6 +10,7 @@ export type Vendor = {
   accent: string;
   coverImage: string;
   logoMark: string;
+  whatsappNumber?: string;
   categories: string[];
   activeProducts: number;
   fulfillmentRate: string;
@@ -34,6 +35,7 @@ export type Product = {
   heroImage: string;
   gallery: string[];
   features: string[];
+  vendorWhatsAppNumber?: string;
   featured?: boolean;
 };
 

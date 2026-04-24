@@ -7,6 +7,7 @@ import {
   getVendorApplicationById,
   updateVendorApplicationStatus,
 } from "@/lib/vendor-applications";
+import { DEFAULT_VENDOR_WHATSAPP_NUMBER } from "@/lib/whatsapp";
 
 function generateTempPassword() {
   return "ST-" + crypto.randomBytes(5).toString("hex").toUpperCase();
@@ -44,6 +45,7 @@ export async function PATCH(
       location: application.location,
       category: application.category,
       description: application.description,
+      whatsappNumber: application.phone ?? DEFAULT_VENDOR_WHATSAPP_NUMBER,
     });
 
     // Check if this person has a user account

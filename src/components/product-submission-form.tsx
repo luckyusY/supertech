@@ -4,45 +4,18 @@ import { useState, useTransition } from "react";
 import { ImagePlus, Package, Send, Tag, Truck } from "lucide-react";
 import { ProductImageUploader } from "@/components/product-image-uploader";
 import type { Vendor } from "@/lib/marketplace";
-
-// Must match the categories used across the public site catalog
-const SITE_CATEGORIES = [
-  "Home Control",
-  "Mobile Essentials",
-  "Creator Gear",
-  "Gaming",
-  "Audio",
-  "Wearables",
-] as const;
-
-const BADGE_OPTIONS = [
-  "New listing",
-  "Best seller",
-  "Limited stock",
-  "Editor's pick",
-  "Sale",
-  "Pre-order",
-];
-
-const STOCK_OPTIONS = [
-  "In stock",
-  "Limited stock",
-  "Only 3 left",
-  "Pre-order",
-  "Out of stock",
-];
-
-const SHIP_OPTIONS = [
-  "Ships within 24h",
-  "Ships within 48h",
-  "Ships within 3–5 days",
-  "Ships within 1 week",
-];
+import {
+  BADGE_OPTIONS,
+  PRODUCT_LISTING_CATEGORIES,
+  SHIP_OPTIONS,
+  STOCK_OPTIONS,
+} from "@/lib/product-listing-options";
 
 type Props = {
   availableVendors: Vendor[];
   canSwitchVendor: boolean;
   vendorSlug: string;
+  categories: string[];
   onVendorChange: (vendorSlug: string) => void;
   onSubmitted: () => void;
 };
@@ -51,6 +24,7 @@ export function ProductSubmissionForm({
   availableVendors,
   canSwitchVendor,
   vendorSlug,
+  categories,
   onVendorChange,
   onSubmitted,
 }: Props) {
@@ -126,6 +100,7 @@ export function ProductSubmissionForm({
     "w-full rounded-[0.9rem] border border-[var(--line)] bg-white/80 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30";
   const selectClass =
     "w-full rounded-[0.9rem] border border-[var(--line)] bg-white/80 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 cursor-pointer";
+  const categoryOptions = categories.length > 0 ? categories : [...PRODUCT_LISTING_CATEGORIES];
 
   return (
     <form onSubmit={handleSubmit} className="soft-card overflow-hidden">
@@ -202,7 +177,7 @@ export function ProductSubmissionForm({
               className={selectClass}
             >
               <option value="">Select a category</option>
-              {SITE_CATEGORIES.map((c) => (
+              {categoryOptions.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>

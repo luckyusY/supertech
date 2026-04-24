@@ -15,6 +15,7 @@ import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
 import { getAccessibleVendorsAsync, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
 import { vendorDashboardHighlights } from "@/lib/marketplace";
+import { getProductListingCategories } from "@/lib/public-marketplace";
 
 export const metadata: Metadata = {
   title: "Vendor Dashboard",
@@ -30,6 +31,7 @@ export default async function VendorDashboardPage() {
   });
   const integrationStatus = getIntegrationStatus();
   const availableVendors = await getAccessibleVendorsAsync(session);
+  const categories = await getProductListingCategories();
   const initialVendorSlug = availableVendors[0]?.slug ?? "";
   const canSwitchVendor = session.role === "admin";
   const currentVendor = availableVendors[0];
@@ -125,6 +127,7 @@ export default async function VendorDashboardPage() {
           availableVendors={availableVendors}
           initialVendorSlug={initialVendorSlug}
           canSwitchVendor={canSwitchVendor}
+          categories={categories}
         />
       </div>
 

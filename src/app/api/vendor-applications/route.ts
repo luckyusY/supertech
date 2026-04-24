@@ -26,8 +26,12 @@ export async function POST(request: Request) {
     const category = typeof body.category === "string" ? body.category.trim() : "";
     const location = typeof body.location === "string" ? body.location.trim() : "";
     const description = typeof body.description === "string" ? body.description.trim() : "";
-    const phone = typeof body.phone === "string" ? body.phone.trim() : undefined;
+    const phone = typeof body.phone === "string" ? body.phone.trim() : "";
     const website = typeof body.website === "string" ? body.website.trim() : undefined;
+
+    if (!phone) {
+      return NextResponse.json({ error: "WhatsApp number is required." }, { status: 400 });
+    }
 
     if (!name || !email || !businessName || !category || !location || !description) {
       return NextResponse.json({ error: "All required fields must be filled in." }, { status: 400 });
@@ -36,7 +40,7 @@ export async function POST(request: Request) {
     const application = await createVendorApplication({
       name,
       email,
-      phone: phone || undefined,
+      phone,
       businessName,
       category,
       location,
