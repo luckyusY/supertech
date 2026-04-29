@@ -65,9 +65,10 @@ const getApprovedSubmissions = cache(async () => {
 });
 
 export const getPublicProducts = cache(async () => {
-  const [approvedSubmissions, hiddenSlugs, mongoVendors] = await Promise.all([
+  const [approvedSubmissions, hiddenProductSlugs, hiddenVendorSlugs, mongoVendors] = await Promise.all([
     getApprovedSubmissions(),
     getHiddenSlugs("product"),
+    getHiddenSlugs("vendor"),
     getMongoVendors(),
   ]);
   const vendorMap = new Map<string, Vendor>();
@@ -78,7 +79,9 @@ export const getPublicProducts = cache(async () => {
   }
 
   for (const product of seedProducts) {
-    if (!hiddenSlugs.has(product.slug)) productMap.set(product.slug, product);
+    if (!hiddenProductSlugs.has(product.slug) && !hiddenVendorSlugs.has(product.vendorSlug)) {
+      productMap.set(product.slug, product);
+    }
   }
 
   const approvedProducts = approvedSubmissions.map((submission) =>
@@ -86,7 +89,9 @@ export const getPublicProducts = cache(async () => {
   );
 
   for (const product of approvedProducts) {
-    if (!hiddenSlugs.has(product.slug)) productMap.set(product.slug, product);
+    if (!hiddenProductSlugs.has(product.slug) && !hiddenVendorSlugs.has(product.vendorSlug)) {
+      productMap.set(product.slug, product);
+    }
   }
 
   return Array.from(productMap.values());
