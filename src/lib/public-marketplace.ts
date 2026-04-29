@@ -220,3 +220,21 @@ export async function getPublicTopVendors() {
 
   return vendors.slice(0, 4);
 }
+
+export async function getAdminVendors() {
+  const [mongoVendors, hiddenSlugs] = await Promise.all([
+    getMongoVendors(),
+    getHiddenSlugs("vendor"),
+  ]);
+  const seedSlugs = new Set(seedVendors.map((v) => v.slug));
+  return [
+    ...seedVendors.map((v) => ({ ...v, isSeed: true as const, disabled: hiddenSlugs.has(v.slug) })),
+    ...mongoVendors
+      .filter((v) => !seedSlugs.has(v.slug))
+      .map((v) => ({ ...v, isSeed: false as const, disabled: false })),
+  ];
+}
+
+export async function getAdminProductHiddenSlugs() {
+  return getHiddenSlugs("product");
+}

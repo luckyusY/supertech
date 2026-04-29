@@ -6,9 +6,11 @@ import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { getProductSubmissions } from "@/lib/product-submissions";
 import { products as seedProducts } from "@/lib/marketplace";
+import { getAdminProductHiddenSlugs } from "@/lib/public-marketplace";
 import { formatPrice } from "@/lib/utils";
 import { AdminDeleteButton } from "@/components/admin-delete-button";
-import { deleteProductAction } from "./actions";
+import { AdminToggleButton } from "@/components/admin-toggle-button";
+import { deleteProductAction, toggleProductAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Manage Products — Admin",
@@ -21,6 +23,7 @@ const STATUS_STYLES: Record<string, string> = {
   pending_review: "bg-amber-50 text-amber-700",
   rejected: "bg-red-50 text-red-600",
   seed: "bg-[rgba(8,145,178,0.1)] text-[var(--teal)]",
+  disabled: "bg-amber-50 text-amber-600",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -28,14 +31,21 @@ const STATUS_LABELS: Record<string, string> = {
   pending_review: "Pending",
   rejected: "Rejected",
   seed: "Built-in",
+  disabled: "Disabled",
 };
 
 export default async function ManageProductsPage() {
   await requirePageSession({ roles: ["admin"], nextPath: "/dashboard/admin/products" });
 
-  const submissions = hasMongoConfig()
-    ? await getProductSubmissions({ limit: 100 }).catch(() => [])
-    : [];
+  const [submissions, hiddenSlugs] = await Promise.all([
+    hasMongoConfig()
+      ? getProductSubmissions({ limit: 100 }).catch(() => [])
+      : Promise.resolve([]),
+    getAdminProductHiddenSlugs(),
+  ]);
+
+  const activeSeeds = seedProducts.filter((p) => !hiddenSlugs.has(p.slug)).length;
+  const disabledSeeds = seedProducts.length - activeSeeds;
 
   return (
     <div className="page-shell py-8">
@@ -55,9 +65,16 @@ export default async function ManageProductsPage() {
             <Package className="h-5 w-5 text-[var(--accent)]" />
             <h1 className="text-3xl font-semibold tracking-[-0.04em]">Manage Products</h1>
           </div>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
-            {seedProducts.length + submissions.length} total
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
+              {activeSeeds + submissions.length} active
+            </span>
+            {disabledSeeds > 0 && (
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
+                {disabledSeeds} disabled
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Vendor-submitted products */}
@@ -139,41 +156,53 @@ export default async function ManageProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {seedProducts.map((product, i) => (
-                  <tr
-                    key={product.id}
-                    className={`border-b border-[var(--line)] last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-[rgba(15,23,42,0.015)]"}`}
-                  >
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        {product.heroImage && (
-                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[var(--line)]">
-                            <Image src={product.heroImage} alt={product.name} fill className="object-cover" />
+                {seedProducts.map((product, i) => {
+                  const isDisabled = hiddenSlugs.has(product.slug);
+                  return (
+                    <tr
+                      key={product.id}
+                      className={`border-b border-[var(--line)] last:border-0 ${
+                        isDisabled
+                          ? "opacity-50"
+                          : i % 2 === 0
+                          ? "bg-white"
+                          : "bg-[rgba(15,23,42,0.015)]"
+                      }`}
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          {product.heroImage && (
+                            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[var(--line)]">
+                              <Image src={product.heroImage} alt={product.name} fill className="object-cover" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-semibold">{product.name}</p>
+                            <p className="text-xs text-[var(--muted)]">{product.slug}</p>
                           </div>
-                        )}
-                        <div>
-                          <p className="font-semibold">{product.name}</p>
-                          <p className="text-xs text-[var(--muted)]">{product.slug}</p>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-[var(--muted)]">{product.vendorSlug}</td>
-                    <td className="px-5 py-4">
-                      <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-2 py-0.5 text-[10px] font-medium">
-                        {product.category}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 font-semibold">{formatPrice(product.price)}</td>
-                    <td className="px-5 py-4">
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_STYLES.seed}`}>
-                        {STATUS_LABELS.seed}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <AdminDeleteButton onDelete={deleteProductAction.bind(null, product.slug, true)} />
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-5 py-4 text-[var(--muted)]">{product.vendorSlug}</td>
+                      <td className="px-5 py-4">
+                        <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-2 py-0.5 text-[10px] font-medium">
+                          {product.category}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 font-semibold">{formatPrice(product.price)}</td>
+                      <td className="px-5 py-4">
+                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${isDisabled ? STATUS_STYLES.disabled : STATUS_STYLES.seed}`}>
+                          {isDisabled ? STATUS_LABELS.disabled : STATUS_LABELS.seed}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <AdminToggleButton
+                          disabled={isDisabled}
+                          onToggle={toggleProductAction.bind(null, product.slug, isDisabled)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
