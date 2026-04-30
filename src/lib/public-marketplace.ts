@@ -154,6 +154,11 @@ export const getPublicCategorySummaries = cache(async () => {
 
   const productCountByCategory = new Map<string, number>();
 
+  // Seed all known categories so they appear even with 0 products
+  for (const name of PRODUCT_LISTING_CATEGORIES) {
+    productCountByCategory.set(name, 0);
+  }
+
   for (const product of products) {
     productCountByCategory.set(
       product.category,
