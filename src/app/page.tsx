@@ -1,12 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Briefcase,
+  Building2,
+  Car,
   Check,
   ChevronRight,
   Gamepad2,
   Headphones,
   HeartPulse,
   Home as HomeIcon,
+  Landmark,
   Monitor,
   ShieldCheck,
   Smartphone,
@@ -103,6 +107,48 @@ const desktopCategories: CategoryLink[] = [
     blurb: "Smart home hubs, sensors and lighting",
     category: "Home Control",
   },
+  {
+    name: "Cars for Sale",
+    icon: Car,
+    href: "/catalog?category=Cars+for+Sale",
+    blurb: "New and used cars from verified dealers",
+    category: "Cars for Sale",
+  },
+  {
+    name: "Cars for Rent",
+    icon: Car,
+    href: "/catalog?category=Cars+for+Rent",
+    blurb: "Daily, weekly and monthly car rentals",
+    category: "Cars for Rent",
+  },
+  {
+    name: "Apartments for Sale",
+    icon: Building2,
+    href: "/catalog?category=Apartments+for+Sale",
+    blurb: "Studios and apartments from trusted agents",
+    category: "Apartments for Sale",
+  },
+  {
+    name: "Apartments for Rent",
+    icon: Building2,
+    href: "/catalog?category=Apartments+for+Rent",
+    blurb: "Short and long-term rental listings",
+    category: "Apartments for Rent",
+  },
+  {
+    name: "Land for Sale",
+    icon: Landmark,
+    href: "/catalog?category=Land+for+Sale",
+    blurb: "Residential and commercial plots",
+    category: "Land for Sale",
+  },
+  {
+    name: "Commercial Spaces",
+    icon: Briefcase,
+    href: "/catalog?category=Commercial+Spaces",
+    blurb: "Offices, shops and warehouse spaces",
+    category: "Commercial Spaces",
+  },
 ];
 
 const shortcutTiles = [
@@ -173,6 +219,17 @@ export default async function Home() {
     .slice(0, 10);
   const wellnessDeals = publicProducts
     .filter((product) => product.category === "Health & Wellness")
+    .slice(0, 10);
+  const carDeals = publicProducts
+    .filter((product) => product.category === "Cars for Sale" || product.category === "Cars for Rent")
+    .slice(0, 10);
+  const propertyDeals = publicProducts
+    .filter((product) =>
+      product.category === "Apartments for Sale" ||
+      product.category === "Apartments for Rent" ||
+      product.category === "Land for Sale" ||
+      product.category === "Commercial Spaces",
+    )
     .slice(0, 10);
 
   const heroProduct =
@@ -437,6 +494,33 @@ export default async function Home() {
             headerClass="bg-gradient-to-r from-[#6840c6] to-[#9f6cff] text-white"
             theme="dark"
             products={creatorDeals}
+          />
+        ) : null}
+
+        {visibleCategorySet.has("Cars for Sale") || visibleCategorySet.has("Cars for Rent") ? (
+          <ShelfSection
+            kicker="Wheels & mobility"
+            title="Cars for sale & rent"
+            description="New and used vehicles plus daily rentals from verified dealers across East & West Africa."
+            href="/catalog?category=Cars+for+Sale"
+            headerClass="bg-gradient-to-r from-[#1a3a6e] to-[#2563eb] text-white"
+            theme="dark"
+            products={carDeals}
+          />
+        ) : null}
+
+        {visibleCategorySet.has("Apartments for Sale") ||
+        visibleCategorySet.has("Apartments for Rent") ||
+        visibleCategorySet.has("Land for Sale") ||
+        visibleCategorySet.has("Commercial Spaces") ? (
+          <ShelfSection
+            kicker="Real estate"
+            title="Property listings"
+            description="Apartments, land, and commercial spaces from trusted agents and landlords."
+            href="/catalog?category=Apartments+for+Sale"
+            headerClass="bg-gradient-to-r from-[#14532d] to-[#16a34a] text-white"
+            theme="dark"
+            products={propertyDeals}
           />
         ) : null}
       </section>

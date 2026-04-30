@@ -3,11 +3,15 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import {
+  Briefcase,
+  Building2,
+  Car,
   ChevronDown,
   Cpu,
   Headphones,
   Home,
   HeartPulse,
+  Landmark,
   Smartphone,
   Watch,
   Gamepad2,
@@ -28,6 +32,12 @@ const categories = [
   { name: "Wearables", href: "/catalog?category=Wearables", icon: Watch, desc: "Smartwatches & fitness bands" },
   { name: "Beauty & Personal Care", href: "/catalog?category=Beauty+%26+Personal+Care", icon: Sparkles, desc: "Serums, cleansers & SPF routines" },
   { name: "Health & Wellness", href: "/catalog?category=Health+%26+Wellness", icon: HeartPulse, desc: "Recovery, sleep & wellness bundles" },
+  { name: "Cars for Sale", href: "/catalog?category=Cars+for+Sale", icon: Car, desc: "New & used cars from verified dealers" },
+  { name: "Cars for Rent", href: "/catalog?category=Cars+for+Rent", icon: Car, desc: "Daily, weekly and monthly rentals" },
+  { name: "Apartments for Sale", href: "/catalog?category=Apartments+for+Sale", icon: Building2, desc: "Studios & apartments from trusted agents" },
+  { name: "Apartments for Rent", href: "/catalog?category=Apartments+for+Rent", icon: Building2, desc: "Short and long-term rental listings" },
+  { name: "Land for Sale", href: "/catalog?category=Land+for+Sale", icon: Landmark, desc: "Residential and commercial plots" },
+  { name: "Commercial Spaces", href: "/catalog?category=Commercial+Spaces", icon: Briefcase, desc: "Offices, shops and warehouse units" },
 ];
 
 const collections = [
@@ -89,7 +99,7 @@ export function MegaMenu() {
                 <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.26em] text-[var(--muted)]">
                   Categories
                 </p>
-                <div className="space-y-1">
+                <div className="max-h-[400px] space-y-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {categories.map((cat) => (
                     <Link
                       key={cat.name}
@@ -110,6 +120,7 @@ export function MegaMenu() {
               </div>
 
               {/* Collections + all products */}
+
               <div className="p-5">
                 <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.26em] text-[var(--muted)]">
                   Collections

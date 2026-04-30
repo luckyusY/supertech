@@ -4,18 +4,22 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  X,
-  Menu,
-  Home,
-  Smartphone,
-  Monitor,
+  Briefcase,
+  Building2,
+  Car,
+  ChevronRight,
   Gamepad2,
   Headphones,
-  Watch,
-  ChevronRight,
-  Sparkles,
   HeartPulse,
+  Home,
+  Landmark,
+  Menu,
+  Monitor,
+  Smartphone,
+  Sparkles,
   Tag,
+  Watch,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -28,6 +32,12 @@ const categoryIcons = {
   Wearables: Watch,
   "Beauty & Personal Care": Sparkles,
   "Health & Wellness": HeartPulse,
+  "Cars for Sale": Car,
+  "Cars for Rent": Car,
+  "Apartments for Sale": Building2,
+  "Apartments for Rent": Building2,
+  "Land for Sale": Landmark,
+  "Commercial Spaces": Briefcase,
 } as const;
 
 const quickLinks = [

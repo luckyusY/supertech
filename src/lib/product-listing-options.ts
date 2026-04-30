@@ -7,6 +7,12 @@ export const PRODUCT_LISTING_CATEGORIES = [
   "Wearables",
   "Beauty & Personal Care",
   "Health & Wellness",
+  "Cars for Sale",
+  "Cars for Rent",
+  "Apartments for Sale",
+  "Apartments for Rent",
+  "Land for Sale",
+  "Commercial Spaces",
 ] as const;
 
 export const BADGE_OPTIONS = [

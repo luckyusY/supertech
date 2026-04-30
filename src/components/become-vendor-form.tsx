@@ -113,8 +113,8 @@ export function BecomeVendorForm({ prefill }: Props) {
   return (
     <div className="page-shell py-8">
       <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
-        {/* Left — brand panel */}
-        <div className="dark-card flex flex-col gap-6 p-8">
+        {/* Left — brand panel (desktop only) */}
+        <div className="dark-card hidden flex-col gap-6 p-8 lg:flex">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.55)]">
               Sell on SuperTech
@@ -152,7 +152,7 @@ export function BecomeVendorForm({ prefill }: Props) {
         </div>
 
         {/* Right — form */}
-        <div className="soft-card p-6 sm:p-8">
+        <div className="soft-card p-5 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
             Vendor application
           </p>
