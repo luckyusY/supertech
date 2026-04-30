@@ -105,6 +105,13 @@ export async function SiteHeader() {
 
             <div className="ml-auto flex items-center gap-2 md:hidden">
               <Link
+                href={session ? (session.dashboardPath ?? "/account") : "/sign-in"}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/25 bg-white/12 text-white"
+                aria-label="Account"
+              >
+                <User className="h-4 w-4" />
+              </Link>
+              <Link
                 href="/track-order"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/25 bg-white/12 text-white"
                 aria-label="Track order"
