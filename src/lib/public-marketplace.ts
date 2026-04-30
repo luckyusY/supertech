@@ -8,6 +8,7 @@ import {
   type Product,
   type Vendor,
 } from "@/lib/marketplace";
+import { getCustomCategories } from "@/lib/mongodb-categories";
 import { getMongoVendors } from "@/lib/mongodb-vendors";
 import { PRODUCT_LISTING_CATEGORIES } from "@/lib/product-listing-options";
 import { getProductSubmissions, type ProductSubmissionSummary } from "@/lib/product-submissions";
@@ -146,34 +147,49 @@ export async function getPublicVendorBySlug(slug: string) {
 }
 
 export const getPublicCategorySummaries = cache(async () => {
-  const [products, vendors, hiddenCategories] = await Promise.all([
+  const [products, vendors, hiddenCategories, customCats] = await Promise.all([
     getPublicProducts(),
     getPublicVendors(),
     getHiddenSlugs("category"),
+    getCustomCategories(),
   ]);
 
-  const productCountByCategory = new Map<string, number>();
-
-  // Seed all known categories so they appear even with 0 products
-  for (const name of PRODUCT_LISTING_CATEGORIES) {
-    productCountByCategory.set(name, 0);
+  // Build a map: builtIn original name → display name (for renames)
+  const builtInToDisplay = new Map<string, string>();
+  for (const cat of customCats) {
+    if (cat.replacesBuiltIn) {
+      builtInToDisplay.set(cat.replacesBuiltIn, cat.name);
+    }
   }
 
+  // Full ordered category list: built-ins (with renames applied) + admin-added extras
+  const allCategoryNames: string[] = [];
+  for (const builtIn of PRODUCT_LISTING_CATEGORIES) {
+    allCategoryNames.push(builtInToDisplay.get(builtIn) ?? builtIn);
+  }
+  for (const cat of customCats) {
+    if (!cat.replacesBuiltIn && !allCategoryNames.includes(cat.name)) {
+      allCategoryNames.push(cat.name);
+    }
+  }
+
+  // Count products — seed products may still use the old built-in name, map them to display name
+  const productCountByCategory = new Map<string, number>(
+    allCategoryNames.map((name) => [name, 0]),
+  );
   for (const product of products) {
-    productCountByCategory.set(
-      product.category,
-      (productCountByCategory.get(product.category) ?? 0) + 1,
-    );
+    const displayName = builtInToDisplay.get(product.category) ?? product.category;
+    if (productCountByCategory.has(displayName)) {
+      productCountByCategory.set(displayName, (productCountByCategory.get(displayName) ?? 0) + 1);
+    }
   }
 
-  return Array.from(productCountByCategory.entries())
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([name, productCount]) => ({
-      name,
-      productCount,
-      vendorCount: vendors.filter((vendor) => vendor.categories.includes(name)).length,
-      hidden: hiddenCategories.has(name),
-    })) satisfies PublicCategorySummary[];
+  return allCategoryNames.map((name) => ({
+    name,
+    productCount: productCountByCategory.get(name) ?? 0,
+    vendorCount: vendors.filter((vendor) => vendor.categories.includes(name)).length,
+    hidden: hiddenCategories.has(name),
+  })) satisfies PublicCategorySummary[];
 });
 
 export async function getPublicCategories() {
@@ -184,13 +200,7 @@ export async function getPublicCategories() {
 
 export async function getProductListingCategories() {
   const categories = await getPublicCategorySummaries().catch(() => []);
-  const orderedNames = [
-    ...PRODUCT_LISTING_CATEGORIES,
-    ...categoryHighlights.map((category) => category.name),
-    ...categories.map((category) => category.name),
-  ];
-
-  return Array.from(new Set(orderedNames)).filter(Boolean);
+  return categories.map((c) => c.name);
 }
 
 export async function getPublicFeaturedProducts() {

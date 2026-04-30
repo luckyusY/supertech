@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, EyeOff, LayoutGrid, Package, Store } from "lucide-react";
+import { AdminAddCategoryForm } from "@/components/admin-add-category-form";
+import { AdminEditCategoryButton } from "@/components/admin-edit-category-button";
 import { AdminVisibilityButton } from "@/components/admin-visibility-button";
 import { requirePageSession } from "@/lib/auth";
 import { getPublicCategorySummaries } from "@/lib/public-marketplace";
@@ -42,6 +44,9 @@ export default async function ManageCategoriesPage() {
               and catalog filters. Products stay in the global catalog unless you remove them
               separately.
             </p>
+            <div className="mt-4">
+              <AdminAddCategoryForm />
+            </div>
           </div>
 
           <div className="grid gap-2 sm:min-w-[220px]">
@@ -64,7 +69,7 @@ export default async function ManageCategoriesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
-                {["Category", "Products", "Vendors", "Status", ""].map((heading) => (
+                {["Category", "Products", "Vendors", "Status", "Actions"].map((heading) => (
                   <th
                     key={heading}
                     className="px-5 py-3 text-left font-semibold text-[var(--muted)]"
@@ -108,7 +113,8 @@ export default async function ManageCategoriesPage() {
                     </span>
                   </td>
                   <td className="px-5 py-4">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <AdminEditCategoryButton name={category.name} />
                       <Link
                         href={`/catalog?category=${encodeURIComponent(category.name)}`}
                         target="_blank"
