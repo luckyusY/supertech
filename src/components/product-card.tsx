@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Heart, MessageCircle, ShoppingBag, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -60,115 +59,109 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     vendor?.whatsappNumber ?? product.vendorWhatsAppNumber,
     `Hello ${vendorName}, I am interested in ${product.name} on SuperTech.`,
   );
+  const hasRating = product.reviewCount > 0;
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-20px" }}
-      transition={{
-        duration: 0.35,
-        delay: index * 0.03,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-md border border-[#e4e4e7] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_18px_rgba(0,0,0,0.12)] sm:rounded-lg"
+    <article
+      style={{ animationDelay: `${Math.min(index, 12) * 30}ms` }}
+      className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-sm transition-all duration-200 motion-safe:animate-[fade-in-up_0.35s_ease-out_backwards] hover:-translate-y-0.5 hover:border-[var(--accent)]/30 hover:shadow-[0_10px_24px_-8px_rgba(0,0,0,0.18)]"
     >
       <Link
         href={`/products/${product.slug}`}
-        className="absolute inset-0 z-10 rounded-md sm:rounded-lg"
+        className="absolute inset-0 z-10 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         aria-label={`View ${product.name}`}
       />
 
-      <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f7f7] sm:aspect-square">
+      <div className="relative aspect-square overflow-hidden bg-[#f7f7f7]">
         <Image
           src={product.heroImage}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
           sizes="(min-width: 1280px) 18vw, (min-width: 768px) 25vw, 45vw"
         />
 
-        <div className="absolute left-1.5 right-10 top-1.5 z-20 flex flex-nowrap gap-1 overflow-hidden sm:left-2 sm:right-11 sm:top-2 sm:gap-1.5">
-          {discount ? (
-            <span className="shrink-0 rounded bg-[var(--accent-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--accent)] sm:px-2 sm:py-1 sm:text-[11px]">
-              -{discount}%
-            </span>
-          ) : null}
-          <span className="min-w-0 truncate rounded bg-white/92 px-1.5 py-0.5 text-[9px] font-semibold text-[var(--foreground)] shadow-sm sm:px-2 sm:py-1 sm:text-[10px]">
-            {product.badge}
+        {discount ? (
+          <span className="absolute left-2 top-2 z-20 rounded-md bg-[var(--accent)] px-1.5 py-0.5 text-[10px] font-bold tracking-tight text-white shadow-sm sm:px-2 sm:text-[11px]">
+            -{discount}%
           </span>
-        </div>
+        ) : null}
 
         <button
           type="button"
           onClick={handleWishlist}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className={`absolute right-1.5 top-1.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border bg-white/92 shadow-sm transition-colors sm:right-2 sm:top-2 ${
-            wishlisted
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-white/80 text-[var(--muted)] hover:text-[var(--accent)]"
+          aria-pressed={wishlisted}
+          className={`absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-sm backdrop-blur transition-all hover:scale-110 ${
+            wishlisted ? "text-[var(--accent)]" : "text-[var(--muted)] hover:text-[var(--accent)]"
           }`}
         >
           <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
         </button>
+
+        {product.badge ? (
+          <span className="absolute bottom-2 left-2 z-20 max-w-[calc(100%-1rem)] truncate rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm sm:text-[10px]">
+            {product.badge}
+          </span>
+        ) : null}
       </div>
 
       <div className="relative flex flex-1 flex-col p-2.5 sm:p-3">
-        <p className="truncate text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)] sm:text-[10px] sm:tracking-[0.18em]">
+        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
           {vendor?.name ?? "SuperTech"}
         </p>
-        <h3 className="mt-1 min-h-[2.5rem] break-words line-clamp-2 text-[13px] font-medium leading-5 text-[var(--foreground)] sm:min-h-[2.75rem] sm:text-sm">
+
+        <h3 className="mt-1 line-clamp-2 min-h-[2.5rem] break-words text-[13px] font-medium leading-5 text-[var(--foreground)] sm:min-h-[2.75rem] sm:text-sm">
           {product.name}
         </h3>
 
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:mt-2 sm:gap-x-2">
-          <span className="text-base font-bold text-[var(--foreground)] sm:text-lg sm:tracking-[-0.03em]">
-            {formatPrice(product.price)}
-          </span>
-          {product.compareAt ? (
-            <span className="text-[11px] text-[var(--muted)] line-through sm:text-xs">
-              {formatPrice(product.compareAt)}
-            </span>
-          ) : null}
-        </div>
-
-        {product.compareAt ? (
-          <p className="mt-0.5 truncate text-[10px] text-[var(--muted)] sm:mt-1 sm:text-[11px]">
-            You save {formatPrice(product.compareAt - product.price)}
-          </p>
-        ) : (
-          <p className="mt-0.5 truncate text-[10px] text-[var(--muted)] sm:mt-1 sm:text-[11px]">{product.stockLabel}</p>
-        )}
-
-        <div className="mt-1.5 flex items-center gap-1 text-[11px] text-[var(--muted)] sm:mt-2 sm:text-xs">
+        <div className="mt-1.5 flex items-center gap-1 text-[11px] text-[var(--muted)] sm:text-xs">
           <Star className="h-3.5 w-3.5 fill-[var(--gold)] text-[var(--gold)]" />
-          <span>{product.reviewCount > 0 ? product.rating.toFixed(1) : "New"}</span>
-          <span>({product.reviewCount})</span>
+          <span className="font-medium text-[var(--foreground)]">
+            {hasRating ? product.rating.toFixed(1) : "New"}
+          </span>
+          {hasRating ? <span>({product.reviewCount})</span> : null}
         </div>
 
-        <div className="relative z-20 mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-3 sm:gap-2">
-          <button
-            type="button"
-            onClick={handleQuickAdd}
-            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-md bg-[var(--accent)] px-2 text-[11px] font-semibold text-white transition-colors hover:bg-[var(--accent-hover)] sm:h-auto sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
-          >
-            <ShoppingBag className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            <span className="truncate sm:hidden">Add</span>
-            <span className="hidden truncate sm:inline">Add to cart</span>
-          </button>
-          <a
-            href={whatsappHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Chat with ${vendorName} on WhatsApp about ${product.name}`}
-            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-md bg-[#1fae5b] px-2 text-[11px] font-semibold text-white transition-colors hover:bg-[#178d49] sm:h-auto sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
-          >
-            <MessageCircle className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            <span className="truncate sm:hidden">Chat</span>
-            <span className="hidden truncate sm:inline">WhatsApp</span>
-          </a>
+        <div className="mt-auto pt-2">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base font-bold tracking-tight text-[var(--foreground)] sm:text-lg">
+              {formatPrice(product.price)}
+            </span>
+            {product.compareAt ? (
+              <span className="text-[11px] text-[var(--muted)] line-through sm:text-xs">
+                {formatPrice(product.compareAt)}
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-0.5 truncate text-[10px] text-[var(--muted)] sm:text-[11px]">
+            {product.compareAt
+              ? `Save ${formatPrice(product.compareAt - product.price)}`
+              : product.stockLabel}
+          </p>
+
+          <div className="relative z-20 mt-2.5 flex gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-[var(--accent)] px-2 text-[12px] font-semibold text-white transition-colors hover:bg-[var(--accent-hover)] active:scale-[0.98] sm:text-sm"
+            >
+              <ShoppingBag className="h-4 w-4 shrink-0" />
+              <span className="truncate">Add to cart</span>
+            </button>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Chat with ${vendorName} on WhatsApp about ${product.name}`}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#1fae5b] text-white transition-colors hover:bg-[#178d49] active:scale-[0.98]"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </a>
+          </div>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }
