@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 58" fill="none">
-  <!-- Globe: white fill with green grid -->
-  <circle cx="29" cy="26" r="16" fill="white"/>
+  <!-- Globe: light fill with green grid -->
+  <circle cx="29" cy="26" r="16" fill="#f1f1f2"/>
   <ellipse cx="29" cy="26" rx="4" ry="16" stroke="#6ab725" stroke-width="0.8"/>
   <ellipse cx="29" cy="26" rx="8" ry="16" stroke="#6ab725" stroke-width="0.8"/>
   <ellipse cx="29" cy="26" rx="12" ry="16" stroke="#6ab725" stroke-width="0.8"/>
@@ -21,6 +21,6 @@
   <circle cx="19" cy="51" r="5" fill="#6ab725"/>
   <circle cx="43" cy="51" r="5" fill="#6ab725"/>
 
-  <!-- KOS text (white) -->
-  <text x="60" y="43" font-family="'Arial Black', Arial, Helvetica, sans-serif" font-size="37" font-weight="900" fill="white">KOS</text>
+  <!-- KOS text (dark) -->
+  <text x="60" y="43" font-family="'Arial Black', Arial, Helvetica, sans-serif" font-size="37" font-weight="900" fill="#313133">KOS</text>
 </svg>

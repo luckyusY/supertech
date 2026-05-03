@@ -46,7 +46,7 @@ export async function SiteHeader() {
             </div>
 
             <Link href="/" className="flex shrink-0 items-center">
-              <img src="/kos-logo-white.svg" alt="KOS" className="h-9 w-auto" />
+              <img src="/kos-logo.svg" alt="KOS" className="h-9 w-auto" />
             </Link>
 
             <form action="/catalog" className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
