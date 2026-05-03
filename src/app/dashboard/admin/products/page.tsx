@@ -6,12 +6,10 @@ import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { getProductSubmissions } from "@/lib/product-submissions";
 import { products as seedProducts } from "@/lib/marketplace";
-import { getAdminProductHiddenSlugs, getAdminSeedSyncStatus } from "@/lib/public-marketplace";
-import { getMongoProducts } from "@/lib/mongodb-products";
+import { getAdminProductHiddenSlugs } from "@/lib/public-marketplace";
 import { formatPrice } from "@/lib/utils";
 import { AdminDeleteButton } from "@/components/admin-delete-button";
 import { AdminToggleButton } from "@/components/admin-toggle-button";
-import { SeedSyncButton } from "@/components/seed-sync-button";
 import { deleteProductAction, toggleProductAction } from "./actions";
 
 export const metadata: Metadata = {
@@ -26,7 +24,6 @@ const STATUS_STYLES: Record<string, string> = {
   rejected: "bg-red-50 text-red-600",
   seed: "bg-[rgba(8,145,178,0.1)] text-[var(--teal)]",
   disabled: "bg-amber-50 text-amber-600",
-  synced: "bg-indigo-50 text-indigo-600",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -35,29 +32,20 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: "Rejected",
   seed: "Built-in",
   disabled: "Disabled",
-  synced: "In DB",
 };
 
 export default async function ManageProductsPage() {
   await requirePageSession({ roles: ["admin"], nextPath: "/dashboard/admin/products" });
 
-  const [submissions, hiddenSlugs, synced, mongoProducts] = await Promise.all([
+  const [submissions, hiddenSlugs] = await Promise.all([
     hasMongoConfig()
       ? getProductSubmissions({ limit: 100 }).catch(() => [])
       : Promise.resolve([]),
     getAdminProductHiddenSlugs(),
-    getAdminSeedSyncStatus(),
-    hasMongoConfig() ? getMongoProducts() : Promise.resolve([]),
   ]);
 
-  // Determine which products to show depending on sync status
-  const displayProducts = synced ? mongoProducts : seedProducts;
-  const activeCount = synced
-    ? mongoProducts.length
-    : seedProducts.filter((p) => !hiddenSlugs.has(p.slug)).length;
-  const disabledSeeds = synced
-    ? 0
-    : seedProducts.length - activeCount;
+  const activeSeeds = seedProducts.filter((p) => !hiddenSlugs.has(p.slug)).length;
+  const disabledSeeds = seedProducts.length - activeSeeds;
 
   return (
     <div className="page-shell py-8">
@@ -79,7 +67,7 @@ export default async function ManageProductsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600">
-              {activeCount + submissions.length} active
+              {activeSeeds + submissions.length} active
             </span>
             {disabledSeeds > 0 && (
               <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
@@ -88,13 +76,6 @@ export default async function ManageProductsPage() {
             )}
           </div>
         </div>
-
-        {/* Sync static data to MongoDB */}
-        {hasMongoConfig() && (
-          <div className="mt-6">
-            <SeedSyncButton synced={synced} />
-          </div>
-        )}
 
         {/* Vendor-submitted products */}
         {submissions.length > 0 && (
@@ -158,10 +139,10 @@ export default async function ManageProductsPage() {
           </div>
         )}
 
-        {/* Products list */}
+        {/* Built-in seed products */}
         <div className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            {synced ? `Products in database (${displayProducts.length})` : `Built-in products (${seedProducts.length})`}
+            Built-in products ({seedProducts.length})
           </p>
           <div className="mt-3 overflow-hidden rounded-[1.25rem] border border-[var(--line)]">
             <table className="w-full text-sm">
@@ -175,11 +156,11 @@ export default async function ManageProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {displayProducts.map((product, i) => {
-                  const isDisabled = !synced && hiddenSlugs.has(product.slug);
+                {seedProducts.map((product, i) => {
+                  const isDisabled = hiddenSlugs.has(product.slug);
                   return (
                     <tr
-                      key={product.id ?? product.slug}
+                      key={product.id}
                       className={`border-b border-[var(--line)] last:border-0 ${
                         isDisabled
                           ? "opacity-50"
@@ -209,21 +190,15 @@ export default async function ManageProductsPage() {
                       </td>
                       <td className="px-5 py-4 font-semibold">{formatPrice(product.price)}</td>
                       <td className="px-5 py-4">
-                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
-                          isDisabled ? STATUS_STYLES.disabled : synced ? STATUS_STYLES.synced : STATUS_STYLES.seed
-                        }`}>
-                          {isDisabled ? STATUS_LABELS.disabled : synced ? STATUS_LABELS.synced : STATUS_LABELS.seed}
+                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${isDisabled ? STATUS_STYLES.disabled : STATUS_STYLES.seed}`}>
+                          {isDisabled ? STATUS_LABELS.disabled : STATUS_LABELS.seed}
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        {synced ? (
-                          <AdminDeleteButton onDelete={deleteProductAction.bind(null, product.slug, false)} />
-                        ) : (
-                          <AdminToggleButton
-                            disabled={isDisabled}
-                            onToggle={toggleProductAction.bind(null, product.slug, isDisabled)}
-                          />
-                        )}
+                        <AdminToggleButton
+                          disabled={isDisabled}
+                          onToggle={toggleProductAction.bind(null, product.slug, isDisabled)}
+                        />
                       </td>
                     </tr>
                   );

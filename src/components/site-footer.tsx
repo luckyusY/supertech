@@ -82,8 +82,16 @@ export function SiteFooter() {
       <div className="page-shell py-8 pb-24 sm:pb-10">
         <div className="grid gap-8 lg:grid-cols-[1.25fr_0.8fr_0.8fr_0.8fr]">
           <div>
-            <Link href="/" className="flex items-center">
-              <img src="/kos-logo.svg" alt="KOS" className="h-10 w-auto" />
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-white text-sm font-black tracking-[0.18em] text-[var(--accent)]">
+                ST
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
+                  SuperTech
+                </p>
+                <p className="text-base font-black tracking-[-0.04em]">Marketplace</p>
+              </div>
             </Link>
 
             <p className="mt-4 max-w-sm text-sm leading-7 text-white/65">

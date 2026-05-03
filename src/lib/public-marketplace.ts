@@ -13,11 +13,6 @@ import { getMongoVendors } from "@/lib/mongodb-vendors";
 import { PRODUCT_LISTING_CATEGORIES } from "@/lib/product-listing-options";
 import { getProductSubmissions, type ProductSubmissionSummary } from "@/lib/product-submissions";
 import { getHiddenSlugs } from "@/lib/hidden-items";
-import {
-  getMongoProducts,
-  isSeedSynced,
-  getDeletedSeedSlugs,
-} from "@/lib/mongodb-products";
 
 export type PublicCategorySummary = {
   name: string;
@@ -70,32 +65,13 @@ const getApprovedSubmissions = cache(async () => {
   }
 });
 
-/**
- * Check whether seed data has been pushed to MongoDB.
- * When synced, we read products from the `products` collection
- * instead of the hardcoded arrays — so deletes are permanent.
- */
-const checkSeedSynced = cache(async () => {
-  return isSeedSynced();
-});
-
 export const getPublicProducts = cache(async () => {
-  const synced = await checkSeedSynced();
-
-  const [
-    approvedSubmissions,
-    hiddenProductSlugs,
-    hiddenVendorSlugs,
-    mongoVendors,
-    mongoProducts,
-  ] = await Promise.all([
+  const [approvedSubmissions, hiddenProductSlugs, hiddenVendorSlugs, mongoVendors] = await Promise.all([
     getApprovedSubmissions(),
     getHiddenSlugs("product"),
     getHiddenSlugs("vendor"),
     getMongoVendors(),
-    synced ? getMongoProducts() : Promise.resolve([]),
   ]);
-
   const vendorMap = new Map<string, Vendor>();
   const productMap = new Map<string, Product>();
 
@@ -103,25 +79,12 @@ export const getPublicProducts = cache(async () => {
     vendorMap.set(vendor.slug, vendor);
   }
 
-  if (synced) {
-    // ── Synced mode: MongoDB is the source of truth for seed products ──
-    // Products that were deleted from MongoDB are simply gone — no need
-    // to check hidden_items for them.
-    for (const product of mongoProducts) {
-      if (!hiddenProductSlugs.has(product.slug) && !hiddenVendorSlugs.has(product.vendorSlug)) {
-        productMap.set(product.slug, product);
-      }
-    }
-  } else {
-    // ── Legacy mode: read from hardcoded seed arrays + hidden_items ──
-    for (const product of seedProducts) {
-      if (!hiddenProductSlugs.has(product.slug) && !hiddenVendorSlugs.has(product.vendorSlug)) {
-        productMap.set(product.slug, product);
-      }
+  for (const product of seedProducts) {
+    if (!hiddenProductSlugs.has(product.slug) && !hiddenVendorSlugs.has(product.vendorSlug)) {
+      productMap.set(product.slug, product);
     }
   }
 
-  // Always merge approved vendor submissions on top
   const approvedProducts = approvedSubmissions.map((submission) =>
     mapApprovedSubmissionToProduct(submission, vendorMap.get(submission.vendorSlug)),
   );
@@ -148,57 +111,33 @@ export async function getPublicVendorProducts(vendorSlug: string) {
 }
 
 export const getPublicVendors = cache(async () => {
-  const synced = await checkSeedSynced();
-  const [approvedSubmissions, mongoVendors, hiddenSlugs, deletedVendorSlugs] = await Promise.all([
+  const [approvedSubmissions, mongoVendors, hiddenSlugs] = await Promise.all([
     getApprovedSubmissions(),
     getMongoVendors(),
     getHiddenSlugs("vendor"),
-    synced ? getDeletedSeedSlugs("vendor") : Promise.resolve(new Set<string>()),
   ]);
 
-  const vendorMap = new Map<string, Vendor>();
-
-  if (synced) {
-    // Synced mode: MongoDB vendors are the source of truth
-    for (const v of mongoVendors) {
-      if (!hiddenSlugs.has(v.slug)) {
-        vendorMap.set(v.slug, v);
-      }
-    }
-  } else {
-    // Legacy mode: start with seed vendors, merge mongo vendors
-    for (const v of seedVendors) {
-      if (!hiddenSlugs.has(v.slug)) {
-        vendorMap.set(v.slug, v);
-      }
-    }
-    const seedSlugs = new Set(seedVendors.map((v) => v.slug));
-    for (const v of mongoVendors) {
-      if (!seedSlugs.has(v.slug) && !hiddenSlugs.has(v.slug)) {
-        vendorMap.set(v.slug, v);
-      }
-    }
-  }
-
-  // Enrich with approved submission counts
-  for (const [slug, vendor] of vendorMap) {
+  const seedWithSubmissions = seedVendors.filter((v) => !hiddenSlugs.has(v.slug)).map((vendor) => {
     const approvedForVendor = approvedSubmissions.filter(
-      (s) => s.vendorSlug === slug,
+      (submission) => submission.vendorSlug === vendor.slug,
     );
-    if (approvedForVendor.length > 0) {
-      const categories = new Set([
-        ...vendor.categories,
-        ...approvedForVendor.map((s) => s.category),
-      ]);
-      vendorMap.set(slug, {
-        ...vendor,
-        activeProducts: vendor.activeProducts + approvedForVendor.length,
-        categories: Array.from(categories),
-      });
-    }
-  }
+    const categories = new Set([
+      ...vendor.categories,
+      ...approvedForVendor.map((submission) => submission.category),
+    ]);
 
-  return Array.from(vendorMap.values());
+    return {
+      ...vendor,
+      activeProducts: vendor.activeProducts + approvedForVendor.length,
+      categories: Array.from(categories),
+    } satisfies Vendor;
+  });
+
+  // Merge MongoDB-created vendors (approved applications), excluding seed slugs and hidden ones
+  const seedSlugs = new Set(seedVendors.map((v) => v.slug));
+  const newVendors = mongoVendors.filter((v) => !seedSlugs.has(v.slug) && !hiddenSlugs.has(v.slug));
+
+  return [...seedWithSubmissions, ...newVendors];
 });
 
 export async function getPublicVendorBySlug(slug: string) {
@@ -280,17 +219,15 @@ export async function getPublicFeaturedProducts() {
     .map((submission) =>
       mapApprovedSubmissionToProduct(submission, vendorMap.get(submission.vendorSlug)),
     );
-
-  // Use full public products list for featured selection (respects synced mode)
-  const allProducts = await getPublicProducts();
+  const featuredSeedProducts = seedProducts.filter((product) => product.featured);
   const featuredMap = new Map<string, Product>();
 
   for (const product of approvedProducts) {
     featuredMap.set(product.slug, product);
   }
 
-  for (const product of allProducts) {
-    if (product.featured && !featuredMap.has(product.slug)) {
+  for (const product of featuredSeedProducts) {
+    if (!featuredMap.has(product.slug)) {
       featuredMap.set(product.slug, product);
     }
   }
@@ -305,22 +242,10 @@ export async function getPublicTopVendors() {
 }
 
 export async function getAdminVendors() {
-  const synced = await checkSeedSynced();
   const [mongoVendors, hiddenSlugs] = await Promise.all([
     getMongoVendors(),
     getHiddenSlugs("vendor"),
   ]);
-
-  if (synced) {
-    // In synced mode, all vendors live in MongoDB
-    return mongoVendors.map((v) => ({
-      ...v,
-      isSeed: false as const,
-      disabled: hiddenSlugs.has(v.slug),
-    }));
-  }
-
-  // Legacy mode
   const seedSlugs = new Set(seedVendors.map((v) => v.slug));
   return [
     ...seedVendors.map((v) => ({ ...v, isSeed: true as const, disabled: hiddenSlugs.has(v.slug) })),
@@ -332,8 +257,4 @@ export async function getAdminVendors() {
 
 export async function getAdminProductHiddenSlugs() {
   return getHiddenSlugs("product");
-}
-
-export async function getAdminSeedSyncStatus() {
-  return checkSeedSynced();
 }

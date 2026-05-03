@@ -40,8 +40,16 @@ export async function SiteHeaderFallback() {
               <MobileNav categories={headerCategories} />
             </div>
 
-            <Link href="/" className="flex shrink-0 items-center">
-              <img src="/kos-logo.svg" alt="KOS" className="h-9 w-auto" />
+            <Link href="/" className="flex shrink-0 items-center gap-2.5 text-white">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-sm font-black tracking-[0.18em] text-[var(--accent)]">
+                ST
+              </div>
+              <div className="hidden min-[420px]:block">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">
+                  SuperTech
+                </p>
+                <p className="text-lg font-black leading-none tracking-[-0.04em]">Marketplace</p>
+              </div>
             </Link>
 
             <form action="/catalog" className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
