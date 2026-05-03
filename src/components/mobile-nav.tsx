@@ -141,9 +141,8 @@ export function MobileNav({ categories }: MobileNavProps) {
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
-                <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent)] text-[11px] font-bold tracking-[0.18em] text-white">ST</div>
-                  <span className="font-semibold tracking-[-0.02em]">SuperTech</span>
+                <Link href="/" onClick={() => setOpen(false)} className="flex items-center">
+                  <img src="/kos-logo-dark.svg" alt="KOS" className="h-8 w-auto" />
                 </Link>
                 <button
                   type="button"
