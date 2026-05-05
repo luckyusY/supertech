@@ -44,7 +44,7 @@ export async function generateMetadata({
   }
 
   const productUrl = getAbsoluteUrl(`/products/${product.slug}`);
-  const previewImage = getAbsoluteUrl(product.gallery[0] ?? product.heroImage);
+  const previewImage = getAbsoluteUrl(`/products/${product.slug}/opengraph-image`);
 
   return {
     title: product.name,
@@ -61,8 +61,9 @@ export async function generateMetadata({
         {
           url: previewImage,
           width: 1200,
-          height: 1200,
+          height: 630,
           alt: product.name,
+          type: "image/png",
         },
       ],
     },
