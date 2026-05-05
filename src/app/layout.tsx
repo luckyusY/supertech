@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteHeaderFallback } from "@/components/site-header-fallback";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { getAppUrl, getAbsoluteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -27,6 +28,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: getAppUrl(),
   title: {
     default: "SuperTech - Premium Tech Marketplace",
     template: "%s | SuperTech",
@@ -36,6 +38,18 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: "SuperTech Marketplace",
     type: "website",
+    images: [
+      {
+        url: getAbsoluteUrl("/logo.png"),
+        width: 512,
+        height: 512,
+        alt: "SuperTech Marketplace",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [getAbsoluteUrl("/logo.png")],
   },
   icons: {
     icon: "/logo.png",

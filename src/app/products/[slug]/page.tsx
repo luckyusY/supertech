@@ -12,6 +12,7 @@ import {
   getPublicVendorBySlug,
   getPublicVendorProducts,
 } from "@/lib/public-marketplace";
+import { getAbsoluteUrl } from "@/lib/site-url";
 import { formatPrice } from "@/lib/utils";
 
 type ProductPageProps = {
@@ -42,9 +43,35 @@ export async function generateMetadata({
     };
   }
 
+  const productUrl = getAbsoluteUrl(`/products/${product.slug}`);
+  const previewImage = getAbsoluteUrl(product.gallery[0] ?? product.heroImage);
+
   return {
     title: product.name,
     description: product.description,
+    alternates: {
+      canonical: productUrl,
+    },
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      type: "website",
+      url: productUrl,
+      images: [
+        {
+          url: previewImage,
+          width: 1200,
+          height: 1200,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description: product.description,
+      images: [previewImage],
+    },
   };
 }
 
