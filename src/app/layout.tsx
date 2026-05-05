@@ -3,8 +3,6 @@ import { Suspense } from "react";
 import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
-import { ChatProvider } from "@/components/chat-context";
-import { LiveChat } from "@/components/live-chat";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -39,6 +37,11 @@ export const metadata: Metadata = {
     siteName: "SuperTech Marketplace",
     type: "website",
   },
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -53,30 +56,27 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <CartProvider>
-          <ChatProvider>
-            <SmoothScroll />
-            <div className="noise fixed inset-0 -z-10 opacity-40" />
-            <div className="relative flex min-h-full flex-col">
-              <Suspense fallback={<SiteHeaderFallback />}>
-                <SiteHeader />
-              </Suspense>
-              <main className="flex-1 pb-20 sm:pb-0">{children}</main>
-              <SiteFooter />
-              <MobileBottomNav />
-            </div>
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                style: {
-                  fontFamily: "var(--font-space-grotesk)",
-                  borderRadius: "1rem",
-                  border: "1px solid rgba(15,23,42,0.12)",
-                  background: "rgba(255,252,246,0.95)",
-                },
-              }}
-            />
-            <LiveChat />
-          </ChatProvider>
+          <SmoothScroll />
+          <div className="noise fixed inset-0 -z-10 opacity-40" />
+          <div className="relative flex min-h-full flex-col">
+            <Suspense fallback={<SiteHeaderFallback />}>
+              <SiteHeader />
+            </Suspense>
+            <main className="flex-1 pb-20 sm:pb-0">{children}</main>
+            <SiteFooter />
+            <MobileBottomNav />
+          </div>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                fontFamily: "var(--font-space-grotesk)",
+                borderRadius: "1rem",
+                border: "1px solid rgba(15,23,42,0.12)",
+                background: "rgba(255,252,246,0.95)",
+              },
+            }}
+          />
         </CartProvider>
       </body>
     </html>

@@ -4,7 +4,6 @@ import {
   BarChart3,
   BadgeCheck,
   CheckCircle2,
-  MessageCircle,
   Package,
   Shapes,
   ShoppingBag,
@@ -12,7 +11,6 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { AdminChatInbox } from "@/components/admin-chat-inbox";
 import { AdminOrderOperations } from "@/components/admin-order-operations";
 import { ProductApprovalInbox } from "@/components/product-approval-inbox";
 import { VendorApplicationsInbox } from "@/components/vendor-applications-inbox";
@@ -286,19 +284,6 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="mt-6">
             <ProductApprovalInbox />
-          </div>
-        </section>
-
-        <section className="soft-card p-6 sm:p-8">
-          <div className="flex items-center gap-3">
-            <MessageCircle className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Customer messages</h2>
-          </div>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Replies you send appear instantly in the customer&apos;s chat window.
-          </p>
-          <div className="mt-6">
-            <AdminChatInbox />
           </div>
         </section>
       </div>

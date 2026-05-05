@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CircleHelp, ShieldCheck, Sparkles, Truck } from "lucide-react";
 
 const shopLinks = [
@@ -83,9 +84,13 @@ export function SiteFooter() {
         <div className="grid gap-8 lg:grid-cols-[1.25fr_0.8fr_0.8fr_0.8fr]">
           <div>
             <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-md bg-white text-sm font-black tracking-[0.18em] text-[var(--accent)]">
-                ST
-              </div>
+              <Image
+                src="/logo.png"
+                alt="SuperTech logo"
+                width={44}
+                height={44}
+                className="h-11 w-11 rounded-md bg-white object-contain"
+              />
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55">
                   SuperTech
@@ -179,7 +184,7 @@ export function SiteFooter() {
 
         <div className="mt-8 border-t border-white/10 pt-4">
           <div className="flex flex-col gap-3 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} SuperTech Marketplace. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} SuperTech Marketplace. All rights reserved.</p>
             <div className="flex flex-wrap items-center gap-4">
               <Link href="/phases" className="transition-colors hover:text-white">
                 Roadmap

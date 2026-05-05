@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Check, ShieldCheck, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
-import { ChatWithSellerButton } from "@/components/chat-with-seller-button";
 import { ProductCard } from "@/components/product-card";
 import { ProductReviews } from "@/components/product-reviews";
 import {
@@ -150,21 +149,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   price: product.price,
                   badge: product.badge,
                   accent: product.accent,
-                }}
-              />
-              <ChatWithSellerButton
-                vendorSlug={product.vendorSlug}
-                vendorName={vendor?.name ?? product.vendorSlug}
-                productContext={{
-                  name: product.name,
-                  price: product.price,
-                  vendorName: vendor?.name ?? product.vendorSlug,
-                  category: product.category,
-                  description: product.description,
-                  features: product.features,
-                  stockLabel: product.stockLabel,
-                  shipWindow: product.shipWindow,
-                  slug: product.slug,
                 }}
               />
             </div>

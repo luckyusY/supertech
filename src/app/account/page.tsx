@@ -114,7 +114,7 @@ export default async function AccountPage() {
               </div>
               <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
                 <p className="text-xs text-[rgba(255,255,255,0.5)]">Support</p>
-                <p className="mt-0.5 text-sm font-semibold text-white">Live chat available</p>
+                <p className="mt-0.5 text-sm font-semibold text-white">Order tracking and product requests</p>
               </div>
             </div>
             <form action="/api/auth/sign-out" method="POST" className="mt-4">
