@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getPublicProductBySlug } from "@/lib/public-marketplace";
+import { getCrawlerSafeImageUrl } from "@/lib/social-preview";
 import { formatPrice } from "@/lib/utils";
 
 /* eslint-disable @next/next/no-img-element */
@@ -47,7 +48,7 @@ export default async function ProductOpenGraphImage({
     );
   }
 
-  const imageUrl = product.gallery[0] ?? product.heroImage;
+  const imageUrl = getCrawlerSafeImageUrl(product.gallery[0] ?? product.heroImage);
 
   return new ImageResponse(
     (
@@ -63,6 +64,7 @@ export default async function ProductOpenGraphImage({
       >
         <img
           alt=""
+          height={630}
           src={imageUrl}
           style={{
             height: "100%",
@@ -70,6 +72,7 @@ export default async function ProductOpenGraphImage({
             position: "absolute",
             width: "100%",
           }}
+          width={1200}
         />
         <div
           style={{

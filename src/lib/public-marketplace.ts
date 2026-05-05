@@ -1,7 +1,6 @@
 import { cache } from "react";
 import { hasMongoConfig } from "@/lib/integrations";
 import {
-  categoryHighlights,
   getVendorBySlug as getSeedVendorBySlug,
   products as seedProducts,
   vendors as seedVendors,
@@ -11,7 +10,11 @@ import {
 import { getCustomCategories } from "@/lib/mongodb-categories";
 import { getMongoVendors } from "@/lib/mongodb-vendors";
 import { PRODUCT_LISTING_CATEGORIES } from "@/lib/product-listing-options";
-import { getProductSubmissions, type ProductSubmissionSummary } from "@/lib/product-submissions";
+import {
+  getProductSubmissionBySlug,
+  getProductSubmissions,
+  type ProductSubmissionSummary,
+} from "@/lib/product-submissions";
 import { getHiddenSlugs } from "@/lib/hidden-items";
 
 export type PublicCategorySummary = {
@@ -100,8 +103,40 @@ export const getPublicProducts = cache(async () => {
 
 export async function getPublicProductBySlug(slug: string) {
   const products = await getPublicProducts();
+  const listedProduct = products.find((product) => product.slug === slug);
 
-  return products.find((product) => product.slug === slug);
+  if (listedProduct) {
+    return listedProduct;
+  }
+
+  if (!hasMongoConfig()) {
+    return undefined;
+  }
+
+  try {
+    const [submission, hiddenProductSlugs, hiddenVendorSlugs, mongoVendors] = await Promise.all([
+      getProductSubmissionBySlug(slug, "approved"),
+      getHiddenSlugs("product"),
+      getHiddenSlugs("vendor"),
+      getMongoVendors(),
+    ]);
+
+    if (
+      !submission ||
+      hiddenProductSlugs.has(submission.slug) ||
+      hiddenVendorSlugs.has(submission.vendorSlug)
+    ) {
+      return undefined;
+    }
+
+    const vendor = [...seedVendors, ...mongoVendors].find(
+      (item) => item.slug === submission.vendorSlug,
+    );
+
+    return mapApprovedSubmissionToProduct(submission, vendor);
+  } catch {
+    return undefined;
+  }
 }
 
 export async function getPublicVendorProducts(vendorSlug: string) {

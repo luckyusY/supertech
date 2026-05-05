@@ -67,6 +67,7 @@ export type ProductSubmissionSummary = {
 };
 
 const PRODUCT_SUBMISSION_COLLECTION = "product_submissions";
+const MAX_SLUG_LENGTH = 80;
 
 function generateSubmissionId() {
   const now = new Date();
@@ -229,6 +230,45 @@ export async function getProductSubmissions({
   const docs = await collection.find(query).sort({ createdAt: -1 }).limit(limit).toArray();
 
   return docs.map((doc) => toSummary(doc));
+}
+
+export async function getProductSubmissionBySlug(
+  slug: string,
+  status?: ProductSubmissionStatus,
+) {
+  const database = await getDatabase();
+  const collection = database.collection<ProductSubmissionRecord>(PRODUCT_SUBMISSION_COLLECTION);
+  const query: Record<string, unknown> = { slug };
+
+  if (status) {
+    query.status = status;
+  }
+
+  const doc = await collection.findOne(query);
+
+  if (doc) {
+    return toSummary(doc);
+  }
+
+  const fallbackSlugs = Array.from(
+    new Set([slug.slice(0, MAX_SLUG_LENGTH), slug.slice(0, MAX_SLUG_LENGTH).replace(/-+$/g, "")]),
+  ).filter((candidate) => candidate && candidate !== slug);
+
+  if (fallbackSlugs.length === 0) {
+    return null;
+  }
+
+  const fallbackQuery: Record<string, unknown> = {
+    slug: { $in: fallbackSlugs },
+  };
+
+  if (status) {
+    fallbackQuery.status = status;
+  }
+
+  const fallbackDoc = await collection.findOne(fallbackQuery);
+
+  return fallbackDoc ? toSummary(fallbackDoc) : null;
 }
 
 export async function updateProductSubmissionStatus(
