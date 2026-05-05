@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CircleHelp, PackageSearch, Search, ShieldCheck, Store, Truck, User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { MobileNav } from "@/components/mobile-nav";
@@ -46,9 +47,14 @@ export async function SiteHeader() {
             </div>
 
             <Link href="/" className="flex shrink-0 items-center gap-2.5 text-white">
-              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-sm font-black tracking-[0.18em] text-[var(--accent)]">
-                ST
-              </div>
+              <Image
+                src="/logo.png"
+                alt="SuperTech logo"
+                width={40}
+                height={40}
+                priority
+                className="h-10 w-10 rounded-md bg-white object-contain"
+              />
               <div className="hidden min-[420px]:block">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">
                   SuperTech
