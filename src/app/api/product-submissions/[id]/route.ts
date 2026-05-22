@@ -48,6 +48,13 @@ export async function PATCH(
 
     const submission = await updateProductSubmissionStatus(id, body.status);
 
+    revalidatePath("/");
+    revalidatePath("/catalog");
+    revalidatePath("/dashboard/admin");
+    revalidatePath("/dashboard/admin/products");
+    revalidatePath("/dashboard/vendor");
+    revalidatePath(`/products/${submission.slug}`);
+
     return NextResponse.json({
       ...submission,
       createdAt: submission.createdAt.toISOString(),

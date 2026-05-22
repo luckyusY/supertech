@@ -61,7 +61,7 @@ const getApprovedSubmissions = cache(async () => {
   try {
     return await getProductSubmissions({
       status: "approved",
-      limit: 100,
+      limit: 1000,
     });
   } catch {
     return [] as ProductSubmissionSummary[];
