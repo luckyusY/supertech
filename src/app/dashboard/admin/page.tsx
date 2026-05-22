@@ -10,6 +10,7 @@ import {
   Store,
   TrendingUp,
   Users,
+  KeyRound,
 } from "lucide-react";
 import { AdminOrderOperations } from "@/components/admin-order-operations";
 import { ProductApprovalInbox } from "@/components/product-approval-inbox";
@@ -18,6 +19,7 @@ import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { vendors, products } from "@/lib/marketplace";
 import { getOrderRequestOperationsSnapshot } from "@/lib/order-requests";
+import { getPasswordRecoveryRequests } from "@/lib/password-recovery";
 import { getVendorApplications } from "@/lib/vendor-applications";
 import { formatPrice } from "@/lib/utils";
 
@@ -34,9 +36,10 @@ export default async function AdminDashboardPage() {
     nextPath: "/dashboard/admin",
   });
 
-  const [operationsSnapshot, vendorApplications] = await Promise.all([
+  const [operationsSnapshot, vendorApplications, passwordRecoveryRequests] = await Promise.all([
     hasMongoConfig() ? getOrderRequestOperationsSnapshot().catch(() => null) : Promise.resolve(null),
     hasMongoConfig() ? getVendorApplications().catch(() => []) : Promise.resolve([]),
+    hasMongoConfig() ? getPasswordRecoveryRequests().catch(() => []) : Promise.resolve([]),
   ]);
   const pendingApplicationsCount = vendorApplications.filter((a) => a.status === "pending").length;
 
@@ -192,6 +195,63 @@ export default async function AdminDashboardPage() {
             </div>
           </Link>
         ))}
+      </div>
+
+      <div className="mt-6 soft-card p-6 sm:p-8">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <KeyRound className="h-5 w-5 text-[var(--accent)]" />
+            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
+              Password recovery
+            </h2>
+          </div>
+          {passwordRecoveryRequests.length > 0 ? (
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
+              {passwordRecoveryRequests.length} recent
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-[var(--line)]">
+          {passwordRecoveryRequests.length > 0 ? (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
+                  {["Request", "Email", "Contact", "Notes"].map((heading) => (
+                    <th
+                      key={heading}
+                      className="px-5 py-3 text-left font-semibold text-[var(--muted)]"
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {passwordRecoveryRequests.map((request) => (
+                  <tr key={request.id} className="border-b border-[var(--line)] last:border-0">
+                    <td className="px-5 py-4 font-semibold">{request.requestId}</td>
+                    <td className="px-5 py-4">
+                      <p className="font-medium">{request.email}</p>
+                      {request.name ? (
+                        <p className="mt-1 text-xs text-[var(--muted)]">{request.name}</p>
+                      ) : null}
+                    </td>
+                    <td className="px-5 py-4 text-[var(--muted)]">
+                      {request.phone || "Not provided"}
+                    </td>
+                    <td className="max-w-xs px-5 py-4 text-[var(--muted)]">
+                      {request.notes || "No notes"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="bg-white px-5 py-6 text-sm text-[var(--muted)]">
+              No password recovery requests yet.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Vendor health */}

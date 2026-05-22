@@ -50,9 +50,17 @@ export function SignInForm({ nextPath }: Props) {
         />
       </div>
       <div>
-        <label className="text-sm font-semibold" htmlFor="signin-password">
-          Password
-        </label>
+        <div className="flex items-center justify-between gap-3">
+          <label className="text-sm font-semibold" htmlFor="signin-password">
+            Password
+          </label>
+          <Link
+            href="/password-recovery"
+            className="text-xs font-semibold text-[var(--accent)] hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <div className="relative mt-2">
           <input
             id="signin-password"
