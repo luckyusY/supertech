@@ -29,6 +29,12 @@ const helpLinks = [
   { label: "Cart & checkout", href: "/cart" },
 ];
 
+const socialLinks = [
+  { label: "Facebook", href: "https://www.facebook.com/share/1HzbNfDRWe/" },
+  { label: "Instagram", href: "https://www.instagram.com/supertech_africanmarket" },
+  { label: "TikTok", href: "https://www.tiktok.com/@superstore100" },
+];
+
 const footerSignals = [
   {
     icon: ShieldCheck,
@@ -157,6 +163,26 @@ export function SiteFooter() {
                     <Link href={link.href} className="text-sm text-white/72 transition-colors hover:text-white">
                       {link.label}
                     </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-white/55">
+                Social
+              </p>
+              <ul className="mt-4 space-y-2.5">
+                {socialLinks.map((link) => (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-white/72 transition-colors hover:text-white"
+                    >
+                      {link.label}
+                    </a>
                   </li>
                 ))}
               </ul>
