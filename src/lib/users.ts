@@ -14,6 +14,8 @@ export type User = {
   name: string;
   phone?: string;
   vendorSlug?: string;
+  emailVerified?: boolean;
+  emailVerifiedAt?: Date;
   createdAt: Date;
 };
 
@@ -44,6 +46,7 @@ export async function createUser(input: {
     name: input.name.trim(),
     phone: input.phone?.trim(),
     vendorSlug: input.vendorSlug,
+    emailVerified: input.role !== "customer",
     createdAt: new Date(),
   };
   await db.collection<User>("users").insertOne(user);
@@ -63,8 +66,32 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 export async function authenticateMongoUser(email: string, password: string): Promise<User | null> {
   const user = await findUserByEmail(email);
   if (!user) return null;
+  if (user.emailVerified === false) return null;
   if (!verifyPassword(password, user.passwordHash)) return null;
   return user;
+}
+
+export async function markUserEmailVerified(email: string): Promise<boolean> {
+  if (!hasMongoConfig()) return false;
+  const db = await getDatabase();
+  const result = await db.collection<User>("users").updateOne(
+    { email: email.trim().toLowerCase() },
+    { $set: { emailVerified: true, emailVerifiedAt: new Date() } },
+  );
+  return result.matchedCount > 0;
+}
+
+export async function updateUserPassword(email: string, password: string): Promise<boolean> {
+  if (!hasMongoConfig()) return false;
+  if (password.trim().length < 8) {
+    throw new Error("Password must be at least 8 characters.");
+  }
+  const db = await getDatabase();
+  const result = await db.collection<User>("users").updateOne(
+    { email: email.trim().toLowerCase() },
+    { $set: { passwordHash: hashPassword(password.trim()), emailVerified: true, emailVerifiedAt: new Date() } },
+  );
+  return result.matchedCount > 0;
 }
 
 export async function promoteToVendor(email: string, vendorSlug: string): Promise<boolean> {

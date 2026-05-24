@@ -60,11 +60,11 @@ export function PasswordRecoveryForm() {
           Request received
         </p>
         <h1 className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
-          We will help recover your account.
+          Check your email for the reset link.
         </h1>
         <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-          Your recovery request for {success.email} has been sent to support.
-          Keep this reference: <span className="font-semibold">{success.requestId}</span>.
+          If an account exists for {success.email}, we sent a password reset link.
+          Keep this support reference: <span className="font-semibold">{success.requestId}</span>.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link
@@ -147,7 +147,7 @@ export function PasswordRecoveryForm() {
         disabled={isPending}
         className="w-full rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white transition-opacity disabled:opacity-60"
       >
-        {isPending ? "Sending request..." : "Send recovery request"}
+        {isPending ? "Sending reset link..." : "Send password reset link"}
       </button>
       <p className="text-center text-sm text-[var(--muted)]">
         Remembered your password?{" "}

@@ -14,11 +14,13 @@ export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const [successEmail, setSuccessEmail] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccessEmail("");
     if (password !== confirm) {
       setError("Passwords do not match.");
       return;
@@ -34,14 +36,39 @@ export function SignUpForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, phone, password }),
         });
-        const payload = (await res.json()) as { error?: string; redirectTo?: string };
+        const payload = (await res.json()) as {
+          error?: string;
+          redirectTo?: string;
+          verifyEmailSent?: boolean;
+          email?: string;
+        };
         if (!res.ok) throw new Error(payload.error ?? "Could not create account.");
+        if (payload.verifyEmailSent) {
+          setSuccessEmail(payload.email ?? email);
+          setPassword("");
+          setConfirm("");
+          return;
+        }
         router.refresh();
         router.replace(payload.redirectTo ?? "/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not create account.");
       }
     });
+  }
+
+  if (successEmail) {
+    return (
+      <div className="rounded-[1rem] border border-[#bbf7d0] bg-[#dcfce7] px-4 py-4 text-sm leading-6 text-[#166534]">
+        Account created. We sent a confirmation link to{" "}
+        <span className="font-semibold">{successEmail}</span>. Open that email to activate your account, then sign in.
+        <div className="mt-4">
+          <Link href="/sign-in" className="font-semibold underline">
+            Go to sign in
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (

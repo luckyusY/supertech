@@ -3,7 +3,7 @@ import { PasswordRecoveryForm } from "@/components/password-recovery-form";
 
 export const metadata: Metadata = {
   title: "Password Recovery",
-  description: "Request help recovering your SuperTech account password.",
+  description: "Reset your SuperTech account password.",
 };
 
 export default function PasswordRecoveryPage() {
@@ -18,8 +18,8 @@ export default function PasswordRecoveryPage() {
             Recover your SuperTech password.
           </h1>
           <p className="mt-4 text-sm leading-7 text-white/70">
-            Send your account email and a contact number. Support will verify the
-            account details before helping you regain access.
+            Enter your account email and we will send a secure password reset
+            link if the account exists.
           </p>
         </section>
         <PasswordRecoveryForm />

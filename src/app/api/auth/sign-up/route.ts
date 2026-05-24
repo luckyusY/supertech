@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { createAccountToken } from "@/lib/account-tokens";
+import { sendEmail } from "@/lib/email";
+import { getAbsoluteUrl } from "@/lib/site-url";
 import { createUser } from "@/lib/users";
-import { buildSessionFromMongo, setAuthSessionCookie } from "@/lib/auth";
 
 export async function POST(request: Request) {
   console.log("[sign-up] MONGODB_URI set:", Boolean(process.env.MONGODB_URI), "| MONGODB_DB:", process.env.MONGODB_DB || "(using default)");
@@ -17,10 +19,29 @@ export async function POST(request: Request) {
     }
 
     const user = await createUser({ email, password, name, phone, role: "customer" });
-    const session = buildSessionFromMongo(user);
-    const response = NextResponse.json({ session, redirectTo: "/" });
-    setAuthSessionCookie(response, session);
-    return response;
+    const verification = await createAccountToken({
+      email: user.email,
+      purpose: "email_verification",
+      ttlMinutes: 60 * 24,
+    });
+    const verifyUrl = getAbsoluteUrl(`/api/auth/verify-email?token=${verification.token}`);
+
+    await sendEmail({
+      to: user.email,
+      subject: "Confirm your SuperTech account",
+      text: `Welcome to SuperTech, ${user.name}. Confirm your account here: ${verifyUrl}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.6;color:#313133">
+          <h2>Welcome to SuperTech, ${user.name}</h2>
+          <p>Please confirm your email address to finish setting up your account.</p>
+          <p><a href="${verifyUrl}" style="display:inline-block;background:#f68b1e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700">Confirm email</a></p>
+          <p>If the button does not work, copy this link into your browser:</p>
+          <p>${verifyUrl}</p>
+        </div>
+      `,
+    });
+
+    return NextResponse.json({ verifyEmailSent: true, email: user.email });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Could not create account." },
