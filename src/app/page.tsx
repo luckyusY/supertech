@@ -301,7 +301,7 @@ export default async function Home() {
   });
 
   return (
-    <div className="pb-20 sm:pb-0">
+    <div className="marketplace-campaign-bg pb-20 sm:pb-0">
       <section className="page-shell py-4 sm:py-6">
         <div className="grid gap-3 lg:auto-rows-[440px] lg:grid-cols-[220px_minmax(0,1fr)_250px]">
           <aside className="hidden lg:block">

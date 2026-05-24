@@ -61,8 +61,9 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       : selectedCategory;
 
   return (
-    <div className="page-shell py-5 sm:py-6">
-      <div className="soft-card overflow-hidden">
+    <div className="marketplace-campaign-bg py-5 sm:py-6">
+      <div className="page-shell">
+        <div className="soft-card overflow-hidden">
         <div className="border-b border-[var(--line)] bg-white px-4 py-4 sm:px-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
             {pageLabel}
@@ -152,6 +153,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -69,6 +69,18 @@ a {
   background: rgba(246, 139, 30, 0.18);
 }
 
+.marketplace-campaign-bg {
+  background:
+    radial-gradient(circle at 10% 18%, rgba(255, 236, 130, 0.32), transparent 18rem),
+    radial-gradient(circle at 90% 8%, rgba(255, 255, 255, 0.18), transparent 16rem),
+    linear-gradient(180deg, #ff9900 0%, #ff9900 58%, #f28a00 100%);
+}
+
+.marketplace-campaign-bg .soft-card,
+.marketplace-campaign-bg .market-shelf {
+  box-shadow: 0 2px 10px rgba(49, 49, 51, 0.14);
+}
+
 .page-shell {
   margin-inline: auto;
   width: 100%;
