@@ -22,6 +22,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { CampaignBannerSlider, type CampaignSlide } from "@/components/campaign-banner-slider";
 import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { ProductCard } from "@/components/product-card";
 import {
@@ -35,6 +36,103 @@ import type { Product, Vendor } from "@/lib/marketplace";
 import { formatCompactNumber, formatPrice } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+const mainCampaignSlides: CampaignSlide[] = [
+  {
+    image: "/banners/flash-sale-campaign.png",
+    kicker: "Hot marketplace picks",
+    title: "Deals across beauty, gadgets, home, and more",
+    description: "A fast, visual shopping lane for the best approved products on SuperTech.",
+    href: "/catalog",
+    cta: "Shop all deals",
+  },
+  {
+    image: "/banners/groceries-campaign.png",
+    kicker: "Everyday essentials",
+    title: "Groceries and home supplies in one place",
+    description: "Browse daily-use products, pantry picks, and household basics from approved sellers.",
+    href: "/catalog",
+    cta: "Shop essentials",
+    align: "left",
+  },
+  {
+    image: "/banners/fashion-campaign.png",
+    kicker: "Style deals",
+    title: "Shoes, bags, fashion, and accessories",
+    description: "Fresh visual deals for fashion, footwear, and accessories across the marketplace.",
+    href: "/catalog",
+    cta: "Shop fashion",
+  },
+  {
+    image: "/banners/gadgets-campaign.png",
+    kicker: "Phones & accessories",
+    title: "Smart gadgets for everyday shopping",
+    description: "Phones, watches, earbuds, charging gear, and mobile essentials in one dense shelf.",
+    href: "/catalog?category=Mobile+Essentials",
+    cta: "Shop gadgets",
+    align: "left",
+  },
+];
+
+const gadgetsCampaignSlides: CampaignSlide[] = [
+  {
+    image: "/banners/gadgets-campaign.png",
+    kicker: "Phones & accessories",
+    title: "Smart gadgets for everyday shopping",
+    description: "Phones, watches, earbuds, charging gear, and mobile essentials in one dense shelf.",
+    href: "/catalog?category=Mobile+Essentials",
+    cta: "Shop gadgets",
+    align: "left",
+  },
+  {
+    image: "/banners/flash-sale-campaign.png",
+    kicker: "Tech markdowns",
+    title: "Fast-moving gadgets and accessories",
+    description: "See mobile essentials, audio gear, power accessories, and daily tech deals.",
+    href: "/catalog?category=Mobile+Essentials",
+    cta: "Shop gadgets",
+  },
+];
+
+const beautyCampaignSlides: CampaignSlide[] = [
+  {
+    image: "/banners/beauty-wellness-campaign.png",
+    kicker: "Beauty & wellness",
+    title: "Daily care, glow, and recovery products",
+    description: "Skincare, hair care, wellness, and personal care picks from approved sellers.",
+    href: "/catalog?category=Beauty+%26+Personal+Care",
+    cta: "Shop beauty",
+  },
+  {
+    image: "/banners/fashion-campaign.png",
+    kicker: "Fresh style",
+    title: "Complete your routine with style picks",
+    description: "Pair personal care with fashion, shoes, accessories, and daily essentials.",
+    href: "/catalog?category=Beauty+%26+Personal+Care",
+    cta: "Shop beauty",
+    align: "left",
+  },
+];
+
+const autoPropertyCampaignSlides: CampaignSlide[] = [
+  {
+    image: "/banners/auto-property-campaign.png",
+    kicker: "Motors & property",
+    title: "Cars, rentals, apartments, and land",
+    description: "Browse bigger-ticket listings from sellers and agents in the marketplace.",
+    href: "/catalog?category=Cars+for+Sale",
+    cta: "Explore listings",
+    align: "left",
+  },
+  {
+    image: "/banners/groceries-campaign.png",
+    kicker: "Marketplace lanes",
+    title: "From daily essentials to major listings",
+    description: "Move between household products, services, motors, and property from one catalog.",
+    href: "/catalog",
+    cta: "Browse catalog",
+  },
+];
 
 type CategoryLink = {
   name: string;
@@ -412,14 +510,7 @@ export default async function Home() {
       </section>
 
       <section className="page-shell space-y-4 pb-6 sm:space-y-5 sm:pb-10">
-        <CampaignBanner
-          image="/banners/flash-sale-campaign.png"
-          kicker="Hot marketplace picks"
-          title="Deals across beauty, gadgets, home, and more"
-          description="A fast, visual shopping lane for the best approved products on SuperTech."
-          href="/catalog"
-          cta="Shop all deals"
-        />
+        <CampaignBannerSlider slides={mainCampaignSlides} />
 
         <ShelfSection
           id="flash-sale"
@@ -459,15 +550,7 @@ export default async function Home() {
 
         {visibleCategorySet.has("Mobile Essentials") || visibleCategorySet.has("Wearables") ? (
           <>
-            <CampaignBanner
-              image="/banners/gadgets-campaign.png"
-              kicker="Phones & accessories"
-              title="Smart gadgets for everyday shopping"
-              description="Phones, watches, earbuds, charging gear, and mobile essentials in one dense shelf."
-              href="/catalog?category=Mobile+Essentials"
-              cta="Shop gadgets"
-              align="left"
-            />
+            <CampaignBannerSlider slides={gadgetsCampaignSlides} />
             <ShelfSection
               kicker="Stay connected"
               title="Phones & wearables"
@@ -482,14 +565,7 @@ export default async function Home() {
 
         {visibleCategorySet.has("Beauty & Personal Care") ? (
           <>
-            <CampaignBanner
-              image="/banners/beauty-wellness-campaign.png"
-              kicker="Beauty & wellness"
-              title="Daily care, glow, and recovery products"
-              description="Skincare, hair care, wellness, and personal care picks from approved sellers."
-              href="/catalog?category=Beauty+%26+Personal+Care"
-              cta="Shop beauty"
-            />
+            <CampaignBannerSlider slides={beautyCampaignSlides} />
             <ShelfSection
               kicker="Glow and routine"
               title="Beauty & personal care"
@@ -530,15 +606,7 @@ export default async function Home() {
 
         {visibleCategorySet.has("Cars for Sale") || visibleCategorySet.has("Cars for Rent") ? (
           <>
-            <CampaignBanner
-              image="/banners/auto-property-campaign.png"
-              kicker="Motors & property"
-              title="Cars, rentals, apartments, and land"
-              description="Browse bigger-ticket listings from sellers and agents in the marketplace."
-              href="/catalog?category=Cars+for+Sale"
-              cta="Explore listings"
-              align="left"
-            />
+            <CampaignBannerSlider slides={autoPropertyCampaignSlides} />
             <ShelfSection
               kicker="Wheels & mobility"
               title="Cars for sale & rent"
@@ -578,64 +646,6 @@ type PromoProductCardProps = {
   href: string;
   image: string;
 };
-
-type CampaignBannerProps = {
-  image: string;
-  kicker: string;
-  title: string;
-  description: string;
-  href: string;
-  cta: string;
-  align?: "left" | "right";
-};
-
-function CampaignBanner({
-  image,
-  kicker,
-  title,
-  description,
-  href,
-  cta,
-  align = "right",
-}: CampaignBannerProps) {
-  const contentAlignment = align === "right" ? "items-start md:items-end md:text-right" : "items-start";
-
-  return (
-    <section className="market-shelf relative min-h-[190px] overflow-hidden sm:min-h-[230px]">
-      <Image
-        src={image}
-        alt=""
-        fill
-        className="object-cover"
-        sizes="(min-width: 1280px) 82rem, 100vw"
-      />
-      <div
-        className={`absolute inset-0 ${
-          align === "right"
-            ? "bg-[linear-gradient(90deg,rgba(255,153,0,0.08),rgba(255,153,0,0.28)_42%,rgba(49,49,51,0.72)_100%)]"
-            : "bg-[linear-gradient(90deg,rgba(49,49,51,0.72)_0%,rgba(255,153,0,0.24)_54%,rgba(255,153,0,0.06)_100%)]"
-        }`}
-      />
-      <div className={`relative flex min-h-[190px] flex-col justify-center px-5 py-6 text-white sm:min-h-[230px] sm:px-8 ${contentAlignment}`}>
-        <p className="max-w-xl text-[11px] font-black uppercase tracking-[0.26em] text-white/82">
-          {kicker}
-        </p>
-        <h2 className="mt-2 max-w-xl text-2xl font-black tracking-[-0.04em] sm:text-4xl">
-          {title}
-        </h2>
-        <p className="mt-3 max-w-lg text-sm leading-6 text-white/82 sm:text-base">
-          {description}
-        </p>
-        <Link
-          href={href}
-          className="mt-5 inline-flex rounded-md bg-white px-4 py-2.5 text-sm font-bold text-[#313133] transition-colors hover:bg-[#fff4e5]"
-        >
-          {cta}
-        </Link>
-      </div>
-    </section>
-  );
-}
 
 function PromoProductCard({
   eyebrow,
