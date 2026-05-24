@@ -414,13 +414,14 @@ export default async function Home() {
       <section className="page-shell space-y-4 pb-6 sm:space-y-5 sm:pb-10">
         <ShelfSection
           id="flash-sale"
-          kicker="Limited-time deals"
+          kicker="LIMITED-TIME DEALS"
           title="Flash Sales"
           description={`High-discount products with the strongest markdowns across ${formatCompactNumber(flashSaleProducts.length)} live offers.`}
           href="/catalog"
-          headerClass="bg-gradient-to-r from-[#d53e29] to-[#f68b1e] text-white"
+          headerClass="bg-[linear-gradient(90deg,#df4428_0%,#f26b1d_48%,#ff8a12_100%)] text-white"
           theme="dark"
           products={flashSaleProducts}
+          compactHeader
         />
 
         <ShelfSection
@@ -595,6 +596,7 @@ type ShelfSectionProps = {
   headerClass: string;
   theme: "dark" | "light";
   products: Product[];
+  compactHeader?: boolean;
 };
 
 function ShelfSection({
@@ -606,6 +608,7 @@ function ShelfSection({
   headerClass,
   theme,
   products,
+  compactHeader = false,
 }: ShelfSectionProps) {
   if (products.length === 0) {
     return null;
@@ -617,25 +620,33 @@ function ShelfSection({
       : "border-[var(--line)] bg-white text-[var(--foreground)] hover:bg-[var(--accent-soft)]";
 
   return (
-    <section id={id} className="soft-card overflow-hidden">
-      <div className={`flex items-center justify-between gap-4 px-4 py-3 ${headerClass}`}>
+    <section id={id} className="market-shelf overflow-hidden">
+      <div
+        className={`flex items-center justify-between gap-4 px-3 ${compactHeader ? "min-h-24 py-4" : "py-3"} sm:px-4 ${headerClass}`}
+      >
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-85">{kicker}</p>
-          <h2 className="mt-1 text-lg font-black tracking-[-0.03em] sm:text-xl">{title}</h2>
+          <p className="text-[11px] font-black uppercase tracking-[0.26em] opacity-90">
+            {kicker}
+          </p>
+          <h2 className="mt-2 text-xl font-black tracking-[-0.03em] sm:text-2xl">
+            {title}
+          </h2>
         </div>
         <Link
           href={href}
-          className={`hidden rounded-md border px-3 py-2 text-sm font-semibold sm:inline-flex ${linkClass}`}
+          className={`hidden rounded-md border px-4 py-2.5 text-sm font-bold sm:inline-flex ${linkClass}`}
         >
           See all
         </Link>
       </div>
 
-      <div className="border-b border-[var(--line)] px-4 py-3">
-        <p className="text-sm leading-6 text-[var(--muted)]">{description}</p>
-      </div>
+      {!compactHeader ? (
+        <div className="border-b border-[var(--line)] px-4 py-3">
+          <p className="text-sm leading-6 text-[var(--muted)]">{description}</p>
+        </div>
+      ) : null}
 
-      <div className="grid grid-cols-2 gap-3 p-3 md:grid-cols-4 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 bg-white p-2 md:grid-cols-4 xl:grid-cols-5">
         {products.map((product, index) => (
           <ProductCard key={product.id} product={product} index={index} />
         ))}
