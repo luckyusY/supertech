@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary";
 
@@ -15,6 +16,14 @@ export function ProductImageUploader({
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
   const disabled = !cloudName || !apiKey;
+
+  // Keep the latest images in a ref so multi-file uploads (which fire
+  // onSuccess once per file) accumulate instead of clobbering each other
+  // via a stale prop closure.
+  const imagesRef = useRef(images);
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
   function handleRemove(index: number) {
     onChange(images.filter((_, currentIndex) => currentIndex !== index));
@@ -88,8 +97,10 @@ export function ProductImageUploader({
           onSuccess={(result) => {
             const secureUrl = extractSecureUrl(result);
 
-            if (secureUrl) {
-              onChange([...images, secureUrl].slice(0, 4));
+            if (secureUrl && !imagesRef.current.includes(secureUrl)) {
+              const next = [...imagesRef.current, secureUrl].slice(0, 4);
+              imagesRef.current = next;
+              onChange(next);
             }
           }}
         >
