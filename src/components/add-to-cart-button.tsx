@@ -18,9 +18,10 @@ type AddToCartButtonProps = {
     badge: string;
     accent: string;
   };
+  className?: string;
 };
 
-export function AddToCartButton({ item }: AddToCartButtonProps) {
+export function AddToCartButton({ item, className = "" }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [didAdd, setDidAdd] = useState(false);
 
@@ -40,11 +41,11 @@ export function AddToCartButton({ item }: AddToCartButtonProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
+    <div className={`flex flex-col gap-3 sm:flex-row ${className}`}>
       <button
         type="button"
         onClick={handleAddToCart}
-        className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 ${
+        className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200 sm:w-auto ${
           didAdd
             ? "bg-[rgba(8,145,178,0.12)] text-[var(--teal)]"
             : "border border-[var(--line)] bg-white text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-white"
@@ -56,7 +57,7 @@ export function AddToCartButton({ item }: AddToCartButtonProps) {
       {didAdd && (
         <Link
           href="/cart"
-          className="inline-flex items-center justify-center rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold hover:bg-[var(--foreground)] hover:text-white transition-colors"
+          className="inline-flex w-full items-center justify-center rounded-full border border-[var(--line)] px-6 py-3 text-sm font-semibold transition-colors hover:bg-[var(--foreground)] hover:text-white sm:w-auto"
         >
           View cart
         </Link>
