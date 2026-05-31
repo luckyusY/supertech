@@ -40,7 +40,7 @@ export function VendorProductWorkspace({
           Submission timeline
         </p>
         <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
-          Recent uploads for this vendor
+          All products for this vendor
         </h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
           {canSwitchVendor

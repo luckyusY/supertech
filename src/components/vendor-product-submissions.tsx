@@ -330,6 +330,8 @@ function SubmissionEditForm({
   );
 }
 
+const PAGE_SIZE = 12;
+
 export function VendorProductSubmissions({
   vendorSlug,
   refreshKey,
@@ -339,21 +341,30 @@ export function VendorProductSubmissions({
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [state, setState] = useState<"loading" | "error" | "ready">("loading");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(false);
+
+  // Reset paging back to the first page when the vendor or refresh trigger changes.
+  useEffect(() => {
+    setLimit(PAGE_SIZE);
+  }, [vendorSlug, refreshKey]);
 
   useEffect(() => {
     let active = true;
 
     async function load() {
-      setState("loading");
+      // Keep the current list visible while loading additional pages.
+      if (limit === PAGE_SIZE) setState("loading");
       try {
         const response = await fetch(
-          `/api/product-submissions?vendorSlug=${encodeURIComponent(vendorSlug)}&limit=10`,
+          `/api/product-submissions?vendorSlug=${encodeURIComponent(vendorSlug)}&limit=${limit}`,
           { cache: "no-store" },
         );
         if (!response.ok) throw new Error("Failed");
         const payload = (await response.json()) as { submissions: Submission[] };
         if (active) {
           setSubmissions(payload.submissions);
+          setHasMore(payload.submissions.length >= limit);
           setEditingId(null);
           setState("ready");
         }
@@ -364,7 +375,7 @@ export function VendorProductSubmissions({
 
     void load();
     return () => { active = false; };
-  }, [refreshKey, vendorSlug]);
+  }, [refreshKey, vendorSlug, limit]);
 
   if (state === "loading") {
     return (
@@ -458,6 +469,17 @@ export function VendorProductSubmissions({
           );
         })}
       </ul>
+      {hasMore ? (
+        <div className="border-t border-[var(--line)] px-5 py-4 text-center">
+          <button
+            type="button"
+            onClick={() => setLimit((current) => current + PAGE_SIZE)}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 py-2 text-sm font-semibold text-[var(--foreground)] transition-colors hover:border-[var(--accent)]"
+          >
+            Show more products
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
