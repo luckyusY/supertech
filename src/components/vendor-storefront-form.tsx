@@ -61,7 +61,18 @@ export function VendorStorefrontForm({
     setError("");
   }, [vendorSlug, initialCoverImage, initialLogoMark, initialHeadline]);
 
-  async function handleSave() {
+  async function persist(overrides?: {
+    coverImage?: string;
+    logoMark?: string;
+    headline?: string;
+  }) {
+    const payload = {
+      vendorSlug,
+      coverImage: overrides?.coverImage ?? coverImage,
+      logoMark: overrides?.logoMark ?? logoMark,
+      headline: overrides?.headline ?? headline,
+    };
+
     setStatus("saving");
     setError("");
 
@@ -69,7 +80,7 @@ export function VendorStorefrontForm({
       const response = await fetch("/api/vendor-profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vendorSlug, coverImage, logoMark, headline }),
+        body: JSON.stringify(payload),
       });
       const result = (await response.json()) as { error?: string };
 
@@ -152,7 +163,9 @@ export function VendorStorefrontForm({
                     const secureUrl = extractSecureUrl(result);
                     if (secureUrl) {
                       setCoverImage(secureUrl);
-                      setStatus("idle");
+                      // Persist immediately so the cover survives a refresh
+                      // without needing a separate save click.
+                      void persist({ coverImage: secureUrl });
                     }
                   }}
                 >
@@ -172,7 +185,7 @@ export function VendorStorefrontForm({
                     type="button"
                     onClick={() => {
                       setCoverImage("");
-                      setStatus("idle");
+                      void persist({ coverImage: "" });
                     }}
                     className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)]"
                   >
@@ -238,7 +251,7 @@ export function VendorStorefrontForm({
 
             <button
               type="button"
-              onClick={handleSave}
+              onClick={() => void persist()}
               disabled={status === "saving"}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
@@ -253,6 +266,10 @@ export function VendorStorefrontForm({
                 "Save storefront"
               )}
             </button>
+            <p className="text-center text-[11px] text-[var(--muted)]">
+              Cover image saves automatically on upload. Use this button to
+              save logo initials and headline changes.
+            </p>
           </div>
         </div>
       )}
