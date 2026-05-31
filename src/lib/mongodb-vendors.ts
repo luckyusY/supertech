@@ -3,6 +3,10 @@ import { hasMongoConfig } from "@/lib/integrations";
 import { getDatabase } from "@/lib/mongodb";
 import type { Vendor } from "@/lib/marketplace";
 import { resolveWhatsAppNumber } from "@/lib/whatsapp";
+import {
+  DEFAULT_MOMO_BUSINESS_NAME,
+  DEFAULT_MOMO_MERCHANT_CODE,
+} from "@/lib/payment-methods";
 
 export type MongoVendor = Omit<Vendor, "id"> & { email: string };
 
@@ -48,6 +52,8 @@ export async function createMongoVendor(input: {
     activeProducts: 0,
     fulfillmentRate: "—",
     joined: new Date().toISOString().slice(0, 7),
+    momoMerchantCode: DEFAULT_MOMO_MERCHANT_CODE,
+    momoBusinessName: DEFAULT_MOMO_BUSINESS_NAME,
   };
 
   await db.collection<MongoVendor>("vendors").insertOne(vendor);
@@ -77,6 +83,8 @@ export async function getMongoVendorBySlug(slug: string): Promise<Vendor | null>
       activeProducts: doc.activeProducts,
       fulfillmentRate: doc.fulfillmentRate,
       joined: doc.joined,
+      momoMerchantCode: doc.momoMerchantCode,
+      momoBusinessName: doc.momoBusinessName,
     };
   } catch {
     return null;
@@ -85,7 +93,13 @@ export async function getMongoVendorBySlug(slug: string): Promise<Vendor | null>
 
 export async function updateMongoVendorProfile(
   slug: string,
-  input: { coverImage?: string; logoMark?: string; headline?: string },
+  input: {
+    coverImage?: string;
+    logoMark?: string;
+    headline?: string;
+    momoMerchantCode?: string;
+    momoBusinessName?: string;
+  },
 ): Promise<Vendor | null> {
   if (!hasMongoConfig()) return null;
   const db = await getDatabase();
@@ -99,6 +113,16 @@ export async function updateMongoVendorProfile(
   }
   if (typeof input.headline === "string") {
     set.headline = input.headline.trim().slice(0, 160);
+  }
+  if (typeof input.momoMerchantCode === "string") {
+    // Keep digits only — MoMoPay merchant codes are numeric.
+    set.momoMerchantCode =
+      input.momoMerchantCode.replace(/[^\d]/g, "").slice(0, 12) ||
+      DEFAULT_MOMO_MERCHANT_CODE;
+  }
+  if (typeof input.momoBusinessName === "string") {
+    set.momoBusinessName =
+      input.momoBusinessName.trim().slice(0, 60) || DEFAULT_MOMO_BUSINESS_NAME;
   }
 
   if (Object.keys(set).length === 0) {
@@ -128,6 +152,8 @@ export async function updateMongoVendorProfile(
     activeProducts: doc.activeProducts,
     fulfillmentRate: doc.fulfillmentRate,
     joined: doc.joined,
+    momoMerchantCode: doc.momoMerchantCode,
+    momoBusinessName: doc.momoBusinessName,
   };
 }
 
@@ -161,6 +187,8 @@ export async function getMongoVendors(): Promise<Vendor[]> {
       activeProducts: doc.activeProducts,
       fulfillmentRate: doc.fulfillmentRate,
       joined: doc.joined,
+      momoMerchantCode: doc.momoMerchantCode,
+      momoBusinessName: doc.momoBusinessName,
     }));
   } catch {
     return [];

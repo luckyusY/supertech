@@ -15,6 +15,8 @@ import {
 import { getAbsoluteUrl } from "@/lib/site-url";
 import { formatPrice } from "@/lib/utils";
 import { getWhatsAppHref } from "@/lib/whatsapp";
+import { MomoPayCard } from "@/components/momo-pay-card";
+import { resolveVendorMomo } from "@/lib/payment-methods";
 
 type ProductPageProps = {
   params: Promise<{
@@ -91,6 +93,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     vendor?.whatsappNumber ?? product.vendorWhatsAppNumber,
     `Hello ${vendorName}, I am interested in ${product.name} on SuperTech.`,
   );
+  const momo = resolveVendorMomo(vendor);
   const relatedProducts = (await getPublicVendorProducts(product.vendorSlug))
     .filter((item) => item.slug !== product.slug)
     .slice(0, 3);
@@ -244,6 +247,24 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
               </div>
             ) : null}
+            <div className="rounded-[1.6rem] border border-[var(--line)] bg-white/72 p-5">
+              <p className="font-mono text-xs uppercase tracking-[0.26em] text-[var(--muted)]">
+                Pay with MoMoPay
+              </p>
+              <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+                Dial{" "}
+                <span className="font-mono font-semibold text-[var(--foreground)]">
+                  {momo.dialCode}
+                </span>{" "}
+                or use the merchant code below to pay {vendorName}.
+              </p>
+              <div className="mt-4">
+                <MomoPayCard
+                  merchantCode={momo.merchantCode}
+                  businessName={momo.businessName}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

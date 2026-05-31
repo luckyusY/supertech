@@ -15,6 +15,9 @@ export type Vendor = {
   activeProducts: number;
   fulfillmentRate: string;
   joined: string;
+  // MTN MoMoPay merchant details (falls back to the platform default).
+  momoMerchantCode?: string;
+  momoBusinessName?: string;
 };
 
 export type Product = {

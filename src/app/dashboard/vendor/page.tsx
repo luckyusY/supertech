@@ -12,6 +12,7 @@ import {
 import { VendorOrderQueue } from "@/components/vendor-order-queue";
 import { VendorPayoutSummary } from "@/components/vendor-payout-summary";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
+import { VendorPaymentForm } from "@/components/vendor-payment-form";
 import { VendorStorefrontForm } from "@/components/vendor-storefront-form";
 import { getAccessibleVendorsAsync, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
@@ -132,6 +133,18 @@ export default async function VendorDashboardPage() {
             initialLogoMark={currentVendor.logoMark}
             initialHeadline={currentVendor.headline}
             accent={currentVendor.accent}
+            canEdit={!getVendorBySlug(currentVendor.slug)}
+          />
+        </div>
+      )}
+
+      {/* Payment method */}
+      {currentVendor && (
+        <div className="mt-6">
+          <VendorPaymentForm
+            vendorSlug={currentVendor.slug}
+            initialMerchantCode={currentVendor.momoMerchantCode ?? ""}
+            initialBusinessName={currentVendor.momoBusinessName ?? ""}
             canEdit={!getVendorBySlug(currentVendor.slug)}
           />
         </div>

@@ -25,6 +25,8 @@ export async function PUT(request: Request) {
       coverImage?: string;
       logoMark?: string;
       headline?: string;
+      momoMerchantCode?: string;
+      momoBusinessName?: string;
     };
 
     // Vendors can only edit their own storefront; admins may target any vendor.
@@ -48,6 +50,8 @@ export async function PUT(request: Request) {
       coverImage: body.coverImage,
       logoMark: body.logoMark,
       headline: body.headline,
+      momoMerchantCode: body.momoMerchantCode,
+      momoBusinessName: body.momoBusinessName,
     });
 
     if (!vendor) {
