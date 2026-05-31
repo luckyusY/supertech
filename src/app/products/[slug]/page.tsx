@@ -129,36 +129,36 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em]">
                 {product.name}
               </h1>
-              <p className="mt-4 text-base leading-7 text-[var(--muted)]">
+              <div className="mt-4 flex items-end gap-4">
+                <p className="text-4xl font-semibold tracking-[-0.05em]">
+                  {formatPrice(product.price)}
+                </p>
+                {product.compareAt ? (
+                  <p className="pb-1 text-base text-[var(--muted)] line-through">
+                    {formatPrice(product.compareAt)}
+                  </p>
+                ) : null}
+              </div>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-white"
+                  style={{ backgroundColor: product.accent }}
+                >
+                  {product.badge}
+                </span>
+                <span className="rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--muted)]">
+                  {product.stockLabel}
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
+                  <Star className="h-4 w-4 fill-current text-[var(--accent)]" />
+                  {product.reviewCount > 0
+                    ? `${product.rating.toFixed(1)} | ${product.reviewCount} reviews`
+                    : "New approved listing"}
+                </span>
+              </div>
+              <p className="mt-6 text-base leading-7 text-[var(--muted)]">
                 {product.description}
               </p>
-            </div>
-            <div className="flex items-end gap-4">
-              <p className="text-4xl font-semibold tracking-[-0.05em]">
-                {formatPrice(product.price)}
-              </p>
-              {product.compareAt ? (
-                <p className="pb-1 text-base text-[var(--muted)] line-through">
-                  {formatPrice(product.compareAt)}
-                </p>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <span
-                className="rounded-full px-4 py-2 text-sm font-semibold text-white"
-                style={{ backgroundColor: product.accent }}
-              >
-                {product.badge}
-              </span>
-              <span className="rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--muted)]">
-                {product.stockLabel}
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                <Star className="h-4 w-4 fill-current text-[var(--accent)]" />
-                {product.reviewCount > 0
-                  ? `${product.rating.toFixed(1)} | ${product.reviewCount} reviews`
-                  : "New approved listing"}
-              </span>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
