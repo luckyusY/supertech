@@ -168,9 +168,26 @@ export const getPublicVendors = cache(async () => {
     } satisfies Vendor;
   });
 
-  // Merge MongoDB-created vendors (approved applications), excluding seed slugs and hidden ones
+  // Merge MongoDB-created vendors (approved applications), excluding seed slugs and hidden ones.
+  // Their stored activeProducts is always 0, so derive the real count from approved submissions.
   const seedSlugs = new Set(seedVendors.map((v) => v.slug));
-  const newVendors = mongoVendors.filter((v) => !seedSlugs.has(v.slug) && !hiddenSlugs.has(v.slug));
+  const newVendors = mongoVendors
+    .filter((v) => !seedSlugs.has(v.slug) && !hiddenSlugs.has(v.slug))
+    .map((vendor) => {
+      const approvedForVendor = approvedSubmissions.filter(
+        (submission) => submission.vendorSlug === vendor.slug,
+      );
+      const categories = new Set([
+        ...vendor.categories,
+        ...approvedForVendor.map((submission) => submission.category),
+      ]);
+
+      return {
+        ...vendor,
+        activeProducts: approvedForVendor.length,
+        categories: Array.from(categories),
+      } satisfies Vendor;
+    });
 
   return [...seedWithSubmissions, ...newVendors];
 });
