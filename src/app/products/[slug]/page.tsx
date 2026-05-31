@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ShieldCheck, Star, Truck } from "lucide-react";
+import { Check, MessageCircle, ShieldCheck, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductCard } from "@/components/product-card";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/public-marketplace";
 import { getAbsoluteUrl } from "@/lib/site-url";
 import { formatPrice } from "@/lib/utils";
+import { getWhatsAppHref } from "@/lib/whatsapp";
 
 type ProductPageProps = {
   params: Promise<{
@@ -85,6 +86,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const vendor = await getPublicVendorBySlug(product.vendorSlug);
+  const vendorName = vendor?.name ?? product.vendorSlug;
+  const whatsappHref = getWhatsAppHref(
+    vendor?.whatsappNumber ?? product.vendorWhatsAppNumber,
+    `Hello ${vendorName}, I am interested in ${product.name} on SuperTech.`,
+  );
   const relatedProducts = (await getPublicVendorProducts(product.vendorSlug))
     .filter((item) => item.slug !== product.slug)
     .slice(0, 3);
@@ -139,6 +145,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </p>
                 ) : null}
               </div>
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Chat with ${vendorName} on WhatsApp about ${product.name}`}
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#1fae5b] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#178d49]"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Chat on WhatsApp
+              </a>
               <div className="mt-4 flex flex-wrap gap-3">
                 <span
                   className="rounded-full px-4 py-2 text-sm font-semibold text-white"
