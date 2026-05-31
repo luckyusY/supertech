@@ -12,9 +12,10 @@ import {
 import { VendorOrderQueue } from "@/components/vendor-order-queue";
 import { VendorPayoutSummary } from "@/components/vendor-payout-summary";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
+import { VendorStorefrontForm } from "@/components/vendor-storefront-form";
 import { getAccessibleVendorsAsync, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
-import { vendorDashboardHighlights } from "@/lib/marketplace";
+import { getVendorBySlug, vendorDashboardHighlights } from "@/lib/marketplace";
 import { getProductListingCategories } from "@/lib/public-marketplace";
 
 export const metadata: Metadata = {
@@ -120,6 +121,21 @@ export default async function VendorDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Storefront branding */}
+      {currentVendor && (
+        <div className="mt-6">
+          <VendorStorefrontForm
+            vendorSlug={currentVendor.slug}
+            vendorName={currentVendor.name}
+            initialCoverImage={currentVendor.coverImage}
+            initialLogoMark={currentVendor.logoMark}
+            initialHeadline={currentVendor.headline}
+            accent={currentVendor.accent}
+            canEdit={!getVendorBySlug(currentVendor.slug)}
+          />
+        </div>
+      )}
 
       {/* Product workspace */}
       <div className="mt-6">

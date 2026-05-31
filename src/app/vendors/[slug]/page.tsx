@@ -56,14 +56,16 @@ export default async function VendorPage({ params }: VendorPageProps) {
   return (
     <div className="page-shell py-8">
       <section className="dark-card relative overflow-hidden p-6 sm:p-8 lg:p-10">
-        <Image
-          src={vendor.coverImage}
-          alt={vendor.name}
-          fill
-          className="object-cover opacity-20"
-          sizes="100vw"
-          priority
-        />
+        {vendor.coverImage ? (
+          <Image
+            src={vendor.coverImage}
+            alt={vendor.name}
+            fill
+            className="object-cover opacity-20"
+            sizes="100vw"
+            priority
+          />
+        ) : null}
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.88),rgba(15,23,42,0.58))]" />
         <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div>

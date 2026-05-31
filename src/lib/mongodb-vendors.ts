@@ -83,6 +83,54 @@ export async function getMongoVendorBySlug(slug: string): Promise<Vendor | null>
   }
 }
 
+export async function updateMongoVendorProfile(
+  slug: string,
+  input: { coverImage?: string; logoMark?: string; headline?: string },
+): Promise<Vendor | null> {
+  if (!hasMongoConfig()) return null;
+  const db = await getDatabase();
+
+  const set: Partial<MongoVendor> = {};
+  if (typeof input.coverImage === "string") {
+    set.coverImage = input.coverImage.trim();
+  }
+  if (typeof input.logoMark === "string") {
+    set.logoMark = input.logoMark.trim().slice(0, 3);
+  }
+  if (typeof input.headline === "string") {
+    set.headline = input.headline.trim().slice(0, 160);
+  }
+
+  if (Object.keys(set).length === 0) {
+    return getMongoVendorBySlug(slug);
+  }
+
+  const doc = await db
+    .collection<MongoVendor>("vendors")
+    .findOneAndUpdate({ slug }, { $set: set }, { returnDocument: "after" });
+
+  if (!doc) return null;
+
+  return {
+    id: doc.slug,
+    slug: doc.slug,
+    name: doc.name,
+    headline: doc.headline,
+    location: doc.location,
+    responseTime: doc.responseTime,
+    rating: doc.rating,
+    reviewCount: doc.reviewCount,
+    accent: doc.accent,
+    coverImage: doc.coverImage,
+    logoMark: doc.logoMark,
+    whatsappNumber: doc.whatsappNumber,
+    categories: doc.categories,
+    activeProducts: doc.activeProducts,
+    fulfillmentRate: doc.fulfillmentRate,
+    joined: doc.joined,
+  };
+}
+
 export async function deleteMongoVendor(slug: string): Promise<void> {
   const db = await getDatabase();
   const result = await db.collection<MongoVendor>("vendors").deleteOne({ slug });

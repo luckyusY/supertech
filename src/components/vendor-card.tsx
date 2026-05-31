@@ -28,13 +28,22 @@ export function VendorCard({ vendor, index = 0 }: VendorCardProps) {
         className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
       >
         <div className="relative aspect-[16/8.4] overflow-hidden">
-          <Image
-            src={vendor.coverImage}
-            alt={vendor.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 40vw, 100vw"
-          />
+          {vendor.coverImage ? (
+            <Image
+              src={vendor.coverImage}
+              alt={vendor.name}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              sizes="(min-width: 1280px) 25vw, (min-width: 768px) 40vw, 100vw"
+            />
+          ) : (
+            <div
+              className="h-full w-full"
+              style={{
+                background: `linear-gradient(135deg, ${vendor.accent}, rgba(15,23,42,0.85))`,
+              }}
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
           <div
