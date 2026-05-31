@@ -43,3 +43,6 @@ next-env.d.ts
 
 .vercel
 .claude/
+
+# local product import data
+/super-store-vendor-products
