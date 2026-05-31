@@ -178,6 +178,24 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <p className="mt-6 text-base leading-7 text-[var(--muted)]">
                 {product.description}
               </p>
+              <div className="mt-6">
+                <p className="font-mono text-xs uppercase tracking-[0.26em] text-[var(--muted)]">
+                  Pay with MoMoPay
+                </p>
+                <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+                  Dial{" "}
+                  <span className="font-mono font-semibold text-[var(--foreground)]">
+                    {momo.dialCode}
+                  </span>{" "}
+                  or use the merchant code below to pay {vendorName}.
+                </p>
+                <div className="mt-4">
+                  <MomoPayCard
+                    merchantCode={momo.merchantCode}
+                    businessName={momo.businessName}
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
@@ -247,24 +265,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
               </div>
             ) : null}
-            <div className="rounded-[1.6rem] border border-[var(--line)] bg-white/72 p-5">
-              <p className="font-mono text-xs uppercase tracking-[0.26em] text-[var(--muted)]">
-                Pay with MoMoPay
-              </p>
-              <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-                Dial{" "}
-                <span className="font-mono font-semibold text-[var(--foreground)]">
-                  {momo.dialCode}
-                </span>{" "}
-                or use the merchant code below to pay {vendorName}.
-              </p>
-              <div className="mt-4">
-                <MomoPayCard
-                  merchantCode={momo.merchantCode}
-                  businessName={momo.businessName}
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>
