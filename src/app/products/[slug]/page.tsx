@@ -126,10 +126,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
                 {product.category}
               </p>
-              <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em]">
+              <h1 className="mt-3 text-4xl font-semibold leading-[1.12] tracking-[-0.05em]">
                 {product.name}
               </h1>
-              <div className="mt-4 flex items-end gap-4">
+              <div className="mt-6 flex items-end gap-4">
                 <p className="text-4xl font-semibold tracking-[-0.05em]">
                   {formatPrice(product.price)}
                 </p>
