@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ImagePlus, Package, Send, Tag, Truck } from "lucide-react";
+import { ImagePlus, Loader2, Package, Send, Sparkles, Tag, Truck } from "lucide-react";
 import { ProductImageUploader } from "@/components/product-image-uploader";
 import type { Vendor } from "@/lib/marketplace";
 import {
@@ -41,6 +41,48 @@ export function ProductSubmissionForm({
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiError, setAiError] = useState("");
+
+  async function handleGenerateCopy() {
+    if (name.trim().length < 3) {
+      setAiError("Enter a product name first, then generate.");
+      return;
+    }
+    setAiError("");
+    setIsGenerating(true);
+
+    try {
+      const response = await fetch("/api/ai/product-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          category,
+          keywords: features,
+          price: price ? Number(price) : undefined,
+        }),
+      });
+      const result = (await response.json()) as {
+        description?: string;
+        features?: string[];
+        error?: string;
+      };
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error ?? "Unable to generate copy.");
+      }
+
+      if (result.description) setDescription(result.description);
+      if (result.features && result.features.length > 0) {
+        setFeatures(result.features.join("\n"));
+      }
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Unable to generate copy.");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
 
   function resetForm() {
     setName("");
@@ -229,9 +271,24 @@ export function ProductSubmissionForm({
           </div>
 
           <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-sm font-semibold">
-              Description <span className="text-[var(--accent)]">*</span>
-            </label>
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-sm font-semibold">
+                Description <span className="text-[var(--accent)]">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleGenerateCopy}
+                disabled={isGenerating}
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[rgba(37,99,235,0.06)] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] transition-colors hover:bg-[rgba(37,99,235,0.12)] disabled:opacity-60"
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5" />
+                )}
+                {isGenerating ? "Writing..." : "Generate with AI"}
+              </button>
+            </div>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -240,6 +297,14 @@ export function ProductSubmissionForm({
               placeholder="What does this product do? Who is it for? What makes it worth buying?"
               className={`${inputClass} resize-none`}
             />
+            {aiError ? (
+              <p className="mt-1.5 text-xs text-[var(--red)]">{aiError}</p>
+            ) : (
+              <p className="mt-1.5 text-xs text-[var(--muted)]">
+                Tip: enter the product name (and optional notes in features), then
+                let AI draft the description and bullets.
+              </p>
+            )}
           </div>
 
           <div className="sm:col-span-2">

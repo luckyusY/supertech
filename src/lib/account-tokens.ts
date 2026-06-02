@@ -2,7 +2,10 @@ import "server-only";
 import crypto from "node:crypto";
 import { getDatabase } from "@/lib/mongodb";
 
-export type AccountTokenPurpose = "email_verification" | "password_reset";
+export type AccountTokenPurpose =
+  | "email_verification"
+  | "password_reset"
+  | "magic_link";
 
 type AccountTokenRecord = {
   tokenHash: string;

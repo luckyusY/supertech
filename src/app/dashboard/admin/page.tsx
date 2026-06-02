@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Users,
   KeyRound,
+  Sparkles,
 } from "lucide-react";
 import { AdminOrderOperations } from "@/components/admin-order-operations";
 import { ProductApprovalInbox } from "@/components/product-approval-inbox";
@@ -146,7 +147,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Management quick links */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {[
           {
             href: "/dashboard/admin/vendors",
@@ -179,6 +180,14 @@ export default async function AdminDashboardPage() {
             desc: "Revenue, orders, and performance metrics",
             color: "text-[var(--accent)]",
             bg: "bg-[rgba(37,99,235,0.08)]",
+          },
+          {
+            href: "/dashboard/admin/ai",
+            icon: Sparkles,
+            label: "AI Studio",
+            desc: "Generate articles, content, and support copy",
+            color: "text-[var(--accent)]",
+            bg: "bg-[var(--accent-soft)]",
           },
         ].map((item) => (
           <Link

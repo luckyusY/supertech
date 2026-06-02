@@ -96,7 +96,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
 
   return (
     <section className="mt-10">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.04em]">Customer reviews</h2>
           {summary && summary.totalReviews > 0 && (
@@ -112,7 +112,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
           <button
             type="button"
             onClick={() => setShowForm((v) => !v)}
-            className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--foreground)] hover:text-white"
+            className="w-full rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--foreground)] hover:text-white sm:w-auto"
           >
             {showForm ? "Cancel" : "Write a review"}
           </button>
@@ -126,7 +126,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-[1.5rem] border border-[var(--line)] bg-white p-6">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-[1.2rem] border border-[var(--line)] bg-white p-4 sm:rounded-[1.5rem] sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-sm font-semibold" htmlFor="rv-name">Name</label>
@@ -158,7 +158,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
             <textarea id="rv-body" required rows={4} value={body} onChange={(e) => setBody(e.target.value)} className="mt-1 w-full rounded-[0.9rem] border border-[var(--line)] px-3 py-2 text-sm" />
           </div>
           {formError && <p className="text-sm text-[var(--accent)]">{formError}</p>}
-          <button type="submit" disabled={submitting} className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
+          <button type="submit" disabled={submitting} className="w-full rounded-full bg-[var(--foreground)] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto">
             {submitting ? "Submitting..." : "Submit review"}
           </button>
         </form>
@@ -170,12 +170,12 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
         <div className="mt-6 space-y-4">
           {reviews.map((r) => (
             <div key={r.reviewId} className="rounded-[1.4rem] border border-[var(--line)] bg-white p-5">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col items-start justify-between gap-3 sm:flex-row">
                 <div>
                   <Stars rating={r.rating} size={14} />
                   <p className="mt-2 font-semibold tracking-[-0.03em]">{r.title}</p>
                 </div>
-                <div className="text-right text-xs text-[var(--muted)]">
+                <div className="text-left text-xs text-[var(--muted)] sm:text-right">
                   <p>{r.customerName}</p>
                   {r.verified && <p className="text-[var(--teal)]">Verified</p>}
                   <p>{formatDate(r.createdAt)}</p>

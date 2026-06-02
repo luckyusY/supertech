@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
+import { AiSupportWidget } from "@/components/ai-support-widget";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -79,6 +80,7 @@ export default function RootLayout({
             <main className="flex-1 pb-20 sm:pb-0">{children}</main>
             <SiteFooter />
             <MobileBottomNav />
+            <AiSupportWidget />
           </div>
           <Toaster
             position="bottom-right"

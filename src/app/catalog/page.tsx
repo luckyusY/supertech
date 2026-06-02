@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { AiSearchBar } from "@/components/ai-search-bar";
 import { ProductCard } from "@/components/product-card";
 import { getVendorBySlug } from "@/lib/marketplace";
 import { getPublicCategories, getPublicProducts } from "@/lib/public-marketplace";
@@ -63,6 +64,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   return (
     <div className="marketplace-campaign-bg py-5 sm:py-6">
       <div className="page-shell">
+        <AiSearchBar />
         <div className="soft-card overflow-hidden">
         <div className="border-b border-[var(--line)] bg-white px-4 py-4 sm:px-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
