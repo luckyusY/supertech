@@ -1,5 +1,16 @@
 import { NextResponse } from "next/server";
-import { AiConfigurationError, getMarketplaceContext, streamAiText } from "@/lib/ai";
+import {
+  AiConfigurationError,
+  generateAiText,
+  getMarketplaceContext,
+  streamAiText,
+} from "@/lib/ai";
+
+const PLAIN_TEXT_HEADERS = {
+  "Content-Type": "text/plain; charset=utf-8",
+  "Cache-Control": "no-store",
+  "X-Accel-Buffering": "no",
+} as const;
 
 type SupportMessage = {
   role?: string;
@@ -25,34 +36,42 @@ export async function POST(request: Request) {
     .map((item) => `${item.role === "assistant" ? "Assistant" : "Customer"}: ${item.content}`)
     .join("\n");
 
-  try {
-    const stream = await streamAiText({
-      instructions: [
-        "You are SuperTech AI Support, a concise and friendly marketplace assistant.",
-        "Help customers find products, understand ordering, request unavailable items, track orders, and become vendors.",
-        "Use the provided marketplace context. If the customer needs account, payment, or delivery help you cannot complete, guide them to the best page and tell them support will follow up.",
-        "Do not invent order status, payment confirmations, stock guarantees, discounts, phone numbers, or policies not in the context.",
-        "Keep replies short and practical. You may use light markdown: **bold** for emphasis, '- ' bullet lists, and link site pages as plain paths like /catalog.",
-        getMarketplaceContext(),
-      ].join("\n\n"),
-      input: [
-        body.page ? `Current page: ${body.page}` : "",
-        history ? `Recent chat:\n${history}` : "",
-        `Customer: ${message}`,
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
-      temperature: 0.4,
-      maxOutputTokens: 450,
-    });
+  const aiOptions = {
+    instructions: [
+      "You are SuperTech AI Support, a concise and friendly marketplace assistant.",
+      "Help customers find products, understand ordering, request unavailable items, track orders, and become vendors.",
+      "Use the provided marketplace context. If the customer needs account, payment, or delivery help you cannot complete, guide them to the best page and tell them support will follow up.",
+      "Do not invent order status, payment confirmations, stock guarantees, discounts, phone numbers, or policies not in the context.",
+      "Keep replies short and practical. You may use light markdown: **bold** for emphasis, '- ' bullet lists, and link site pages as plain paths like /catalog.",
+      getMarketplaceContext(),
+    ].join("\n\n"),
+    input: [
+      body.page ? `Current page: ${body.page}` : "",
+      history ? `Recent chat:\n${history}` : "",
+      `Customer: ${message}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+    temperature: 0.4,
+    maxOutputTokens: 450,
+  };
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store",
-        "X-Accel-Buffering": "no",
-      },
-    });
+  try {
+    // Prefer streaming. Some OpenAI organizations are not verified for
+    // streaming (non-streaming requests still succeed), so fall back to a
+    // single non-streamed response if streaming is rejected. The client
+    // reads both the same way.
+    try {
+      const stream = await streamAiText(aiOptions);
+      return new Response(stream, { headers: PLAIN_TEXT_HEADERS });
+    } catch (streamError) {
+      if (streamError instanceof AiConfigurationError) {
+        throw streamError;
+      }
+      console.warn("AI support streaming failed, using non-streaming fallback:", streamError);
+      const reply = await generateAiText(aiOptions);
+      return new Response(reply, { headers: PLAIN_TEXT_HEADERS });
+    }
   } catch (error) {
     if (error instanceof AiConfigurationError) {
       return NextResponse.json({ error: error.message }, { status: 503 });
