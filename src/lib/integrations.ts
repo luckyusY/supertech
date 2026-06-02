@@ -11,6 +11,10 @@ export type IntegrationStatus = {
     configured: boolean;
     label: string;
   };
+  ai: {
+    configured: boolean;
+    label: string;
+  };
 };
 
 function hasValue(value?: string) {
@@ -36,10 +40,15 @@ export function hasCloudinaryClientConfig() {
   );
 }
 
+export function hasAiConfig() {
+  return hasValue(process.env.OPENAI_API_KEY) || hasValue(process.env.CHATGPT_API_KEY);
+}
+
 export function getIntegrationStatus(): IntegrationStatus {
   const mongoConfigured = hasMongoConfig();
   const cloudinaryServerConfigured = hasCloudinaryServerConfig();
   const cloudinaryClientConfigured = hasCloudinaryClientConfig();
+  const aiConfigured = hasAiConfig();
 
   return {
     mongodb: {
@@ -59,6 +68,12 @@ export function getIntegrationStatus(): IntegrationStatus {
       label: cloudinaryClientConfigured
         ? "Client-side Cloudinary uploads and delivery are ready for vendor workflows."
         : "Expose NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_API_KEY.",
+    },
+    ai: {
+      configured: aiConfigured,
+      label: aiConfigured
+        ? "ChatGPT/OpenAI API is ready for support and content generation."
+        : "Add OPENAI_API_KEY or CHATGPT_API_KEY to enable AI support and content generation.",
     },
   };
 }
