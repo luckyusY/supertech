@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { AiConfigurationError, generateAiText, getMarketplaceContext } from "@/lib/ai";
+import { AiConfigurationError, getMarketplaceContext, streamAiText } from "@/lib/ai";
 
 type SupportMessage = {
   role?: string;
@@ -26,13 +26,13 @@ export async function POST(request: Request) {
     .join("\n");
 
   try {
-    const reply = await generateAiText({
+    const stream = await streamAiText({
       instructions: [
         "You are SuperTech AI Support, a concise and friendly marketplace assistant.",
         "Help customers find products, understand ordering, request unavailable items, track orders, and become vendors.",
         "Use the provided marketplace context. If the customer needs account, payment, or delivery help you cannot complete, guide them to the best page and tell them support will follow up.",
         "Do not invent order status, payment confirmations, stock guarantees, discounts, phone numbers, or policies not in the context.",
-        "Keep replies short, practical, and suitable for a shopping website chat.",
+        "Keep replies short and practical. You may use light markdown: **bold** for emphasis, '- ' bullet lists, and link site pages as plain paths like /catalog.",
         getMarketplaceContext(),
       ].join("\n\n"),
       input: [
@@ -46,7 +46,13 @@ export async function POST(request: Request) {
       maxOutputTokens: 450,
     });
 
-    return NextResponse.json({ reply });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Accel-Buffering": "no",
+      },
+    });
   } catch (error) {
     if (error instanceof AiConfigurationError) {
       return NextResponse.json({ error: error.message }, { status: 503 });
