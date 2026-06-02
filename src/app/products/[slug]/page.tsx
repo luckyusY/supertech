@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Check, MessageCircle, ShieldCheck, Star, Truck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { AiRecommendations } from "@/components/ai-recommendations";
 import { ProductCard } from "@/components/product-card";
 import { ProductReviews } from "@/components/product-reviews";
 import {
@@ -293,6 +294,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           ))}
         </div>
       </section>
+
+      <AiRecommendations slug={product.slug} />
     </div>
   );
 }
