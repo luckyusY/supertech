@@ -8,10 +8,12 @@ export const metadata: Metadata = {
   description: "Sign in to your SuperTech account.",
 };
 
-type Props = { searchParams: Promise<{ next?: string; verified?: string }> };
+type Props = {
+  searchParams: Promise<{ next?: string; verified?: string; magic?: string }>;
+};
 
 export default async function SignInPage({ searchParams }: Props) {
-  const { next, verified } = await searchParams;
+  const { next, verified, magic } = await searchParams;
 
   return (
     <div className="page-shell flex min-h-[calc(100vh-80px)] items-center py-8 sm:py-12">
@@ -65,6 +67,11 @@ export default async function SignInPage({ searchParams }: Props) {
             {verified === "invalid" ? (
               <div className="mb-4 rounded-[1rem] border border-[var(--red-soft)] bg-[var(--red-soft)] px-4 py-3 text-sm text-[var(--red)]">
                 That confirmation link is invalid or expired.
+              </div>
+            ) : null}
+            {magic === "invalid" ? (
+              <div className="mb-4 rounded-[1rem] border border-[var(--red-soft)] bg-[var(--red-soft)] px-4 py-3 text-sm text-[var(--red)]">
+                That sign-in link is invalid or has expired. Request a new one below.
               </div>
             ) : null}
             <SignInForm nextPath={next} />
