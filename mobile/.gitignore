@@ -1,0 +1,12 @@
+# Capacitor generated native projects (regenerate with `npx cap add ...`)
+/android
+/ios
+
+# Dependencies
+/node_modules
+
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+.DS_Store

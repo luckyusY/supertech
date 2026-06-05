@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/components/cart-provider";
 import { AiSupportWidget } from "@/components/ai-support-widget";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { PwaRegister } from "@/components/pwa-register";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteHeaderFallback } from "@/components/site-header-fallback";
@@ -52,11 +53,23 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: [getAbsoluteUrl("/logo.png")],
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SuperTech",
+  },
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
-    apple: "/logo.png",
+    apple: "/apple-touch-icon.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f68b1e",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -71,6 +84,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <CartProvider>
+          <PwaRegister />
           <SmoothScroll />
           <div className="noise fixed inset-0 -z-10 opacity-40" />
           <div className="relative flex min-h-full flex-col">
