@@ -40,12 +40,19 @@ npm install
 npm run add:android       # Windows/Mac/Linux
 npm run add:ios           # Mac only
 
-# Generate app icons + splash screens from resources/icon.png & splash.png.
-npm run assets
+# Brand the Android launcher icon + splash (uses the web project's sharp).
+npm run icons:android
 
 # Copy config + web assets into the native projects.
 npm run sync
 ```
+
+> **iOS icons/splash:** generate them in Xcode (drag the 1024² `resources/icon.png`
+> into the asset catalog) or, on a Mac, install `@capacitor/assets`
+> (`npm i -D @capacitor/assets`) and run `npx capacitor-assets generate`.
+> `@capacitor/assets` is intentionally **not** a dependency here because its
+> `sharp` binary download fails behind some corporate TLS proxies; the Android
+> script above sidesteps that by reusing the web project's already-installed sharp.
 
 The `android/` and `ios/` folders are **git-ignored** because they're generated and
 machine-specific — anyone can recreate them with the commands above.
