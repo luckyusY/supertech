@@ -340,14 +340,21 @@ export default async function Home() {
   const promoProduct =
     creatorDeals.find((product) => product.slug !== heroProduct.slug) ?? sidebarProduct;
 
-  const averageFulfillment = publicVendors.length
-    ? publicVendors.reduce((total, vendor) => total + Number.parseFloat(vendor.fulfillmentRate), 0) / publicVendors.length
-    : 0;
+  const fulfillmentRates = publicVendors
+    .map((vendor) => Number.parseFloat(vendor.fulfillmentRate))
+    .filter((rate) => Number.isFinite(rate));
+  const averageFulfillment = fulfillmentRates.length
+    ? fulfillmentRates.reduce((total, rate) => total + rate, 0) / fulfillmentRates.length
+    : null;
 
   const heroStats = [
     { iconKey: "package", label: "Live products", value: formatCompactNumber(publicProducts.length) },
     { iconKey: "shield", label: "Vendors", value: formatCompactNumber(publicVendors.length) },
-    { iconKey: "trending", label: "Fulfillment", value: `${averageFulfillment.toFixed(1)}%` },
+    {
+      iconKey: "trending",
+      label: "Fulfillment",
+      value: averageFulfillment === null ? "New" : `${averageFulfillment.toFixed(1)}%`,
+    },
   ] as const;
 
   const heroSlides: HeroSlide[] = [

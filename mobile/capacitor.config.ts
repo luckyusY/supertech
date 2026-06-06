@@ -13,9 +13,6 @@ const config: CapacitorConfig = {
   webDir: "www",
   server: {
     url: "https://www.supertech.africa",
-    hostname: "www.supertech.africa",
-    androidScheme: "https",
-    iosScheme: "https",
     cleartext: false,
     // Open these hosts inside the app's webview; everything else (WhatsApp,
     // payment USSD, external links) is handed off to the OS.

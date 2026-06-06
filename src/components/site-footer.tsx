@@ -17,6 +17,7 @@ const footerGroups = [
       { label: "Official stores", href: "/vendors" },
       { label: "Sell on SuperTech", href: "/become-vendor" },
       { label: "Roadmap", href: "/phases" },
+      { label: "Privacy policy", href: "/privacy" },
       { label: "Account", href: "/account" },
     ],
   },

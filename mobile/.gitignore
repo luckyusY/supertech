@@ -10,3 +10,9 @@
 *.aab
 *.ipa
 .DS_Store
+
+# Local release signing secrets
+*.jks
+*.keystore
+signing.properties
+/keystores/

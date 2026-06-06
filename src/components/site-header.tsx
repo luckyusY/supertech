@@ -8,10 +8,10 @@ import { getAuthSession } from "@/lib/auth";
 import { getPublicCategories } from "@/lib/public-marketplace";
 
 const shopperLinks = [
-  { label: "Vendors", href: "/vendors", icon: Store },
-  { label: "Request Product", href: "/request-product", icon: PackageSearch },
-  { label: "Track Your Order", href: "/track-order", icon: Truck },
-  { label: "Become a Vendor", href: "/become-vendor", icon: ShieldCheck },
+  { label: "Vendors", mobileLabel: "Vendors", href: "/vendors", icon: Store },
+  { label: "Request Product", mobileLabel: "Request", href: "/request-product", icon: PackageSearch },
+  { label: "Track Your Order", mobileLabel: "Track", href: "/track-order", icon: Truck },
+  { label: "Become a Vendor", mobileLabel: "Sell", href: "/become-vendor", icon: ShieldCheck },
 ] as const;
 
 export async function SiteHeader() {
@@ -121,7 +121,7 @@ export async function SiteHeader() {
             </div>
           </div>
 
-          <form action="/catalog" className="mt-3 flex gap-2 md:hidden">
+          <form action="/catalog" className="mt-3 grid grid-cols-[minmax(0,1fr)_92px] gap-2 md:hidden">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
               <input
@@ -139,15 +139,15 @@ export async function SiteHeader() {
             </button>
           </form>
 
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mt-3 grid grid-cols-3 gap-2 md:hidden">
             {shopperLinks.slice(0, 3).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="inline-flex h-9 shrink-0 items-center gap-2 rounded-md border border-white/25 bg-white/12 px-3 text-xs font-semibold text-white"
+                className="inline-flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-md border border-white/35 bg-white/12 px-2 text-xs font-semibold text-white"
               >
-                <link.icon className="h-3.5 w-3.5" />
-                {link.label}
+                <link.icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{link.mobileLabel}</span>
               </Link>
             ))}
           </div>
