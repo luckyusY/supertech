@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, ShoppingBag, Star } from "lucide-react";
+import { Heart, MessageCircle, PenLine, ShoppingBag, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, type MouseEvent } from "react";
@@ -146,27 +146,33 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           <span>({product.reviewCount})</span>
         </div>
 
-        <div className="relative z-20 mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-3 sm:gap-2">
+        <div className="relative z-20 mt-2.5 grid grid-cols-3 gap-1.5 sm:mt-3 sm:gap-2">
           <button
             type="button"
             onClick={handleQuickAdd}
-            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-sm bg-[var(--accent)] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[var(--accent-hover)] sm:h-auto sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
+            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-sm bg-[var(--accent)] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[var(--accent-hover)] sm:h-auto sm:gap-1.5 sm:px-2 sm:py-2.5 sm:text-xs lg:text-sm"
           >
             <ShoppingBag className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            <span className="truncate sm:hidden">Add</span>
-            <span className="hidden truncate sm:inline">Add to cart</span>
+            <span className="truncate">Add</span>
           </button>
           <a
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Chat with ${vendorName} on WhatsApp about ${product.name}`}
-            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-sm bg-[#1fae5b] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[#178d49] sm:h-auto sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm"
+            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-sm bg-[#1fae5b] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[#178d49] sm:h-auto sm:gap-1.5 sm:px-2 sm:py-2.5 sm:text-xs lg:text-sm"
           >
             <MessageCircle className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
-            <span className="truncate sm:hidden">Chat</span>
-            <span className="hidden truncate sm:inline">WhatsApp</span>
+            <span className="truncate">Chat</span>
           </a>
+          <Link
+            href={`/blog/write?product=${encodeURIComponent(product.slug)}`}
+            aria-label={`Write a blog story about ${product.name}`}
+            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-sm bg-[var(--foreground)] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[#111] sm:h-auto sm:gap-1.5 sm:px-2 sm:py-2.5 sm:text-xs lg:text-sm"
+          >
+            <PenLine className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+            <span className="truncate">Story</span>
+          </Link>
         </div>
       </div>
     </motion.article>
