@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { BarChart3, ChevronDown, LayoutDashboard, LogOut, Store, User } from "lucide-react";
 
 type Props = {
@@ -14,7 +13,6 @@ type Props = {
 export function UserMenu({ name, role, dashboardPath }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   // Close on outside click
   useEffect(() => {
@@ -30,8 +28,8 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
   async function signOut() {
     setOpen(false);
     await fetch("/api/auth/sign-out", { method: "POST" });
-    router.push("/sign-in");
-    router.refresh();
+    // Hard navigation so the server-rendered header drops the session immediately.
+    window.location.assign("/sign-in");
   }
 
   const firstName = name.split(" ")[0];

@@ -197,24 +197,30 @@ export function AiSupportWidget() {
   return (
     <div className="fixed bottom-24 right-4 z-[60] sm:bottom-5 sm:right-5">
       {isOpen ? (
-        <section className="flex h-[34rem] max-h-[calc(100vh-8rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[0_16px_50px_rgba(0,0,0,0.22)] sm:w-[24rem]">
+        <section className="flex h-[34rem] max-h-[calc(100vh-8rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[1.4rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(0,0,0,0.28)] sm:w-[25rem]">
           {/* Header */}
-          <div className="flex items-center justify-between gap-3 bg-[var(--foreground)] px-4 py-3 text-white">
-            <div className="flex items-center gap-2.5">
-              <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/12">
+          <div className="relative flex items-center justify-between gap-3 overflow-hidden bg-gradient-to-br from-[var(--accent)] to-[#e07e17] px-4 py-3.5 text-white">
+            <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10" />
+            <div className="relative flex items-center gap-3">
+              <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/25">
                 <Bot className="h-5 w-5" />
-                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--foreground)] bg-[#1fae5b]" />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--accent)] bg-[#1fae5b]" />
               </span>
               <div>
-                <p className="text-sm font-semibold">SuperTech AI</p>
-                <p className="text-xs text-white/60">Shopping &amp; vendor help</p>
+                <p className="flex items-center gap-1.5 text-sm font-bold tracking-[-0.01em]">
+                  SuperTech AI
+                </p>
+                <p className="flex items-center gap-1 text-[11px] text-white/80">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#7CFFB2]" />
+                  Online · replies in seconds
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="relative flex items-center gap-1">
               <button
                 type="button"
                 onClick={resetChat}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Clear conversation"
                 title="Clear conversation"
               >
@@ -223,7 +229,7 @@ export function AiSupportWidget() {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Close AI support"
               >
                 <X className="h-4 w-4" />
@@ -289,18 +295,26 @@ export function AiSupportWidget() {
 
             {/* Suggestions on the welcome screen */}
             {showSuggestions ? (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => void sendMessage(suggestion)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    {suggestion}
-                  </button>
-                ))}
+              <div className="pt-1">
+                <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                  Try asking
+                </p>
+                <div className="mt-2 grid gap-2">
+                  {SUGGESTIONS.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => void sendMessage(suggestion)}
+                      className="group flex items-center justify-between gap-2 rounded-2xl border border-[var(--line)] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[var(--foreground)] transition-all hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+                        {suggestion}
+                      </span>
+                      <Send className="h-3.5 w-3.5 -translate-x-1 text-[var(--accent)] opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : null}
           </div>
@@ -308,39 +322,44 @@ export function AiSupportWidget() {
           {/* Composer */}
           <form
             onSubmit={handleSubmit}
-            className="flex gap-2 border-t border-[var(--line)] bg-white p-3"
+            className="border-t border-[var(--line)] bg-white p-3"
           >
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask SuperTech AI..."
-              className="h-11 min-w-0 flex-1 rounded-full border border-[var(--line)] px-4 text-sm outline-none focus:border-[var(--accent)]"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-55"
-              aria-label="Send message"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
+            <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--background)] py-1 pl-4 pr-1 transition-colors focus-within:border-[var(--accent)] focus-within:bg-white">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="Ask SuperTech AI…"
+                className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--muted)]"
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Send message"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            <p className="mt-2 text-center text-[10px] text-[var(--muted)]">
+              AI can make mistakes — double-check important details.
+            </p>
           </form>
         </section>
       ) : (
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="group inline-flex h-14 items-center gap-2 rounded-full bg-[var(--foreground)] px-4 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.22)] transition-all hover:bg-black hover:shadow-[0_14px_38px_rgba(0,0,0,0.3)]"
+          className="group inline-flex h-14 items-center gap-2.5 rounded-full bg-gradient-to-br from-[var(--accent)] to-[#e07e17] px-4 text-sm font-bold text-white shadow-[0_12px_32px_rgba(246,139,30,0.45)] transition-all hover:shadow-[0_16px_42px_rgba(246,139,30,0.55)] active:scale-95"
           aria-label="Open AI support"
         >
-          <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/12">
+          <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
             <MessageCircle className="h-5 w-5" />
-            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--foreground)] bg-[#1fae5b]" />
+            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full border-2 border-[var(--accent)] bg-[#7CFFB2]" />
           </span>
           <span className="hidden sm:inline">AI Support</span>
         </button>

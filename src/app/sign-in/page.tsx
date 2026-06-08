@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Package, ShieldCheck, Zap } from "lucide-react";
 import { SignInForm } from "@/components/sign-in-form";
@@ -16,8 +17,32 @@ export default async function SignInPage({ searchParams }: Props) {
   const { next, verified, magic } = await searchParams;
 
   return (
-    <div className="page-shell flex min-h-[calc(100vh-80px)] items-center py-8 sm:py-12">
-      <div className="mx-auto grid w-full max-w-4xl gap-6 xl:grid-cols-[1fr_400px]">
+    <div className="relative flex min-h-[calc(100vh-80px)] items-center overflow-hidden py-8 sm:py-12">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(circle at 12% 12%, rgba(246,139,30,0.12), transparent 22rem), radial-gradient(circle at 88% 90%, rgba(39,96,118,0.1), transparent 22rem)",
+        }}
+      />
+      <div className="page-shell mx-auto grid w-full max-w-4xl gap-6 xl:grid-cols-[1fr_400px]">
+        {/* Mobile brand mark */}
+        <div className="flex items-center gap-3 xl:hidden">
+          <Image
+            src="/logo.png"
+            alt="SuperTech"
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-[0.75rem] bg-white object-contain shadow-sm"
+          />
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--accent)]">
+              SuperTech
+            </p>
+            <p className="text-base font-black leading-none tracking-[-0.03em]">Marketplace</p>
+          </div>
+        </div>
+
         {/* Brand panel — hidden on mobile */}
         <section className="dark-card hidden flex-col justify-between p-8 xl:flex lg:p-12">
           <div>

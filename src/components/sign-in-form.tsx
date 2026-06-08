@@ -1,5 +1,4 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Eye, EyeOff, Loader2, Mail, MailCheck } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +11,6 @@ const inputClass =
   "w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30";
 
 export function SignInForm({ nextPath }: Props) {
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,8 +32,10 @@ export function SignInForm({ nextPath }: Props) {
         });
         const payload = (await res.json()) as { error?: string; redirectTo?: string };
         if (!res.ok) throw new Error(payload.error ?? "Unable to sign in.");
-        router.refresh();
-        router.replace(payload.redirectTo ?? "/");
+        // Hard navigation so the server-rendered header/layout re-reads the
+        // freshly set session cookie. A client-side router.replace keeps the
+        // already-rendered layout, leaving the header unaware of the new session.
+        window.location.assign(payload.redirectTo ?? "/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unable to sign in.");
       }

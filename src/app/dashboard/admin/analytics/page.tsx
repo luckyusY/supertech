@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeft, BarChart3, DollarSign, Package, Store, TrendingUp } from "lucide-react";
+import { BarChart3, DollarSign, Package, TrendingUp } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { vendors, products } from "@/lib/marketplace";
@@ -100,33 +100,22 @@ export default async function AdminAnalyticsPage() {
   ];
 
   return (
-    <div className="page-shell py-8">
-      <div className="soft-card p-6 sm:p-8 lg:p-10">
-        <Link
-          href="/dashboard/admin"
-          className="inline-flex items-center gap-2 text-sm text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to dashboard
-        </Link>
-
-        <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-              Marketplace
-            </p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-              Analytics
-            </h1>
-          </div>
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <AdminPageHeader
+        icon={BarChart3}
+        eyebrow="Marketplace"
+        title="Analytics"
+        description="Revenue, payouts, commission, and seller performance across the marketplace."
+        actions={
           <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(8,145,178,0.25)] bg-[rgba(8,145,178,0.08)] px-4 py-2 text-sm font-semibold text-[var(--teal)]">
             <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--teal)]" />
             Live data
           </span>
-        </div>
+        }
+      />
 
         {/* Metrics */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {metrics.map((m) => (
             <div
               key={m.label}
@@ -245,17 +234,6 @@ export default async function AdminAnalyticsPage() {
             </p>
           </div>
         </div>
-
-        <div className="mt-6 flex justify-start">
-          <Link
-            href="/dashboard/admin"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-[var(--foreground)] hover:text-white"
-          >
-            <Store className="h-4 w-4" />
-            Back to control room
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

@@ -1,26 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  BarChart3,
+  ArrowRight,
   BadgeCheck,
   CheckCircle2,
+  LayoutDashboard,
   Package,
-  Shapes,
   ShoppingBag,
   Store,
   TrendingUp,
   Users,
-  KeyRound,
-  Sparkles,
 } from "lucide-react";
-import { AdminOrderOperations } from "@/components/admin-order-operations";
-import { ProductApprovalInbox } from "@/components/product-approval-inbox";
-import { VendorApplicationsInbox } from "@/components/vendor-applications-inbox";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { vendors, products } from "@/lib/marketplace";
 import { getOrderRequestOperationsSnapshot } from "@/lib/order-requests";
-import { getPasswordRecoveryRequests } from "@/lib/password-recovery";
 import { getVendorApplications } from "@/lib/vendor-applications";
 import { formatPrice } from "@/lib/utils";
 
@@ -37,10 +32,9 @@ export default async function AdminDashboardPage() {
     nextPath: "/dashboard/admin",
   });
 
-  const [operationsSnapshot, vendorApplications, passwordRecoveryRequests] = await Promise.all([
+  const [operationsSnapshot, vendorApplications] = await Promise.all([
     hasMongoConfig() ? getOrderRequestOperationsSnapshot().catch(() => null) : Promise.resolve(null),
     hasMongoConfig() ? getVendorApplications().catch(() => []) : Promise.resolve([]),
-    hasMongoConfig() ? getPasswordRecoveryRequests().catch(() => []) : Promise.resolve([]),
   ]);
   const pendingApplicationsCount = vendorApplications.filter((a) => a.status === "pending").length;
 
@@ -75,191 +69,99 @@ export default async function AdminDashboardPage() {
     },
   ];
 
+  const shortcuts = [
+    {
+      href: "/dashboard/admin/orders",
+      label: "Order management",
+      desc: "Confirm, fulfill, and track customer orders",
+      icon: ShoppingBag,
+    },
+    {
+      href: "/dashboard/admin/approvals",
+      label: "Approvals queue",
+      desc: `${pendingApplicationsCount} vendor application${pendingApplicationsCount === 1 ? "" : "s"} pending`,
+      icon: BadgeCheck,
+    },
+    {
+      href: "/dashboard/admin/products",
+      label: "Manage products",
+      desc: "Browse, disable, and write blogs for listings",
+      icon: Package,
+    },
+  ];
+
   const now = new Date();
   const dateLabel = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   return (
-    <div className="page-shell py-8">
-      {/* Header */}
-      <div className="soft-card p-6 sm:p-8 lg:p-10">
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-              {dateLabel}
-            </p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-              Welcome back, {session.name.split(" ")[0]}.
-            </h1>
-            <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-              Here&apos;s what&apos;s happening across the marketplace today.
-            </p>
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <AdminPageHeader
+        icon={LayoutDashboard}
+        eyebrow={dateLabel}
+        title={`Welcome back, ${session.name.split(" ")[0]}.`}
+        description="Here's what's happening across the marketplace today."
+      />
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {metricCards.map((card) => (
-                <div
-                  key={card.label}
-                  className="rounded-[1.5rem] border border-[var(--line)] bg-white/72 p-5"
-                >
-                  <div className={`inline-flex rounded-[0.75rem] p-2 ${card.bg}`}>
-                    <card.icon className={`h-5 w-5 ${card.color}`} />
-                  </div>
-                  <p className="mt-4 text-sm text-[var(--muted)]">{card.label}</p>
-                  <p className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{card.value}</p>
-                </div>
-              ))}
+      {/* Metrics */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metricCards.map((card) => (
+          <div key={card.label} className="soft-card p-5">
+            <div className={`inline-flex rounded-[0.75rem] p-2 ${card.bg}`}>
+              <card.icon className={`h-5 w-5 ${card.color}`} />
             </div>
+            <p className="mt-4 text-sm text-[var(--muted)]">{card.label}</p>
+            <p className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{card.value}</p>
           </div>
-
-          {/* Platform overview */}
-          <div className="dark-card p-6">
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.55)]">
-              Platform overview
-            </p>
-            <div className="mt-5 space-y-4">
-              {[
-                { icon: Store, label: "Verified sellers", value: `${vendors.length} active` },
-                { icon: Package, label: "Listed products", value: `${products.length} live` },
-                { icon: Users, label: "Marketplace status", value: "Open to buyers" },
-                { icon: CheckCircle2, label: "Buyer protection", value: "Enabled on all orders" },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-4 rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <item.icon className="h-4 w-4 text-[rgba(255,255,255,0.55)]" />
-                    <p className="text-sm text-[rgba(255,255,255,0.76)]">{item.label}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-white">{item.value}</p>
-                </div>
-              ))}
-            </div>
-
-            <Link
-              href="/dashboard/admin/analytics"
-              className="mt-6 flex items-center justify-between rounded-[1.2rem] bg-white/10 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/15"
-            >
-              <span className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                View analytics
-              </span>
-              <span className="text-[rgba(255,255,255,0.5)]">→</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Management quick links */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {[
-          {
-            href: "/dashboard/admin/vendors",
-            icon: Store,
-            label: "Manage Vendors",
-            desc: "View, monitor and manage all sellers",
-            color: "text-[var(--teal)]",
-            bg: "bg-[rgba(8,145,178,0.08)]",
-          },
-          {
-            href: "/dashboard/admin/products",
-            icon: Package,
-            label: "Manage Products",
-            desc: "Browse and control all product listings",
-            color: "text-indigo-500",
-            bg: "bg-indigo-50",
-          },
-          {
-            href: "/dashboard/admin/categories",
-            icon: Shapes,
-            label: "Manage Categories",
-            desc: "Show or hide storefront categories in navigation",
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
-          },
-          {
-            href: "/dashboard/admin/analytics",
-            icon: BarChart3,
-            label: "Analytics",
-            desc: "Revenue, orders, and performance metrics",
-            color: "text-[var(--accent)]",
-            bg: "bg-[rgba(37,99,235,0.08)]",
-          },
-          {
-            href: "/dashboard/admin/ai",
-            icon: Sparkles,
-            label: "AI Studio",
-            desc: "Generate articles, content, and support copy",
-            color: "text-[var(--accent)]",
-            bg: "bg-[var(--accent-soft)]",
-          },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="soft-card flex items-start gap-4 p-5 transition-shadow hover:shadow-md"
-          >
-            <div className={`inline-flex rounded-[0.75rem] p-2.5 ${item.bg}`}>
-              <item.icon className={`h-5 w-5 ${item.color}`} />
-            </div>
-            <div>
-              <p className="font-semibold">{item.label}</p>
-              <p className="mt-0.5 text-xs text-[var(--muted)]">{item.desc}</p>
-            </div>
-          </Link>
         ))}
       </div>
 
-      <div className="mt-6 soft-card p-6 sm:p-8">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <KeyRound className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">
-              Password recovery
-            </h2>
-          </div>
-          {passwordRecoveryRequests.length > 0 ? (
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
-              {passwordRecoveryRequests.length} recent
-            </span>
-          ) : null}
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Quick shortcuts */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {shortcuts.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="soft-card group flex items-start gap-4 p-5 transition-shadow hover:shadow-md"
+            >
+              <span className="inline-flex rounded-[0.75rem] bg-[var(--accent-soft)] p-2.5 text-[var(--accent)]">
+                <item.icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 font-semibold">
+                  {item.label}
+                  <ArrowRight className="h-3.5 w-3.5 -translate-x-1 text-[var(--muted)] opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+                </p>
+                <p className="mt-0.5 text-xs leading-5 text-[var(--muted)]">{item.desc}</p>
+              </div>
+            </Link>
+          ))}
         </div>
-        <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-[var(--line)]">
-          {passwordRecoveryRequests.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
-                  {["Request", "Email", "Contact", "Notes"].map((heading) => (
-                    <th
-                      key={heading}
-                      className="px-5 py-3 text-left font-semibold text-[var(--muted)]"
-                    >
-                      {heading}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {passwordRecoveryRequests.map((request) => (
-                  <tr key={request.id} className="border-b border-[var(--line)] last:border-0">
-                    <td className="px-5 py-4 font-semibold">{request.requestId}</td>
-                    <td className="px-5 py-4">
-                      <p className="font-medium">{request.email}</p>
-                      {request.name ? (
-                        <p className="mt-1 text-xs text-[var(--muted)]">{request.name}</p>
-                      ) : null}
-                    </td>
-                    <td className="px-5 py-4 text-[var(--muted)]">
-                      {request.phone || "Not provided"}
-                    </td>
-                    <td className="max-w-xs px-5 py-4 text-[var(--muted)]">
-                      {request.notes || "No notes"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="bg-white px-5 py-6 text-sm text-[var(--muted)]">
-              No password recovery requests yet.
-            </p>
-          )}
+
+        {/* Platform overview */}
+        <div className="dark-card p-6">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.55)]">
+            Platform overview
+          </p>
+          <div className="mt-5 space-y-3">
+            {[
+              { icon: Store, label: "Verified sellers", value: `${vendors.length} active` },
+              { icon: Package, label: "Listed products", value: `${products.length} live` },
+              { icon: Users, label: "Marketplace status", value: "Open to buyers" },
+              { icon: CheckCircle2, label: "Buyer protection", value: "Enabled" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between gap-4 rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3"
+              >
+                <div className="flex items-center gap-3">
+                  <item.icon className="h-4 w-4 text-[rgba(255,255,255,0.55)]" />
+                  <p className="text-sm text-[rgba(255,255,255,0.76)]">{item.label}</p>
+                </div>
+                <p className="text-sm font-semibold text-white">{item.value}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -268,14 +170,14 @@ export default async function AdminDashboardPage() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Store className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Vendor health</h2>
+            <h2 className="text-xl font-semibold tracking-[-0.04em]">Vendor health</h2>
           </div>
           <span className="rounded-full bg-[rgba(8,145,178,0.1)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
             {vendors.length} sellers
           </span>
         </div>
-        <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-[var(--line)]">
-          <table className="w-full text-sm">
+        <div className="mt-6 overflow-x-auto rounded-[1.25rem] border border-[var(--line)]">
+          <table className="w-full min-w-[34rem] text-sm">
             <thead>
               <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
                 {["Vendor", "Location", "Products", "Fulfillment", "Rating"].map((h) => (
@@ -308,53 +210,6 @@ export default async function AdminDashboardPage() {
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* Vendor applications */}
-      <div className="mt-6 soft-card p-6 sm:p-8">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Store className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Vendor applications</h2>
-          </div>
-          {pendingApplicationsCount > 0 && (
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
-              {pendingApplicationsCount} pending
-            </span>
-          )}
-        </div>
-        <div className="mt-6">
-          <VendorApplicationsInbox
-            initialApplications={vendorApplications.map((a) => ({
-              ...a,
-              _id: String(a._id),
-              createdAt: a.createdAt.toISOString(),
-            }))}
-          />
-        </div>
-      </div>
-
-      {/* Order operations + Product approvals */}
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <section className="soft-card p-6 sm:p-8">
-          <div className="flex items-center gap-3">
-            <ShoppingBag className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Order management</h2>
-          </div>
-          <div className="mt-6">
-            <AdminOrderOperations />
-          </div>
-        </section>
-
-        <section className="soft-card p-6 sm:p-8">
-          <div className="flex items-center gap-3">
-            <BadgeCheck className="h-5 w-5 text-[var(--accent)]" />
-            <h2 className="text-2xl font-semibold tracking-[-0.04em]">Product approvals</h2>
-          </div>
-          <div className="mt-6">
-            <ProductApprovalInbox />
-          </div>
-        </section>
       </div>
     </div>
   );

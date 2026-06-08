@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, MapPin, Package, Star, Store } from "lucide-react";
+import { ExternalLink, MapPin, Package, Star, Store } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { requirePageSession } from "@/lib/auth";
 import { getAdminVendors } from "@/lib/public-marketplace";
 import { AdminDeleteButton } from "@/components/admin-delete-button";
@@ -19,37 +20,28 @@ export default async function ManageVendorsPage() {
   const activeCount = vendors.filter((v) => !v.disabled).length;
 
   return (
-    <div className="page-shell py-8">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/dashboard/admin"
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Admin dashboard
-        </Link>
-      </div>
-
-      <div className="mt-4 soft-card p-6 sm:p-8">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Store className="h-5 w-5 text-[var(--accent)]" />
-            <h1 className="text-3xl font-semibold tracking-[-0.04em]">Manage Vendors</h1>
-          </div>
-          <div className="flex items-center gap-2">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <AdminPageHeader
+        icon={Store}
+        eyebrow="Sellers"
+        title="Manage Vendors"
+        description="Monitor every seller, disable built-in stores, or remove vendor accounts."
+        actions={
+          <>
             <span className="rounded-full bg-[rgba(8,145,178,0.1)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
               {activeCount} active
             </span>
-            {vendors.length > activeCount && (
+            {vendors.length > activeCount ? (
               <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
                 {vendors.length - activeCount} disabled
               </span>
-            )}
-          </div>
-        </div>
+            ) : null}
+          </>
+        }
+      />
 
-        <div className="mt-6 overflow-hidden rounded-[1.25rem] border border-[var(--line)]">
-          <table className="w-full text-sm">
+      <div className="mt-6 overflow-x-auto rounded-[1.25rem] border border-[var(--line)] bg-white">
+          <table className="w-full min-w-[48rem] text-sm">
             <thead>
               <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
                 {["Vendor", "Location", "Categories", "Products", "Rating", "Joined", ""].map((h) => (
@@ -148,7 +140,6 @@ export default async function ManageVendorsPage() {
               ))}
             </tbody>
           </table>
-        </div>
       </div>
     </div>
   );

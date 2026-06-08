@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, Package, Pencil, Save, X } from "lucide-react";
+import Link from "next/link";
+import { Clock, Package, Pencil, PenLine, Save, X } from "lucide-react";
 import { ProductImageUploader } from "@/components/product-image-uploader";
 import {
   BADGE_OPTIONS,
@@ -14,6 +15,7 @@ import { formatDateTime, formatPrice } from "@/lib/utils";
 type Submission = {
   id: string;
   submissionId: string;
+  slug: string;
   vendorName: string;
   name: string;
   category: string;
@@ -442,14 +444,26 @@ export function VendorProductSubmissions({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setEditingId((current) => current === sub.id ? null : sub.id)}
-                  className="relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
-                  aria-label={`Edit ${sub.name}`}
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                  {sub.status === "approved" ? (
+                    <Link
+                      href={`/blog/write?product=${encodeURIComponent(sub.slug)}`}
+                      className="relative z-10 inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--accent)]/40 bg-[var(--accent-soft)] px-3 text-xs font-semibold text-[var(--accent)] transition-colors hover:bg-[var(--accent)] hover:text-white"
+                      aria-label={`Write a blog about ${sub.name}`}
+                    >
+                      <PenLine className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Write blog</span>
+                    </Link>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setEditingId((current) => current === sub.id ? null : sub.id)}
+                    className="relative z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
+                    aria-label={`Edit ${sub.name}`}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
               {editingId === sub.id ? (
                 <SubmissionEditForm

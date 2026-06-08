@@ -1,11 +1,9 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Eye, EyeOff, Phone } from "lucide-react";
 import Link from "next/link";
 
 export function SignUpForm() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -49,8 +47,8 @@ export function SignUpForm() {
           setConfirm("");
           return;
         }
-        router.refresh();
-        router.replace(payload.redirectTo ?? "/");
+        // Hard navigation so the server-rendered header picks up the new session.
+        window.location.assign(payload.redirectTo ?? "/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not create account.");
       }
