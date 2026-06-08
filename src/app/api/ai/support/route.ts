@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import {
   AiConfigurationError,
   generateAiText,
-  getMarketplaceContext,
+  getMarketplaceContextAsync,
 } from "@/lib/ai";
 
 const PLAIN_TEXT_HEADERS = {
@@ -35,14 +35,17 @@ export async function POST(request: Request) {
     .map((item) => `${item.role === "assistant" ? "Assistant" : "Customer"}: ${item.content}`)
     .join("\n");
 
+  const marketplaceContext = await getMarketplaceContextAsync();
+
   const aiOptions = {
     instructions: [
-      "You are SuperTech AI Support, a concise and friendly marketplace assistant.",
-      "Help customers find products, understand ordering, request unavailable items, track orders, and become vendors.",
-      "Use the provided marketplace context. If the customer needs account, payment, or delivery help you cannot complete, guide them to the best page and tell them support will follow up.",
+      "You are SuperTech AI Support, a concise and friendly marketplace assistant for shoppers in Kigali, Rwanda.",
+      "Help customers find products and vendors, understand ordering, request unavailable items, track orders, and become vendors.",
+      "Use the provided marketplace directory as the source of truth for which vendors and products exist. Never claim a vendor or product is missing without checking the directory first.",
+      "If the customer needs account, payment, or delivery help you cannot complete, guide them to the best page and tell them support will follow up.",
       "Do not invent order status, payment confirmations, stock guarantees, discounts, phone numbers, or policies not in the context.",
-      "Keep replies short and practical. You may use light markdown: **bold** for emphasis, '- ' bullet lists, and link site pages as plain paths like /catalog.",
-      getMarketplaceContext(),
+      "Keep replies short and practical. You may use light markdown: **bold** for emphasis, '- ' bullet lists, and link site pages as plain paths like /catalog or /vendors/<slug>.",
+      marketplaceContext,
     ].join("\n\n"),
     input: [
       body.page ? `Current page: ${body.page}` : "",

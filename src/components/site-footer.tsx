@@ -6,6 +6,7 @@ const footerGroups = [
     title: "Shop",
     links: [
       { label: "Catalog", href: "/catalog" },
+      { label: "Blog", href: "/blog" },
       { label: "Request product", href: "/request-product" },
       { label: "Track order", href: "/track-order" },
       { label: "Cart", href: "/cart" },

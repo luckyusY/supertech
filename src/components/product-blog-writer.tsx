@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { Check, Copy, Loader2, PenLine, Search, Sparkles } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, PenLine, Rocket, Search, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/marketplace";
 import { formatPrice } from "@/lib/utils";
 
@@ -34,6 +34,9 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [publishState, setPublishState] = useState<"idle" | "publishing" | "done" | "error">("idle");
+  const [publishError, setPublishError] = useState("");
+  const [publishedUrl, setPublishedUrl] = useState("");
 
   const combinedDraft = useMemo(() => {
     if (!draft) return "";
@@ -94,6 +97,42 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
     await navigator.clipboard.writeText(value);
     setCopied(key);
     window.setTimeout(() => setCopied((current) => (current === key ? null : current)), 1800);
+  }
+
+  async function publish() {
+    if (!draft) return;
+
+    setPublishState("publishing");
+    setPublishError("");
+
+    try {
+      const response = await fetch("/api/blog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productSlug: product.slug,
+          title: draft.title,
+          metaTitle: draft.metaTitle,
+          metaDescription: draft.metaDescription,
+          slug: draft.slug,
+          excerpt: draft.excerpt,
+          body: editableBody,
+          keywords: draft.keywords,
+          hashtags: draft.hashtags,
+        }),
+      });
+      const data = (await response.json()) as { url?: string; error?: string };
+
+      if (!response.ok || data.error || !data.url) {
+        throw new Error(data.error ?? "Unable to publish this blog.");
+      }
+
+      setPublishedUrl(data.url);
+      setPublishState("done");
+    } catch (err) {
+      setPublishError(err instanceof Error ? err.message : "Unable to publish this blog.");
+      setPublishState("error");
+    }
   }
 
   return (
@@ -212,24 +251,62 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
           <div className="border-t border-[var(--line)] p-4 sm:p-6">
             {/* SEO panel */}
             <div className="rounded-lg border border-[var(--line)] bg-[var(--background)] p-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
                   <Search className="h-3.5 w-3.5" />
                   SEO metadata
                 </p>
-                <button
-                  type="button"
-                  onClick={() => copyText(combinedDraft, "article")}
-                  className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[var(--foreground)] px-3 text-xs font-semibold text-white"
-                >
-                  {copied === "article" ? (
-                    <Check className="h-3.5 w-3.5 text-[#7CFFB2]" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5" />
-                  )}
-                  {copied === "article" ? "Copied" : "Copy article"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => copyText(combinedDraft, "article")}
+                    className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white px-3 text-xs font-semibold text-[var(--foreground)]"
+                  >
+                    {copied === "article" ? (
+                      <Check className="h-3.5 w-3.5 text-[#1fae5b]" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {copied === "article" ? "Copied" : "Copy"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={publish}
+                    disabled={publishState === "publishing"}
+                    className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-xs font-bold text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-60"
+                  >
+                    {publishState === "publishing" ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Rocket className="h-3.5 w-3.5" />
+                    )}
+                    {publishState === "done" ? "Published" : "Publish"}
+                  </button>
+                </div>
               </div>
+
+              {publishState === "done" && publishedUrl ? (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#bbf7d0] bg-[#dcfce7] px-3 py-2 text-sm text-[#166534]">
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
+                    <Check className="h-4 w-4" />
+                    Blog published &amp; live for SEO.
+                  </span>
+                  <Link
+                    href={publishedUrl}
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 font-semibold underline underline-offset-2"
+                  >
+                    View blog
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              ) : null}
+
+              {publishState === "error" && publishError ? (
+                <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-[var(--red)]">
+                  {publishError}
+                </p>
+              ) : null}
 
               <dl className="mt-3 grid gap-3 sm:grid-cols-2">
                 <SeoField

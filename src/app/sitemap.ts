@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAbsoluteUrl } from "@/lib/site-url";
+import { getPublishedBlogs } from "@/lib/blogs";
+import { hasMongoConfig } from "@/lib/integrations";
 import {
   getPublicCategorySummaries,
   getPublicProducts,
@@ -15,6 +17,7 @@ const staticRoutes: Array<{
 }> = [
   { path: "/", priority: 1, changeFrequency: "daily" },
   { path: "/catalog", priority: 0.95, changeFrequency: "daily" },
+  { path: "/blog", priority: 0.85, changeFrequency: "daily" },
   { path: "/vendors", priority: 0.8, changeFrequency: "daily" },
   { path: "/request-product", priority: 0.6, changeFrequency: "weekly" },
   { path: "/become-vendor", priority: 0.55, changeFrequency: "weekly" },
@@ -24,10 +27,11 @@ const staticRoutes: Array<{
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const [products, vendors, categories] = await Promise.all([
+  const [products, vendors, categories, blogs] = await Promise.all([
     getPublicProducts().catch(() => []),
     getPublicVendors().catch(() => []),
     getPublicCategorySummaries().catch(() => []),
+    hasMongoConfig() ? getPublishedBlogs(200).catch(() => []) : Promise.resolve([]),
   ]);
 
   const routes: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
@@ -63,6 +67,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.65,
+    });
+  }
+
+  for (const blog of blogs) {
+    routes.push({
+      url: getAbsoluteUrl(`/blog/${blog.slug}`),
+      lastModified: new Date(blog.updatedAt),
+      changeFrequency: "weekly",
+      priority: 0.7,
     });
   }
 

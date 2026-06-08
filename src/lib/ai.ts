@@ -47,6 +47,14 @@ export function getAiModel() {
   return readEnvValue("OPENAI_MODEL") || readEnvValue("CHATGPT_MODEL") || "gpt-4.1-mini";
 }
 
+const MARKETPLACE_HOW_TO = [
+  "SuperTech is an online marketplace based in Kigali, Rwanda for tech, beauty, wellness, home essentials, vendors, product requests, cart orders, and order tracking. Prices are in Rwandan Francs (RWF).",
+  "Important customer paths: /catalog, /blog, /request-product, /track-order, /cart, /vendors, /become-vendor, /account.",
+  "How to buy: open a product, then either 'Buy now' (fills the order form), add to cart, or 'Chat on WhatsApp' with the seller.",
+  "Payments: vendors accept MTN MoMoPay — customers dial *182*8*1*<merchant code># shown on the product's MoMoPay card to pay the seller.",
+  "Becoming a vendor: apply at /become-vendor; once approved you manage products, storefront branding, and payment method from the vendor dashboard.",
+];
+
 export function getMarketplaceContext() {
   const productLines = products
     .slice(0, 18)
@@ -61,15 +69,52 @@ export function getMarketplaceContext() {
     .join("\n");
 
   return [
-    "SuperTech is an African marketplace for tech, beauty, wellness, home essentials, vendors, product requests, cart orders, and order tracking.",
-    "Important customer paths: /catalog, /request-product, /track-order, /cart, /vendors, /become-vendor, /account.",
-    "How to buy: open a product, then either 'Buy now' (fills the order form), add to cart, or 'Chat on WhatsApp' with the seller.",
-    "Payments: vendors accept MTN MoMoPay — customers dial *182*8*1*<merchant code># shown on the product's MoMoPay card to pay the seller.",
-    "Becoming a vendor: apply at /become-vendor; once approved you manage products, storefront branding, and payment method from the vendor dashboard.",
+    ...MARKETPLACE_HOW_TO,
     "Sample products:",
     productLines,
     "Sample vendors:",
     vendorLines,
+  ].join("\n");
+}
+
+/**
+ * Builds support context from the LIVE marketplace (seed + approved vendors and
+ * products) so the assistant can answer "is vendor/product X on SuperTech?".
+ */
+export async function getMarketplaceContextAsync() {
+  const { getPublicProducts, getPublicVendors } = await import("@/lib/public-marketplace");
+
+  const [publicProducts, publicVendors] = await Promise.all([
+    getPublicProducts().catch(() => []),
+    getPublicVendors().catch(() => []),
+  ]);
+
+  const vendorLines = publicVendors
+    .slice(0, 60)
+    .map(
+      (vendor) =>
+        `- ${vendor.name} (${vendor.location}) — ${vendor.categories.join(", ")} · /vendors/${vendor.slug}`,
+    )
+    .join("\n");
+
+  const productLines = publicProducts
+    .slice(0, 80)
+    .map(
+      (product) =>
+        `- ${product.name} — ${product.category}, ${product.price} RWF · /products/${product.slug}`,
+    )
+    .join("\n");
+
+  return [
+    ...MARKETPLACE_HOW_TO,
+    "",
+    "VENDOR & PRODUCT DIRECTORY (this is the authoritative, current list of who and what is on SuperTech):",
+    `Vendors (${publicVendors.length}):`,
+    vendorLines || "- (no vendors listed yet)",
+    `Products (${publicProducts.length} total, first 80 shown):`,
+    productLines || "- (no products listed yet)",
+    "",
+    "When a shopper asks whether a vendor or product exists or how to find one: search this directory. If it is listed, confirm it and share its page link. If it is NOT in the directory, say it is not on SuperTech yet (or you couldn't find it) and suggest the closest alternatives or /catalog. Match names loosely (ignore case and small typos).",
   ].join("\n");
 }
 
