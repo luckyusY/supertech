@@ -2,6 +2,55 @@ import { NextResponse } from "next/server";
 import { AiConfigurationError, generateAiText, hasAiConfig } from "@/lib/ai";
 import { getPublicProducts } from "@/lib/public-marketplace";
 
+type PublicProduct = Awaited<ReturnType<typeof getPublicProducts>>[number];
+
+const STOP_WORDS = new Set([
+  "and",
+  "for",
+  "the",
+  "with",
+  "that",
+  "this",
+  "find",
+  "show",
+  "need",
+  "want",
+  "best",
+  "product",
+  "products",
+]);
+
+function getFallbackMatches(products: PublicProduct[], query: string, limit: number) {
+  const terms = query
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map((term) => term.trim())
+    .filter((term) => term.length > 1 && !STOP_WORDS.has(term));
+
+  if (terms.length === 0) return [];
+
+  return products
+    .map((product) => {
+      const name = product.name.toLowerCase();
+      const category = product.category.toLowerCase();
+      const description = product.description.toLowerCase();
+      const features = product.features.join(" ").toLowerCase();
+      const haystack = `${name} ${category} ${description} ${features}`;
+      const score = terms.reduce((total, term) => {
+        if (name.includes(term)) return total + 8;
+        if (category.includes(term)) return total + 5;
+        if (haystack.includes(term)) return total + 2;
+        return total;
+      }, 0);
+
+      return { product, score };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.product)
+    .slice(0, limit);
+}
+
 export async function POST(request: Request) {
   if (!hasAiConfig()) {
     return NextResponse.json({ products: [], note: "AI search is not configured." });
@@ -77,16 +126,17 @@ export async function POST(request: Request) {
       .filter((product): product is NonNullable<typeof product> => Boolean(product))
       .slice(0, limit);
 
-    return NextResponse.json({ products });
+    return NextResponse.json({
+      products: products.length > 0 ? products : getFallbackMatches(allProducts, query, limit),
+    });
   } catch (error) {
     if (error instanceof AiConfigurationError) {
-      return NextResponse.json({ products: [], note: error.message });
+      const products = getFallbackMatches(await getPublicProducts(), query, limit);
+      return NextResponse.json({ products, note: error.message });
     }
 
     console.error("AI search error", error);
-    return NextResponse.json(
-      { error: "AI search is unavailable right now." },
-      { status: 500 },
-    );
+    const products = getFallbackMatches(await getPublicProducts(), query, limit);
+    return NextResponse.json({ products, note: "AI search fallback was used." });
   }
 }
