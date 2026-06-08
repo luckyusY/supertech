@@ -8,11 +8,11 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * shown if the site can't be reached on first launch.
  */
 const config: CapacitorConfig = {
-  appId: "africa.supertech.app",
+  appId: "africa.supertech.marketplace",
   appName: "SuperTech",
   webDir: "www",
   server: {
-    url: "https://www.supertech.africa",
+    url: "https://www.supertech.africa/app",
     cleartext: false,
     // Open these hosts inside the app's webview; everything else (WhatsApp,
     // payment USSD, external links) is handed off to the OS.

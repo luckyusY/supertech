@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/cart-provider";
 import { AiSupportWidget } from "@/components/ai-support-widget";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { PwaRegister } from "@/components/pwa-register";
+import { SiteChrome } from "@/components/site-chrome";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteHeaderFallback } from "@/components/site-header-fallback";
@@ -88,13 +89,18 @@ export default function RootLayout({
           <SmoothScroll />
           <div className="noise fixed inset-0 -z-10 opacity-40" />
           <div className="relative flex min-h-full flex-col">
-            <Suspense fallback={<SiteHeaderFallback />}>
-              <SiteHeader />
-            </Suspense>
-            <main className="flex-1 pb-20 sm:pb-0">{children}</main>
-            <SiteFooter />
-            <MobileBottomNav />
-            <AiSupportWidget />
+            <SiteChrome
+              header={
+                <Suspense fallback={<SiteHeaderFallback />}>
+                  <SiteHeader />
+                </Suspense>
+              }
+              footer={<SiteFooter />}
+              mobileNav={<MobileBottomNav />}
+              support={<AiSupportWidget />}
+            >
+              {children}
+            </SiteChrome>
           </div>
           <Toaster
             position="bottom-right"
