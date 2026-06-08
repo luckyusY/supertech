@@ -46,3 +46,5 @@ next-env.d.ts
 
 # local product import data
 /super-store-vendor-products
+
+.vercel

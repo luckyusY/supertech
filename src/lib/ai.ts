@@ -29,12 +29,22 @@ export class AiConfigurationError extends Error {
   }
 }
 
+function readEnvValue(name: string) {
+  const value = process.env[name]?.trim();
+  if (!value || value === '""' || value === "''") return "";
+  return value;
+}
+
+function getAiApiKey() {
+  return readEnvValue("OPENAI_API_KEY") || readEnvValue("CHATGPT_API_KEY");
+}
+
 export function hasAiConfig() {
-  return Boolean(process.env.OPENAI_API_KEY || process.env.CHATGPT_API_KEY);
+  return Boolean(getAiApiKey());
 }
 
 export function getAiModel() {
-  return process.env.OPENAI_MODEL || process.env.CHATGPT_MODEL || "gpt-4.1-mini";
+  return readEnvValue("OPENAI_MODEL") || readEnvValue("CHATGPT_MODEL") || "gpt-4.1-mini";
 }
 
 export function getMarketplaceContext() {
@@ -69,7 +79,7 @@ export async function generateAiText({
   temperature = 0.5,
   maxOutputTokens = 900,
 }: GenerateAiTextOptions) {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.CHATGPT_API_KEY;
+  const apiKey = getAiApiKey();
   if (!apiKey) {
     throw new AiConfigurationError();
   }
@@ -80,6 +90,7 @@ export async function generateAiText({
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
+    signal: AbortSignal.timeout(25000),
     body: JSON.stringify({
       model: getAiModel(),
       instructions,
@@ -122,7 +133,7 @@ export async function streamAiText({
   temperature = 0.5,
   maxOutputTokens = 900,
 }: GenerateAiTextOptions): Promise<ReadableStream<Uint8Array>> {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.CHATGPT_API_KEY;
+  const apiKey = getAiApiKey();
   if (!apiKey) {
     throw new AiConfigurationError();
   }
@@ -133,6 +144,7 @@ export async function streamAiText({
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
+    signal: AbortSignal.timeout(25000),
     body: JSON.stringify({
       model: getAiModel(),
       instructions,

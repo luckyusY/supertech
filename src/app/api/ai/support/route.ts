@@ -3,7 +3,6 @@ import {
   AiConfigurationError,
   generateAiText,
   getMarketplaceContext,
-  streamAiText,
 } from "@/lib/ai";
 
 const PLAIN_TEXT_HEADERS = {
@@ -57,21 +56,8 @@ export async function POST(request: Request) {
   };
 
   try {
-    // Prefer streaming. Some OpenAI organizations are not verified for
-    // streaming (non-streaming requests still succeed), so fall back to a
-    // single non-streamed response if streaming is rejected. The client
-    // reads both the same way.
-    try {
-      const stream = await streamAiText(aiOptions);
-      return new Response(stream, { headers: PLAIN_TEXT_HEADERS });
-    } catch (streamError) {
-      if (streamError instanceof AiConfigurationError) {
-        throw streamError;
-      }
-      console.warn("AI support streaming failed, using non-streaming fallback:", streamError);
-      const reply = await generateAiText(aiOptions);
-      return new Response(reply, { headers: PLAIN_TEXT_HEADERS });
-    }
+    const reply = await generateAiText(aiOptions);
+    return new Response(reply, { headers: PLAIN_TEXT_HEADERS });
   } catch (error) {
     if (error instanceof AiConfigurationError) {
       return NextResponse.json({ error: error.message }, { status: 503 });
