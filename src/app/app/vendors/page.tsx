@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, ShieldCheck, Star } from "lucide-react";
-import { AppBottomTabs } from "@/components/app-bottom-tabs";
+import { AppHeader } from "@/components/app-header";
 import { getPublicVendors } from "@/lib/public-marketplace";
 
 export const dynamic = "force-dynamic";
@@ -10,21 +10,18 @@ export default async function AppVendorsPage() {
   const vendors = await getPublicVendors();
 
   return (
-    <div className="min-h-screen bg-[#f3f6f2] pb-24 text-[#102019]">
-      <header className="sticky top-0 z-40 border-b border-black/6 bg-[#f3f6f2]/92 px-4 py-3 backdrop-blur">
-        <div className="mx-auto max-w-md">
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#66736b]">
-            Official stores
-          </p>
-          <h1 className="text-2xl font-black tracking-[-0.04em]">Vendors</h1>
-        </div>
-      </header>
+    <>
+      <AppHeader
+        eyebrow="Official stores"
+        title="Vendors"
+        subtitle={`${vendors.length} verified sellers`}
+      />
       <main className="mx-auto max-w-md space-y-3 px-4 py-4">
         {vendors.map((vendor) => (
           <Link
             key={vendor.id}
             href={`/vendors/${vendor.slug}`}
-            className="block overflow-hidden rounded-lg bg-white shadow-sm"
+            className="app-tap block overflow-hidden rounded-lg bg-white shadow-sm"
           >
             <div className="relative h-32">
               <Image src={vendor.coverImage} alt={vendor.name} fill className="object-cover" sizes="448px" />
@@ -55,7 +52,6 @@ export default async function AppVendorsPage() {
           </Link>
         ))}
       </main>
-      <AppBottomTabs />
-    </div>
+    </>
   );
 }

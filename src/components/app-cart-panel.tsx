@@ -19,7 +19,7 @@ export function AppCartPanel() {
         </p>
         <Link
           href="/app/shop"
-          className="mt-5 inline-flex h-12 items-center justify-center rounded-lg bg-[#102019] px-5 text-sm font-black text-white"
+          className="app-tap mt-5 inline-flex h-12 items-center justify-center rounded-lg bg-[#102019] px-5 text-sm font-black text-white"
         >
           Start shopping
         </Link>
@@ -51,7 +51,7 @@ export function AppCartPanel() {
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.slug, item.quantity - 1)}
-                    className="grid h-8 w-8 place-items-center rounded-md bg-[#f3f6f2]"
+                    className="app-tap grid h-8 w-8 place-items-center rounded-md bg-[#f3f6f2]"
                     aria-label="Decrease quantity"
                   >
                     <Minus className="h-4 w-4" />
@@ -62,7 +62,7 @@ export function AppCartPanel() {
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.slug, item.quantity + 1)}
-                    className="grid h-8 w-8 place-items-center rounded-md bg-[#f3f6f2]"
+                    className="app-tap grid h-8 w-8 place-items-center rounded-md bg-[#f3f6f2]"
                     aria-label="Increase quantity"
                   >
                     <Plus className="h-4 w-4" />
@@ -70,7 +70,7 @@ export function AppCartPanel() {
                   <button
                     type="button"
                     onClick={() => removeItem(item.slug)}
-                    className="grid h-8 w-8 place-items-center rounded-md bg-[#fde7ea] text-[#f04438]"
+                    className="app-tap grid h-8 w-8 place-items-center rounded-md bg-[#fde7ea] text-[#f04438]"
                     aria-label="Remove item"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -84,7 +84,7 @@ export function AppCartPanel() {
 
       <Link
         href="/order"
-        className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-[#f68b1e] text-sm font-black text-white"
+        className="app-tap inline-flex h-12 w-full items-center justify-center rounded-lg bg-[#f68b1e] text-sm font-black text-white"
       >
         Continue checkout
       </Link>

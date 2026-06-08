@@ -11,7 +11,6 @@ import {
   Store,
   Truck,
 } from "lucide-react";
-import { AppBottomTabs } from "@/components/app-bottom-tabs";
 import { AppProductCard, AppRequestButton } from "@/components/app-product-card";
 import {
   getPublicCategorySummaries,
@@ -47,10 +46,10 @@ export default async function AppHomePage() {
     .slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-[#f3f6f2] pb-24 text-[#102019]">
-      <header className="sticky top-0 z-40 border-b border-black/6 bg-[#f3f6f2]/92 px-4 py-3 backdrop-blur">
+    <>
+      <header className="app-safe-top sticky top-0 z-40 border-b border-black/6 bg-[#f3f6f2]/92 px-4 pb-3 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-          <Link href="/app" className="flex min-w-0 items-center gap-2">
+          <Link href="/app" className="app-tap flex min-w-0 items-center gap-2">
             <Image
               src="/logo.png"
               alt="SuperTech"
@@ -69,14 +68,14 @@ export default async function AppHomePage() {
           <div className="flex items-center gap-2">
             <Link
               href="/track-order"
-              className="grid h-10 w-10 place-items-center rounded-lg bg-white text-[#102019] shadow-sm"
+              className="app-tap grid h-10 w-10 place-items-center rounded-lg bg-white text-[#102019] shadow-sm"
               aria-label="Track order"
             >
               <PackageSearch className="h-5 w-5" />
             </Link>
             <Link
               href="/account"
-              className="grid h-10 w-10 place-items-center rounded-lg bg-[#102019] text-white shadow-sm"
+              className="app-tap grid h-10 w-10 place-items-center rounded-lg bg-[#102019] text-white shadow-sm"
               aria-label="Account"
             >
               <Bell className="h-5 w-5" />
@@ -183,7 +182,7 @@ export default async function AppHomePage() {
                 <Link
                   key={category.name}
                   href={`/app/shop?category=${encodeURIComponent(category.name)}`}
-                  className="min-w-[9rem] rounded-lg border border-black/10 bg-white p-3 shadow-sm"
+                  className="app-tap min-w-[9rem] rounded-lg border border-black/10 bg-white p-3 shadow-sm"
                 >
                   <p className="line-clamp-2 min-h-10 text-sm font-black leading-5">
                     {category.name}
@@ -235,7 +234,7 @@ export default async function AppHomePage() {
                 <Link
                   key={vendor.id}
                   href={`/vendors/${vendor.slug}`}
-                  className="flex items-center gap-3 rounded-lg bg-white/10 p-3"
+                  className="app-tap flex items-center gap-3 rounded-lg bg-white/10 p-3"
                 >
                   <div
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-black text-white"
@@ -256,9 +255,7 @@ export default async function AppHomePage() {
           </section>
         ) : null}
       </main>
-
-      <AppBottomTabs />
-    </div>
+    </>
   );
 }
 
@@ -285,7 +282,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="flex min-w-0 flex-col items-center gap-2 rounded-lg border border-black/10 bg-white p-3 shadow-sm"
+      className="app-tap flex min-w-0 flex-col items-center gap-2 rounded-lg border border-black/10 bg-white p-3 shadow-sm"
     >
       <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#fff4e5] text-[#f68b1e]">
         <Icon className="h-5 w-5" />
@@ -344,7 +341,9 @@ function ProductShelf({
       </div>
       <div className="mt-3 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {products.map((product) => (
-          <AppProductCard key={product.id} product={product} />
+          <div key={product.id} className="w-44 shrink-0">
+            <AppProductCard product={product} />
+          </div>
         ))}
       </div>
     </section>

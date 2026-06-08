@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Search, SlidersHorizontal } from "lucide-react";
-import { AppBottomTabs } from "@/components/app-bottom-tabs";
+import { AppHeader } from "@/components/app-header";
 import { AppProductCard } from "@/components/app-product-card";
 import { getVendorBySlug } from "@/lib/marketplace";
 import { getPublicCategories, getPublicProducts } from "@/lib/public-marketplace";
@@ -27,8 +27,12 @@ export default async function AppShopPage({ searchParams }: AppShopPageProps) {
   });
 
   return (
-    <div className="min-h-screen bg-[#f3f6f2] pb-24 text-[#102019]">
-      <AppHeader title="Shop" subtitle={`${filteredProducts.length} products`} />
+    <>
+      <AppHeader
+        eyebrow="SuperTech App"
+        title="Shop"
+        subtitle={`${filteredProducts.length} products`}
+      />
       <main className="mx-auto max-w-md space-y-4 px-4 py-4">
         <form action="/app/shop" className="grid grid-cols-[minmax(0,1fr)_52px] gap-2">
           <label className="relative block">
@@ -61,7 +65,7 @@ export default async function AppShopPage({ searchParams }: AppShopPageProps) {
               <Link
                 key={item}
                 href={href}
-                className={`shrink-0 rounded-lg px-3 py-2 text-xs font-black ${
+                className={`app-tap shrink-0 rounded-lg px-3 py-2 text-xs font-black ${
                   active ? "bg-[#102019] text-white" : "bg-white text-[#102019]"
                 }`}
               >
@@ -92,21 +96,6 @@ export default async function AppShopPage({ searchParams }: AppShopPageProps) {
           </div>
         )}
       </main>
-      <AppBottomTabs />
-    </div>
-  );
-}
-
-function AppHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <header className="sticky top-0 z-40 border-b border-black/6 bg-[#f3f6f2]/92 px-4 py-3 backdrop-blur">
-      <div className="mx-auto max-w-md">
-        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#66736b]">
-          SuperTech App
-        </p>
-        <h1 className="text-2xl font-black tracking-[-0.04em]">{title}</h1>
-        <p className="text-sm font-semibold text-[#66736b]">{subtitle}</p>
-      </div>
-    </header>
+    </>
   );
 }

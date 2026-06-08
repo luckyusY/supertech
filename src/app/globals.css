@@ -44,6 +44,28 @@ html {
   padding-bottom: env(safe-area-inset-bottom, 0.5rem);
 }
 
+/* Top safe area for full-screen app shell / TWA (status bar overlap) */
+.app-safe-top {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
+/* Native-feel app shell: contain overscroll glow, smooth momentum scroll,
+   and stop long-press text selection on tappable surfaces. */
+.app-shell {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-tap {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.app-tap:active {
+  transform: scale(0.97);
+}
+
 /* Skeleton pulse override for brand colors */
 @keyframes skeleton-pulse {
   0%, 100% { opacity: 1; }

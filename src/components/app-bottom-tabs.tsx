@@ -29,10 +29,11 @@ export function AppBottomTabs() {
             <Link
               key={tab.href}
               href={tab.href}
-              className="relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
+              aria-current={isActive ? "page" : undefined}
+              className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
             >
               <span
-                className={`relative flex h-9 w-9 items-center justify-center rounded-lg ${
+                className={`relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
                   isActive ? "bg-[#fff4e5] text-[#f68b1e]" : "text-[#67726b]"
                 }`}
               >

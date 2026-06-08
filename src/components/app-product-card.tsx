@@ -44,8 +44,8 @@ export function AppProductCard({ product }: AppProductCardProps) {
   }
 
   return (
-    <article className="min-w-[11rem] overflow-hidden rounded-lg border border-black/10 bg-white shadow-[0_8px_22px_rgba(16,32,25,0.08)]">
-      <Link href={`/products/${product.slug}`} className="block">
+    <article className="flex w-full flex-col overflow-hidden rounded-lg border border-black/10 bg-white shadow-[0_8px_22px_rgba(16,32,25,0.08)]">
+      <Link href={`/products/${product.slug}`} className="block transition active:opacity-90">
         <div className="relative aspect-[1.05] overflow-hidden bg-[#f4f5f3]">
           <Image
             src={product.heroImage}
@@ -85,11 +85,11 @@ export function AppProductCard({ product }: AppProductCardProps) {
           </div>
         </div>
       </Link>
-      <div className="grid grid-cols-[1fr_44px] gap-2 border-t border-black/6 p-2">
+      <div className="mt-auto grid grid-cols-[1fr_44px] gap-2 border-t border-black/6 p-2">
         <button
           type="button"
           onClick={handleAdd}
-          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-[#f68b1e] px-3 text-xs font-black text-white"
+          className="app-tap inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-[#f68b1e] px-3 text-xs font-black text-white"
         >
           <ShoppingBag className="h-4 w-4" />
           Add
@@ -98,7 +98,7 @@ export function AppProductCard({ product }: AppProductCardProps) {
           href={whatsappHref}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex h-10 items-center justify-center rounded-md bg-[#1fae5b] text-white"
+          className="app-tap inline-flex h-10 items-center justify-center rounded-md bg-[#1fae5b] text-white"
           aria-label={`Chat with ${vendorName}`}
         >
           <MessageCircle className="h-4 w-4" />
@@ -112,7 +112,7 @@ export function AppRequestButton() {
   return (
     <Link
       href="/request-product"
-      className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#102019] px-4 text-sm font-black text-white"
+      className="app-tap inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#102019] px-4 text-sm font-black text-white"
     >
       <Plus className="h-4 w-4" />
       Request item
