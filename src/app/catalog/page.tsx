@@ -7,7 +7,7 @@ import { getVendorBySlug } from "@/lib/marketplace";
 import { getPublicCategories, getPublicProducts } from "@/lib/public-marketplace";
 
 type CatalogPageProps = {
-  searchParams: Promise<{ category?: string; query?: string }>;
+  searchParams: Promise<{ category?: string; query?: string; ai?: string }>;
 };
 
 export const metadata: Metadata = {
@@ -18,8 +18,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
-  const { category, query } = await searchParams;
+  const { category, query, ai } = await searchParams;
   const normalizedQuery = query?.trim().toLowerCase() ?? "";
+  const aiMode = ai === "1";
 
   const [products, categories] = await Promise.all([
     getPublicProducts(),
@@ -64,7 +65,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   return (
     <div className="marketplace-campaign-bg py-5 sm:py-6">
       <div className="page-shell">
-        <AiSearchBar />
+        <AiSearchBar initialQuery={aiMode ? query?.trim() ?? "" : ""} autoRun={aiMode} />
         <div className="soft-card overflow-hidden">
         <div className="border-b border-[var(--line)] bg-white px-4 py-4 sm:px-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">

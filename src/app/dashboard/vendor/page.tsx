@@ -9,6 +9,7 @@ import {
   Star,
   Wallet,
 } from "lucide-react";
+import { VendorBlogStudio } from "@/components/vendor-blog-studio";
 import { VendorOrderQueue } from "@/components/vendor-order-queue";
 import { VendorPayoutSummary } from "@/components/vendor-payout-summary";
 import { VendorProductWorkspace } from "@/components/vendor-product-workspace";
@@ -17,7 +18,7 @@ import { VendorStorefrontForm } from "@/components/vendor-storefront-form";
 import { getAccessibleVendorsAsync, requirePageSession } from "@/lib/auth";
 import { getIntegrationStatus } from "@/lib/integrations";
 import { getVendorBySlug, vendorDashboardHighlights } from "@/lib/marketplace";
-import { getProductListingCategories } from "@/lib/public-marketplace";
+import { getProductListingCategories, getPublicVendorProducts } from "@/lib/public-marketplace";
 
 export const metadata: Metadata = {
   title: "Vendor Dashboard",
@@ -41,6 +42,16 @@ export default async function VendorDashboardPage() {
   if (!initialVendorSlug) {
     redirect("/forbidden");
   }
+
+  const vendorProducts = currentVendor
+    ? await getPublicVendorProducts(currentVendor.slug).catch(() => [])
+    : [];
+  const blogStudioProducts = vendorProducts.slice(0, 16).map((product) => ({
+    slug: product.slug,
+    name: product.name,
+    category: product.category,
+    heroImage: product.heroImage,
+  }));
 
   const highlightIcons = [ShoppingBag, Package, Star];
 
@@ -121,6 +132,11 @@ export default async function VendorDashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* AI SEO blog studio */}
+      <div className="mt-6">
+        <VendorBlogStudio products={blogStudioProducts} />
       </div>
 
       {/* Storefront branding */}

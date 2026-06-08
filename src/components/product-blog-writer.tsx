@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { Check, Copy, Loader2, PenLine, Sparkles } from "lucide-react";
+import { Check, Copy, Loader2, PenLine, Search, Sparkles } from "lucide-react";
 import type { Product } from "@/lib/marketplace";
 import { formatPrice } from "@/lib/utils";
 
@@ -14,6 +14,10 @@ type ProductBlogWriterProps = {
 
 type BlogDraft = {
   title: string;
+  metaTitle: string;
+  metaDescription: string;
+  slug: string;
+  keywords: string[];
   excerpt: string;
   body: string;
   hashtags: string[];
@@ -29,7 +33,7 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
   const [editableBody, setEditableBody] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const combinedDraft = useMemo(() => {
     if (!draft) return "";
@@ -38,14 +42,14 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
       ? `\n\n${draft.hashtags.map((tag) => `#${tag}`).join(" ")}`
       : "";
 
-    return `${draft.title}\n\n${draft.excerpt}\n\n${editableBody}${tags}`;
+    return `# ${draft.title}\n\n${draft.excerpt}\n\n${editableBody}${tags}`;
   }, [draft, editableBody]);
 
   async function generate(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     setState("loading");
     setError("");
-    setCopied(false);
+    setCopied(null);
 
     try {
       const response = await fetch("/api/ai/product-blog", {
@@ -64,8 +68,12 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
         throw new Error(data.error ?? "Unable to generate this story.");
       }
 
-      const nextDraft = {
+      const nextDraft: BlogDraft = {
         title: String(data.title || ""),
+        metaTitle: String(data.metaTitle || data.title || ""),
+        metaDescription: String(data.metaDescription || data.excerpt || ""),
+        slug: String(data.slug || ""),
+        keywords: Array.isArray(data.keywords) ? data.keywords.map(String) : [],
         excerpt: String(data.excerpt || ""),
         body: String(data.body || ""),
         hashtags: Array.isArray(data.hashtags) ? data.hashtags.map(String) : [],
@@ -80,12 +88,12 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
     }
   }
 
-  async function copyDraft() {
-    if (!combinedDraft) return;
+  async function copyText(value: string, key: string) {
+    if (!value) return;
 
-    await navigator.clipboard.writeText(combinedDraft);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    await navigator.clipboard.writeText(value);
+    setCopied(key);
+    window.setTimeout(() => setCopied((current) => (current === key ? null : current)), 1800);
   }
 
   return (
@@ -129,25 +137,27 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
           <div className="flex items-center gap-2 text-[var(--accent)]">
             <Sparkles className="h-4 w-4" />
             <p className="text-xs font-semibold uppercase tracking-[0.18em]">
-              AI product story
+              AI SEO blog writer
             </p>
           </div>
           <h1 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
-            Write a blog about this product
+            Write an SEO blog about this product
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            Choose an angle, generate a draft, then edit the story before sharing it.
+            Pick a focus keyword and tone, then generate a search-optimized article with meta title, description, slug, and keywords — ready to publish.
           </p>
         </div>
 
         <form onSubmit={generate} className="grid gap-4 p-4 sm:p-6">
           <label className="grid gap-2">
-            <span className="text-sm font-semibold text-[var(--foreground)]">Story angle</span>
+            <span className="text-sm font-semibold text-[var(--foreground)]">
+              Focus keyword / angle
+            </span>
             <textarea
               value={angle}
               onChange={(event) => setAngle(event.target.value)}
               className="min-h-24 rounded-md border border-[var(--line)] bg-white px-3 py-2 text-sm leading-6 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
-              placeholder="Example: how this product helps a busy student, creator, parent, vendor..."
+              placeholder="Example: best budget skincare in Rwanda, gift for gamers, affordable home office upgrade..."
             />
           </label>
 
@@ -194,36 +204,93 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
             ) : (
               <PenLine className="h-4 w-4" />
             )}
-            {draft ? "Regenerate story" : "Generate story"}
+            {draft ? "Regenerate SEO blog" : "Generate SEO blog"}
           </button>
         </form>
 
         {draft ? (
           <div className="border-t border-[var(--line)] p-4 sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            {/* SEO panel */}
+            <div className="rounded-lg border border-[var(--line)] bg-[var(--background)] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
+                  <Search className="h-3.5 w-3.5" />
+                  SEO metadata
+                </p>
+                <button
+                  type="button"
+                  onClick={() => copyText(combinedDraft, "article")}
+                  className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[var(--foreground)] px-3 text-xs font-semibold text-white"
+                >
+                  {copied === "article" ? (
+                    <Check className="h-3.5 w-3.5 text-[#7CFFB2]" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  {copied === "article" ? "Copied" : "Copy article"}
+                </button>
+              </div>
+
+              <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                <SeoField
+                  label="Meta title"
+                  value={draft.metaTitle}
+                  hint={`${draft.metaTitle.length}/60`}
+                  copied={copied === "metaTitle"}
+                  onCopy={() => copyText(draft.metaTitle, "metaTitle")}
+                />
+                <SeoField
+                  label="URL slug"
+                  value={draft.slug}
+                  copied={copied === "slug"}
+                  onCopy={() => copyText(draft.slug, "slug")}
+                />
+                <div className="sm:col-span-2">
+                  <SeoField
+                    label="Meta description"
+                    value={draft.metaDescription}
+                    hint={`${draft.metaDescription.length}/160`}
+                    copied={copied === "metaDescription"}
+                    onCopy={() => copyText(draft.metaDescription, "metaDescription")}
+                  />
+                </div>
+              </dl>
+
+              {draft.keywords.length ? (
+                <div className="mt-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                    Keywords
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {draft.keywords.map((keyword) => (
+                      <span
+                        key={keyword}
+                        className="rounded-full border border-[var(--line)] bg-white px-2.5 py-0.5 text-xs font-medium text-[var(--foreground)]"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-5 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                  Editable draft
+                  Editable article (markdown)
                 </p>
                 <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--foreground)]">
                   {draft.title}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{draft.excerpt}</p>
               </div>
-              <button
-                type="button"
-                onClick={copyDraft}
-                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white px-3 text-sm font-semibold text-[var(--foreground)]"
-              >
-                {copied ? <Check className="h-4 w-4 text-[#1fae5b]" /> : <Copy className="h-4 w-4" />}
-                {copied ? "Copied" : "Copy"}
-              </button>
             </div>
 
             <textarea
               value={editableBody}
               onChange={(event) => setEditableBody(event.target.value)}
-              className="mt-4 min-h-[360px] w-full rounded-md border border-[var(--line)] bg-[#fffdf9] px-3 py-3 text-sm leading-7 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
+              className="mt-4 min-h-[360px] w-full rounded-md border border-[var(--line)] bg-[#fffdf9] px-3 py-3 font-mono text-[13px] leading-7 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
             />
 
             {draft.hashtags.length ? (
@@ -241,6 +308,44 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
           </div>
         ) : null}
       </section>
+    </div>
+  );
+}
+
+type SeoFieldProps = {
+  label: string;
+  value: string;
+  hint?: string;
+  copied: boolean;
+  onCopy: () => void;
+};
+
+function SeoField({ label, value, hint, copied, onCopy }: SeoFieldProps) {
+  return (
+    <div className="rounded-md border border-[var(--line)] bg-white p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+          {label}
+        </p>
+        <div className="flex items-center gap-2">
+          {hint ? <span className="text-[10px] text-[var(--muted)]">{hint}</span> : null}
+          <button
+            type="button"
+            onClick={onCopy}
+            className="text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+            aria-label={`Copy ${label}`}
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-[#1fae5b]" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+      </div>
+      <p className="mt-1 break-words text-sm font-medium text-[var(--foreground)]">
+        {value || "—"}
+      </p>
     </div>
   );
 }

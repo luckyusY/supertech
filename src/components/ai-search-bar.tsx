@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { Loader2, Sparkles, X } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/marketplace";
@@ -11,11 +11,26 @@ const EXAMPLES = [
   "something to upgrade my home office",
 ];
 
-export function AiSearchBar() {
-  const [query, setQuery] = useState("");
+type AiSearchBarProps = {
+  initialQuery?: string;
+  autoRun?: boolean;
+};
+
+export function AiSearchBar({ initialQuery = "", autoRun = false }: AiSearchBarProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<Product[] | null>(null);
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
+  const autoRanFor = useRef<string | null>(null);
+
+  // Auto-run when the shopper arrived via the header "switch to AI" toggle.
+  useEffect(() => {
+    const value = initialQuery.trim();
+    if (autoRun && value.length >= 2 && autoRanFor.current !== value) {
+      autoRanFor.current = value;
+      void runSearch(value);
+    }
+  }, [autoRun, initialQuery]);
 
   async function runSearch(text: string) {
     const value = text.trim();

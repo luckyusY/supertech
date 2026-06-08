@@ -44,15 +44,24 @@ export async function POST(request: Request) {
   try {
     const raw = await generateAiText({
       instructions: [
-        "You write helpful product stories for SuperTech, an African online marketplace.",
-        "Write a blog-style story that a shopper can edit before sharing.",
+        "You are an SEO content writer for SuperTech, an African online marketplace.",
+        "Write a search-engine-optimized blog article about the product that a shopper or vendor can edit before publishing.",
+        "GOAL: rank on Google and drive organic traffic to the product. Optimize for SEO throughout.",
         "Be accurate. Do not invent specs, certifications, quantities, warranties, or claims not provided.",
-        "Mention the product naturally and explain practical use cases.",
-        "Keep it clear for mobile readers.",
+        "Naturally weave in relevant keywords (the product name, category, use-cases, and buyer intent terms). Do not keyword-stuff.",
+        "Structure the body with clear H2/H3 markdown headings (## and ###), short scannable paragraphs, and at least one bulleted list.",
+        "Include a short FAQ section (2-3 questions) near the end.",
+        "Write for mobile readers in clear, helpful language.",
         "Return ONLY valid minified JSON, no markdown fences, with this exact shape:",
-        '{"title": string, "excerpt": string, "body": string, "hashtags": string[]}',
-        "Body should be 5-7 short paragraphs, separated by blank lines.",
-        "Hashtags should be 3-6 short tags without spaces.",
+        '{"title": string, "metaTitle": string, "metaDescription": string, "slug": string, "keywords": string[], "excerpt": string, "body": string, "hashtags": string[]}',
+        "title: the on-page H1 (compelling, includes the main keyword).",
+        "metaTitle: <= 60 characters, keyword-first, for the <title> tag.",
+        "metaDescription: 140-160 characters, includes the main keyword and a call to action.",
+        "slug: lowercase, hyphenated, <= 70 characters, derived from the title.",
+        "keywords: 5-8 SEO keywords/phrases.",
+        "excerpt: 1-2 sentence summary.",
+        "body: 6-9 short sections using markdown headings, lists, and a FAQ. Use blank lines between blocks.",
+        "hashtags: 4-6 short social tags without spaces or the # symbol.",
       ].join("\n"),
       input: [
         `Product: ${product.name}`,
@@ -64,14 +73,14 @@ export async function POST(request: Request) {
         `Stock/shipping: ${product.stockLabel}; ${product.shipWindow}`,
         `Description: ${product.description}`,
         product.features.length ? `Features: ${product.features.join(", ")}` : "",
-        `Requested angle: ${angle}`,
+        `Requested angle / focus keyword: ${angle}`,
         `Tone: ${tone}`,
-        `Audience: ${audience}`,
+        `Target audience: ${audience}`,
       ]
         .filter(Boolean)
         .join("\n"),
-      temperature: 0.7,
-      maxOutputTokens: 1000,
+      temperature: 0.6,
+      maxOutputTokens: 1500,
     });
 
     const cleaned = raw
@@ -81,6 +90,10 @@ export async function POST(request: Request) {
 
     let parsed: {
       title?: string;
+      metaTitle?: string;
+      metaDescription?: string;
+      slug?: string;
+      keywords?: unknown;
       excerpt?: string;
       body?: string;
       hashtags?: unknown;
@@ -97,15 +110,30 @@ export async function POST(request: Request) {
       };
     }
 
+    const toStringList = (value: unknown, max: number) =>
+      Array.isArray(value)
+        ? value
+            .map((item) => String(item).replace(/^#/, "").trim())
+            .filter(Boolean)
+            .slice(0, max)
+        : [];
+
     const title = String(parsed.title || "").trim();
     const excerpt = String(parsed.excerpt || "").trim();
     const draftBody = String(parsed.body || "").trim();
-    const hashtags = Array.isArray(parsed.hashtags)
-      ? parsed.hashtags
-          .map((item) => String(item).replace(/^#/, "").trim())
-          .filter(Boolean)
-          .slice(0, 6)
-      : [];
+    const metaTitle = String(parsed.metaTitle || title).trim().slice(0, 70);
+    const metaDescription = String(parsed.metaDescription || excerpt).trim().slice(0, 180);
+    const slug =
+      String(parsed.slug || title)
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 70) || product.slug;
+    const keywords = toStringList(parsed.keywords, 8);
+    const hashtags = toStringList(parsed.hashtags, 6);
 
     if (!title || !draftBody) {
       throw new Error("The AI did not return a usable blog draft.");
@@ -113,6 +141,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       title,
+      metaTitle,
+      metaDescription,
+      slug,
+      keywords,
       excerpt,
       body: draftBody,
       hashtags,

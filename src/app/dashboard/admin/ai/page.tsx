@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Bot, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Bot, PenLine, Sparkles } from "lucide-react";
 import { AiContentGenerator } from "@/components/ai-content-generator";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { requirePageSession } from "@/lib/auth";
@@ -25,16 +26,25 @@ export default async function AdminAiPage() {
         title="AI Studio"
         description="Create articles, product descriptions, social captions, and customer emails using your ChatGPT API settings."
         actions={
-          <span
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
-              aiConfigured
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-amber-50 text-amber-700"
-            }`}
-          >
-            <Bot className="h-3.5 w-3.5" />
-            {aiConfigured ? `Ready · ${getAiModel()}` : "Not configured"}
-          </span>
+          <>
+            <Link
+              href="/blog/write"
+              className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              <PenLine className="h-3.5 w-3.5" />
+              Write product SEO blog
+            </Link>
+            <span
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${
+                aiConfigured
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-amber-50 text-amber-700"
+              }`}
+            >
+              <Bot className="h-3.5 w-3.5" />
+              {aiConfigured ? `Ready · ${getAiModel()}` : "Not configured"}
+            </span>
+          </>
         }
       />
 
