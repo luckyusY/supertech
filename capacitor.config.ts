@@ -11,7 +11,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * so the native binary stays small.
  */
 const config: CapacitorConfig = {
-  appId: "africa.supertech.app",
+  appId: "africa.supertech.marketplace",
   appName: "SuperTech",
   webDir: "capacitor-www",
   server: {
