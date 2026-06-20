@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { Eye, EyeOff, Loader2, Mail, MailCheck } from "lucide-react";
 import Link from "next/link";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 type Props = { nextPath?: string };
 
@@ -136,6 +137,14 @@ export function SignInForm({ nextPath }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <GoogleSignInButton nextPath={nextPath} />
+
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-[var(--line)]" />
+        <span className="text-xs text-[var(--muted)]">or continue with email</span>
+        <span className="h-px flex-1 bg-[var(--line)]" />
+      </div>
+
       <div>
         <label className="text-sm font-semibold" htmlFor="signin-email">
           Email address

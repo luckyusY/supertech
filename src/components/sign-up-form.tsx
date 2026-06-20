@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { Eye, EyeOff, Phone } from "lucide-react";
 import Link from "next/link";
+import { GoogleSignInButton } from "@/components/google-sign-in-button";
 
 export function SignUpForm() {
   const [name, setName] = useState("");
@@ -71,6 +72,14 @@ export function SignUpForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <GoogleSignInButton />
+
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-[var(--line)]" />
+        <span className="text-xs text-[var(--muted)]">or sign up with email</span>
+        <span className="h-px flex-1 bg-[var(--line)]" />
+      </div>
+
       <div>
         <label className="text-sm font-semibold" htmlFor="signup-name">
           Full name
