@@ -71,6 +71,43 @@ export async function authenticateMongoUser(email: string, password: string): Pr
   return user;
 }
 
+export async function findOrCreateGoogleUser(input: {
+  email: string;
+  name: string;
+}): Promise<User> {
+  if (!hasMongoConfig()) throw new Error("MongoDB is not configured.");
+
+  const db = await getDatabase();
+  const email = input.email.trim().toLowerCase();
+  const existing = await db.collection<User>("users").findOne({ email });
+
+  if (existing) {
+    await db.collection<User>("users").updateOne(
+      { _id: existing._id },
+      {
+        $set: {
+          emailVerified: true,
+          emailVerifiedAt: existing.emailVerifiedAt ?? new Date(),
+        },
+      },
+    );
+    return { ...existing, emailVerified: true };
+  }
+
+  const user: User = {
+    email,
+    // Google-authenticated accounts never use this value for authentication.
+    passwordHash: crypto.randomBytes(32).toString("hex"),
+    role: "customer",
+    name: input.name.trim() || email.split("@")[0],
+    emailVerified: true,
+    emailVerifiedAt: new Date(),
+    createdAt: new Date(),
+  };
+  await db.collection<User>("users").insertOne(user);
+  return user;
+}
+
 export async function markUserEmailVerified(email: string): Promise<boolean> {
   if (!hasMongoConfig()) return false;
   const db = await getDatabase();
