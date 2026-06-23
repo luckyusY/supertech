@@ -173,7 +173,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="grid gap-3 sm:flex sm:flex-row">
               <Link
                 href={`/order?product=${product.slug}`}
-                className="inline-flex w-full items-center justify-center rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white sm:w-auto"
+                className="supertech-dark-cta inline-flex w-full items-center justify-center rounded-full bg-[#313133] px-6 py-3 text-sm font-semibold text-white sm:w-auto"
               >
                 Buy now
               </Link>

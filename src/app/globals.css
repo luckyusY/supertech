@@ -295,6 +295,23 @@ button:active, .button:active {
   transform: scale(0.98);
 }
 
+/* Android WebView can inherit a stale text fill on dark CTA links/buttons.
+   Keep SuperTech dark actions readable everywhere they appear. */
+:is(a, button)[class*="bg-[var(--foreground)]"][class*="text-white"],
+:is(a, button)[class*="bg-[#313133]"][class*="text-white"],
+:is(a, button).supertech-dark-cta {
+  background-color: #313133 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+:is(a, button)[class*="hover:bg-[var(--foreground)]"][class*="hover:text-white"]:hover,
+:is(a, button).supertech-dark-cta:hover {
+  background-color: #313133 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* Link hover effects */
 a {
   transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
