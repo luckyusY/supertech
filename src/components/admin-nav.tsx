@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   BadgeCheck,
   BarChart3,
+  FileText,
   KeyRound,
   LayoutDashboard,
   Menu,
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/admin/approvals", label: "Approvals", icon: BadgeCheck },
   { href: "/dashboard/admin/products", label: "Products", icon: Package },
   { href: "/dashboard/admin/vendors", label: "Vendors", icon: Store },
+  { href: "/dashboard/admin/blogs", label: "Blogs", icon: FileText },
   { href: "/dashboard/admin/categories", label: "Categories", icon: Shapes },
   { href: "/dashboard/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/admin/ai", label: "AI Studio", icon: Sparkles },

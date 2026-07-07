@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CreditCard,
+  FileText,
   LayoutDashboard,
   Menu,
   Package,
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/vendor/products", label: "Products", icon: Package },
   { href: "/dashboard/vendor/orders", label: "Orders", icon: ShoppingBag },
   { href: "/dashboard/vendor/ai", label: "AI SEO Studio", icon: Sparkles },
+  { href: "/dashboard/vendor/blogs", label: "Blogs", icon: FileText },
   { href: "/dashboard/vendor/storefront", label: "Storefront", icon: Palette },
   { href: "/dashboard/vendor/payments", label: "Payment method", icon: CreditCard },
   { href: "/dashboard/vendor/payouts", label: "Payouts", icon: Wallet },

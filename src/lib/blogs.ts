@@ -59,6 +59,17 @@ export type CreateBlogInput = {
   authorRole: string;
 };
 
+export type UpdateBlogInput = {
+  title?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  slug?: string;
+  excerpt?: string;
+  body?: string;
+  keywords?: string[];
+  hashtags?: string[];
+};
+
 const BLOG_COLLECTION = "blogs";
 
 function toSummary(record: BlogRecord): BlogSummary {
@@ -74,7 +85,7 @@ function cleanList(value: string[] | undefined, max: number) {
     .slice(0, max);
 }
 
-async function ensureUniqueSlug(base: string) {
+async function ensureUniqueSlug(base: string, excludeId?: ObjectId) {
   const database = await getDatabase();
   const collection = database.collection<BlogRecord>(BLOG_COLLECTION);
   const root = slugify(base) || `blog-${Date.now()}`;
@@ -82,7 +93,15 @@ async function ensureUniqueSlug(base: string) {
   let counter = 2;
 
   // Append -2, -3, ... until the slug is free.
-  while (await collection.findOne({ slug: candidate }, { projection: { _id: 1 } })) {
+  while (
+    await collection.findOne(
+      {
+        slug: candidate,
+        ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+      },
+      { projection: { _id: 1 } },
+    )
+  ) {
     candidate = `${root}-${counter}`;
     counter += 1;
   }
@@ -183,6 +202,70 @@ export async function getBlogsForVendor(vendorSlug: string, limit = 50): Promise
     .limit(limit)
     .toArray();
   return docs.map(toSummary);
+}
+
+export async function getBlogById(id: string): Promise<BlogSummary | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const database = await getDatabase();
+  const collection = database.collection<BlogRecord>(BLOG_COLLECTION);
+  const doc = await collection.findOne({ _id: new ObjectId(id) });
+  return doc ? toSummary(doc) : null;
+}
+
+export async function updateBlogById(
+  id: string,
+  input: UpdateBlogInput,
+): Promise<BlogSummary | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const _id = new ObjectId(id);
+  const database = await getDatabase();
+  const collection = database.collection<BlogRecord>(BLOG_COLLECTION);
+  const set: Partial<BlogRecord> = { updatedAt: new Date() };
+
+  if (typeof input.title === "string") {
+    const title = input.title.trim();
+    if (!title) throw new Error("Title is required.");
+    set.title = title.slice(0, 160);
+  }
+  if (typeof input.metaTitle === "string") {
+    set.metaTitle = input.metaTitle.trim().slice(0, 70);
+  }
+  if (typeof input.metaDescription === "string") {
+    set.metaDescription = input.metaDescription.trim().slice(0, 180);
+  }
+  if (typeof input.slug === "string") {
+    set.slug = await ensureUniqueSlug(input.slug, _id);
+  }
+  if (typeof input.excerpt === "string") {
+    set.excerpt = input.excerpt.trim().slice(0, 320);
+  }
+  if (typeof input.body === "string") {
+    const body = input.body.trim();
+    if (!body) throw new Error("Article body is required.");
+    set.body = body;
+  }
+  if (Array.isArray(input.keywords)) {
+    set.keywords = cleanList(input.keywords, 12);
+  }
+  if (Array.isArray(input.hashtags)) {
+    set.hashtags = cleanList(input.hashtags, 8);
+  }
+
+  const doc = await collection.findOneAndUpdate(
+    { _id },
+    { $set: set },
+    { returnDocument: "after" },
+  );
+
+  return doc ? toSummary(doc) : null;
+}
+
+export async function deleteBlogById(id: string): Promise<BlogSummary | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const database = await getDatabase();
+  const collection = database.collection<BlogRecord>(BLOG_COLLECTION);
+  const doc = await collection.findOneAndDelete({ _id: new ObjectId(id) });
+  return doc ? toSummary(doc) : null;
 }
 
 export async function getBlogActivityForVendor(
