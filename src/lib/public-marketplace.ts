@@ -146,11 +146,19 @@ export async function getPublicVendorProducts(vendorSlug: string) {
 }
 
 export const getPublicVendors = cache(async () => {
-  const [approvedSubmissions, mongoVendors, hiddenSlugs] = await Promise.all([
+  const [approvedSubmissions, mongoVendors, hiddenSlugs, publicProducts] = await Promise.all([
     getApprovedSubmissions(),
     getMongoVendors(),
     getHiddenSlugs("vendor"),
+    getPublicProducts(),
   ]);
+  const productCountByVendor = new Map<string, number>();
+  for (const product of publicProducts) {
+    productCountByVendor.set(
+      product.vendorSlug,
+      (productCountByVendor.get(product.vendorSlug) ?? 0) + 1,
+    );
+  }
 
   const seedWithSubmissions = seedVendors.filter((v) => !hiddenSlugs.has(v.slug)).map((vendor) => {
     const approvedForVendor = approvedSubmissions.filter(
@@ -163,7 +171,7 @@ export const getPublicVendors = cache(async () => {
 
     return {
       ...vendor,
-      activeProducts: vendor.activeProducts + approvedForVendor.length,
+      activeProducts: productCountByVendor.get(vendor.slug) ?? 0,
       categories: Array.from(categories),
     } satisfies Vendor;
   });
@@ -184,7 +192,7 @@ export const getPublicVendors = cache(async () => {
 
       return {
         ...vendor,
-        activeProducts: approvedForVendor.length,
+        activeProducts: productCountByVendor.get(vendor.slug) ?? 0,
         categories: Array.from(categories),
       } satisfies Vendor;
     });
@@ -294,16 +302,34 @@ export async function getPublicTopVendors() {
 }
 
 export async function getAdminVendors() {
-  const [mongoVendors, hiddenSlugs] = await Promise.all([
+  const [mongoVendors, hiddenSlugs, publicProducts] = await Promise.all([
     getMongoVendors(),
     getHiddenSlugs("vendor"),
+    getPublicProducts(),
   ]);
+  const productCountByVendor = new Map<string, number>();
+  for (const product of publicProducts) {
+    productCountByVendor.set(
+      product.vendorSlug,
+      (productCountByVendor.get(product.vendorSlug) ?? 0) + 1,
+    );
+  }
   const seedSlugs = new Set(seedVendors.map((v) => v.slug));
   return [
-    ...seedVendors.map((v) => ({ ...v, isSeed: true as const, disabled: hiddenSlugs.has(v.slug) })),
+    ...seedVendors.map((v) => ({
+      ...v,
+      activeProducts: productCountByVendor.get(v.slug) ?? 0,
+      isSeed: true as const,
+      disabled: hiddenSlugs.has(v.slug),
+    })),
     ...mongoVendors
       .filter((v) => !seedSlugs.has(v.slug))
-      .map((v) => ({ ...v, isSeed: false as const, disabled: false })),
+      .map((v) => ({
+        ...v,
+        activeProducts: productCountByVendor.get(v.slug) ?? 0,
+        isSeed: false as const,
+        disabled: false,
+      })),
   ];
 }
 

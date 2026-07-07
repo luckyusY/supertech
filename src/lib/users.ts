@@ -71,6 +71,42 @@ export async function authenticateMongoUser(email: string, password: string): Pr
   return user;
 }
 
+export async function updateUserProfile(
+  email: string,
+  input: {
+    name?: string;
+    phone?: string;
+  },
+): Promise<User | null> {
+  if (!hasMongoConfig()) return null;
+  const db = await getDatabase();
+  const set: Partial<User> = {};
+
+  if (typeof input.name === "string") {
+    const name = input.name.trim().slice(0, 80);
+    if (name.length < 2) {
+      throw new Error("Name must be at least 2 characters.");
+    }
+    set.name = name;
+  }
+
+  if (typeof input.phone === "string") {
+    set.phone = input.phone.trim().slice(0, 30);
+  }
+
+  if (Object.keys(set).length === 0) {
+    return findUserByEmail(email);
+  }
+
+  const doc = await db.collection<User>("users").findOneAndUpdate(
+    { email: email.trim().toLowerCase() },
+    { $set: set },
+    { returnDocument: "after" },
+  );
+
+  return doc ?? null;
+}
+
 export async function findOrCreateGoogleUser(input: {
   email: string;
   name: string;

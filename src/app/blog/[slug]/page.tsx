@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CalendarDays, Store, Tag } from "lucide-react";
+import { ArrowRight, CalendarDays, PenLine, Store, Tag } from "lucide-react";
 import { BlogContent } from "@/components/blog-content";
+import { ProductCard } from "@/components/product-card";
 import { hasMongoConfig } from "@/lib/integrations";
-import { getBlogBySlug } from "@/lib/blogs";
+import { getBlogBySlug, getRelatedBlogs } from "@/lib/blogs";
+import { getPublicProducts } from "@/lib/public-marketplace";
 import { formatPrice } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +56,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   if (!blog) {
     notFound();
   }
+
+  // Related products (same category, excluding the featured product) + related blogs.
+  const [allProducts, relatedBlogs] = await Promise.all([
+    getPublicProducts().catch(() => []),
+    getRelatedBlogs(blog.slug, blog.category, 3).catch(() => []),
+  ]);
+
+  const relatedProducts = allProducts
+    .filter(
+      (product) => product.category === blog.category && product.slug !== blog.productSlug,
+    )
+    .slice(0, 5);
 
   const publishedDate = new Date(blog.createdAt).toLocaleDateString("en-US", {
     month: "long",
@@ -186,6 +200,91 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
         ) : null}
       </article>
+
+      {/* Related products */}
+      {relatedProducts.length > 0 ? (
+        <section className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="text-xl font-black tracking-[-0.03em] text-[var(--foreground)] sm:text-2xl">
+              Related products in {blog.category}
+            </h2>
+            <Link
+              href={`/catalog?category=${encodeURIComponent(blog.category)}`}
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[var(--accent)] hover:underline"
+            >
+              See all
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {relatedProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {/* Related blogs */}
+      {relatedBlogs.length > 0 ? (
+        <section className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6">
+          <div className="flex items-end justify-between gap-3">
+            <h2 className="text-xl font-black tracking-[-0.03em] text-[var(--foreground)] sm:text-2xl">
+              More blogs to read
+            </h2>
+            <Link
+              href="/blog"
+              className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[var(--accent)] hover:underline"
+            >
+              All articles
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedBlogs.map((related) => (
+              <Link
+                key={related.id}
+                href={`/blog/${related.slug}`}
+                className="group flex flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white transition-shadow hover:shadow-md"
+              >
+                <div className="relative aspect-[16/10] bg-[#f7f7f7]">
+                  <Image
+                    src={related.heroImage}
+                    alt={related.productName}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col p-4">
+                  <h3 className="line-clamp-2 text-sm font-bold leading-snug tracking-[-0.01em] text-[var(--foreground)]">
+                    {related.title}
+                  </h3>
+                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--muted)]">
+                    {related.excerpt || related.metaDescription}
+                  </p>
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--accent)]">
+                    Read article
+                    <ArrowRight className="h-3 w-3 -translate-x-0.5 transition-transform group-hover:translate-x-0" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-5 py-6 text-center">
+            <p className="text-sm font-semibold text-[var(--foreground)]">
+              Selling on SuperTech? Turn your products into SEO blogs.
+            </p>
+            <Link
+              href="/blog/write"
+              className="inline-flex items-center gap-2 rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-[var(--accent-hover)]"
+            >
+              <PenLine className="h-4 w-4" />
+              Write a blog
+            </Link>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

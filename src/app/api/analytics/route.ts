@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { authorizeRequest } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
-import { vendors, products } from "@/lib/marketplace";
 import { getAllPayoutSummaries } from "@/lib/payouts";
+import { getPublicProducts, getPublicVendors } from "@/lib/public-marketplace";
 
 export type AnalyticsSnapshot = {
   totalVendors: number;
@@ -23,6 +23,11 @@ export type AnalyticsSnapshot = {
 export async function GET(request: Request) {
   const auth = authorizeRequest(request, ["admin"]);
   if (!auth.ok) return auth.response;
+
+  const [vendors, products] = await Promise.all([
+    getPublicVendors().catch(() => []),
+    getPublicProducts().catch(() => []),
+  ]);
 
   if (!hasMongoConfig()) {
     // Return static fallback so the page still renders

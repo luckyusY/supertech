@@ -10,9 +10,14 @@ import {
   Store,
   User,
 } from "lucide-react";
+import { AccountProfileForm } from "@/components/account-profile-form";
+import { BusinessInfoForm } from "@/components/business-info-form";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
+import { getVendorBySlug } from "@/lib/marketplace";
+import { getPublicVendorBySlug } from "@/lib/public-marketplace";
 import { getProductRequestsByCustomerEmail } from "@/lib/product-requests";
+import { findUserByEmail } from "@/lib/users";
 
 export const metadata: Metadata = {
   title: "My Account",
@@ -33,9 +38,15 @@ export default async function AccountPage() {
     nextPath: "/account",
   });
 
-  const requests = hasMongoConfig()
-    ? await getProductRequestsByCustomerEmail(session.email).catch(() => [])
-    : [];
+  const [requests, userProfile, currentVendor] = await Promise.all([
+    hasMongoConfig()
+      ? getProductRequestsByCustomerEmail(session.email).catch(() => [])
+      : Promise.resolve([]),
+    hasMongoConfig() ? findUserByEmail(session.email).catch(() => null) : Promise.resolve(null),
+    session.vendorSlug
+      ? getPublicVendorBySlug(session.vendorSlug).catch(() => undefined)
+      : Promise.resolve(undefined),
+  ]);
 
   const isVendorOrAdmin = session.role === "admin" || session.role === "vendor";
 
@@ -128,6 +139,41 @@ export default async function AccountPage() {
             </form>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <AccountProfileForm
+          initialName={userProfile?.name ?? session.name}
+          initialPhone={userProfile?.phone ?? ""}
+          canEdit={Boolean(userProfile)}
+        />
+        {currentVendor ? (
+          <BusinessInfoForm
+            vendorSlug={currentVendor.slug}
+            initialName={currentVendor.name}
+            initialLocation={currentVendor.location}
+            initialWhatsappNumber={currentVendor.whatsappNumber ?? ""}
+            initialCategories={currentVendor.categories}
+            canEdit={!getVendorBySlug(currentVendor.slug)}
+          />
+        ) : (
+          <section className="soft-card p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              <Store className="h-5 w-5 text-[var(--accent)]" />
+              <h2 className="text-2xl font-semibold tracking-[-0.04em]">Business info</h2>
+            </div>
+            <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
+              Become a vendor to add and manage your public business profile.
+            </p>
+            <Link
+              href="/become-vendor"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/72 px-5 py-2.5 text-sm font-semibold"
+            >
+              <Store className="h-4 w-4" />
+              Become a vendor
+            </Link>
+          </section>
+        )}
       </div>
 
       {/* Product requests */}

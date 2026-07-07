@@ -14,8 +14,8 @@ import {
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
-import { vendors, products } from "@/lib/marketplace";
 import { getOrderRequestOperationsSnapshot } from "@/lib/order-requests";
+import { getPublicProducts, getPublicVendors } from "@/lib/public-marketplace";
 import { getVendorApplications } from "@/lib/vendor-applications";
 import { formatPrice } from "@/lib/utils";
 
@@ -32,9 +32,11 @@ export default async function AdminDashboardPage() {
     nextPath: "/dashboard/admin",
   });
 
-  const [operationsSnapshot, vendorApplications] = await Promise.all([
+  const [operationsSnapshot, vendorApplications, vendors, products] = await Promise.all([
     hasMongoConfig() ? getOrderRequestOperationsSnapshot().catch(() => null) : Promise.resolve(null),
     hasMongoConfig() ? getVendorApplications().catch(() => []) : Promise.resolve([]),
+    getPublicVendors().catch(() => []),
+    getPublicProducts().catch(() => []),
   ]);
   const pendingApplicationsCount = vendorApplications.filter((a) => a.status === "pending").length;
 

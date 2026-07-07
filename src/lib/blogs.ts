@@ -28,6 +28,16 @@ export type BlogRecord = {
 
 export type BlogSummary = Omit<BlogRecord, "_id"> & { id: string };
 
+export type BlogActivitySummary = {
+  total: number;
+  today: number;
+  last7Days: number;
+  daily: {
+    date: string;
+    count: number;
+  }[];
+};
+
 export type CreateBlogInput = {
   slug?: string;
   title: string;
@@ -135,6 +145,35 @@ export async function getBlogBySlug(slug: string): Promise<BlogSummary | null> {
   return doc ? toSummary(doc) : null;
 }
 
+export async function getRelatedBlogs(
+  currentSlug: string,
+  category: string,
+  limit = 3,
+): Promise<BlogSummary[]> {
+  const database = await getDatabase();
+  const collection = database.collection<BlogRecord>(BLOG_COLLECTION);
+
+  // Prefer same-category articles, then backfill with the most recent others.
+  const sameCategory = await collection
+    .find({ slug: { $ne: currentSlug }, category })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+
+  if (sameCategory.length >= limit) {
+    return sameCategory.map(toSummary);
+  }
+
+  const excludeSlugs = [currentSlug, ...sameCategory.map((doc) => doc.slug)];
+  const backfill = await collection
+    .find({ slug: { $nin: excludeSlugs } })
+    .sort({ createdAt: -1 })
+    .limit(limit - sameCategory.length)
+    .toArray();
+
+  return [...sameCategory, ...backfill].map(toSummary);
+}
+
 export async function getBlogsForVendor(vendorSlug: string, limit = 50): Promise<BlogSummary[]> {
   const database = await getDatabase();
   const collection = database.collection<BlogRecord>(BLOG_COLLECTION);
@@ -144,4 +183,50 @@ export async function getBlogsForVendor(vendorSlug: string, limit = 50): Promise
     .limit(limit)
     .toArray();
   return docs.map(toSummary);
+}
+
+export async function getBlogActivityForVendor(
+  vendorSlug: string,
+): Promise<BlogActivitySummary> {
+  const database = await getDatabase();
+  const collection = database.collection<BlogRecord>(BLOG_COLLECTION);
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const sevenDaysAgo = new Date(todayStart);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+  const [total, recentDocs] = await Promise.all([
+    collection.countDocuments({ vendorSlug }),
+    collection
+      .find(
+        { vendorSlug, createdAt: { $gte: sevenDaysAgo } },
+        { projection: { createdAt: 1 } },
+      )
+      .sort({ createdAt: -1 })
+      .toArray(),
+  ]);
+
+  const daily = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(sevenDaysAgo);
+    date.setDate(sevenDaysAgo.getDate() + index);
+    return {
+      date: date.toISOString().slice(0, 10),
+      count: 0,
+    };
+  });
+  const countByDate = new Map(daily.map((item) => [item.date, item]));
+
+  for (const doc of recentDocs) {
+    const date = doc.createdAt.toISOString().slice(0, 10);
+    const item = countByDate.get(date);
+    if (item) item.count += 1;
+  }
+
+  return {
+    total,
+    today: countByDate.get(todayStart.toISOString().slice(0, 10))?.count ?? 0,
+    last7Days: recentDocs.length,
+    daily,
+  };
 }

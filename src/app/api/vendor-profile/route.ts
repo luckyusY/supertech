@@ -22,6 +22,10 @@ export async function PUT(request: Request) {
   try {
     const body = (await request.json()) as {
       vendorSlug?: string;
+      name?: string;
+      location?: string;
+      whatsappNumber?: string;
+      categories?: string[];
       coverImage?: string;
       logoMark?: string;
       headline?: string;
@@ -47,6 +51,10 @@ export async function PUT(request: Request) {
     }
 
     const vendor = await updateMongoVendorProfile(slug, {
+      name: body.name,
+      location: body.location,
+      whatsappNumber: body.whatsappNumber,
+      categories: body.categories,
       coverImage: body.coverImage,
       logoMark: body.logoMark,
       headline: body.headline,
@@ -62,6 +70,7 @@ export async function PUT(request: Request) {
     revalidatePath("/vendors");
     revalidatePath(`/vendors/${slug}`);
     revalidatePath("/dashboard/vendor");
+    revalidatePath("/account");
 
     return NextResponse.json(vendor);
   } catch (error) {

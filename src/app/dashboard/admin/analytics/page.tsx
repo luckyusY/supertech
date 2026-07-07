@@ -166,8 +166,8 @@ export default async function AdminAnalyticsPage() {
               </span>
             )}
           </div>
-          <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-[var(--line)]">
-            <table className="w-full text-sm">
+          <div className="mt-5 overflow-x-auto rounded-[1.5rem] border border-[var(--line)] bg-white">
+            <table className="w-full min-w-[44rem] text-sm">
               <thead>
                 <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
                   {["Vendor", "Gross sales", "Net payout", "Commission", "Products", "Fulfillment"].map((h) => (

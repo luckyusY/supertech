@@ -94,6 +94,10 @@ export async function getMongoVendorBySlug(slug: string): Promise<Vendor | null>
 export async function updateMongoVendorProfile(
   slug: string,
   input: {
+    name?: string;
+    location?: string;
+    whatsappNumber?: string;
+    categories?: string[];
     coverImage?: string;
     logoMark?: string;
     headline?: string;
@@ -105,6 +109,28 @@ export async function updateMongoVendorProfile(
   const db = await getDatabase();
 
   const set: Partial<MongoVendor> = {};
+  if (typeof input.name === "string") {
+    const name = input.name.trim().slice(0, 80);
+    if (name.length < 2) {
+      throw new Error("Business name must be at least 2 characters.");
+    }
+    set.name = name;
+  }
+  if (typeof input.location === "string") {
+    set.location = input.location.trim().slice(0, 80);
+  }
+  if (typeof input.whatsappNumber === "string") {
+    set.whatsappNumber = resolveWhatsAppNumber(input.whatsappNumber);
+  }
+  if (Array.isArray(input.categories)) {
+    const categories = input.categories
+      .map((category) => category.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+    if (categories.length > 0) {
+      set.categories = Array.from(new Set(categories));
+    }
+  }
   if (typeof input.coverImage === "string") {
     set.coverImage = input.coverImage.trim();
   }

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { getIntegrationStatus } from "@/lib/integrations";
-import { vendorDashboardHighlights } from "@/lib/marketplace";
+import { getPublicVendorProducts } from "@/lib/public-marketplace";
 import { loadVendorContext } from "@/lib/vendor-dashboard";
 
 export const metadata: Metadata = {
@@ -27,6 +27,12 @@ export default async function VendorDashboardPage() {
   const { session, currentVendor } = await loadVendorContext("/dashboard/vendor");
   const integrationStatus = getIntegrationStatus();
   const highlightIcons = [ShoppingBag, Package, Star];
+  const vendorProducts = await getPublicVendorProducts(currentVendor.slug).catch(() => []);
+  const highlights = [
+    { label: "Active products", value: String(vendorProducts.length) },
+    { label: "Store categories", value: String(currentVendor.categories.length) },
+    { label: "Rating", value: currentVendor.rating > 0 ? currentVendor.rating.toFixed(1) : "New" },
+  ];
 
   const shortcuts = [
     {
@@ -70,7 +76,7 @@ export default async function VendorDashboardPage() {
 
       {/* Highlights */}
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {vendorDashboardHighlights.map((item, i) => {
+        {highlights.map((item, i) => {
           const Icon = highlightIcons[i] ?? Package;
           return (
             <div key={item.label} className="soft-card p-5">

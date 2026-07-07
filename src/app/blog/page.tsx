@@ -51,8 +51,43 @@ export default async function BlogIndexPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3">
-              {blogs.map((blog) => (
+            <>
+              {/* Featured latest article */}
+              <div className="p-4 sm:p-6 sm:pb-0">
+                <Link
+                  href={`/blog/${blogs[0].slug}`}
+                  className="group grid overflow-hidden rounded-2xl border border-[var(--line)] bg-white transition-shadow hover:shadow-md md:grid-cols-2"
+                >
+                  <div className="relative aspect-[16/10] bg-[#f7f7f7] md:aspect-auto md:min-h-[16rem]">
+                    <Image
+                      src={blogs[0].heroImage}
+                      alt={blogs[0].productName}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(min-width: 768px) 50vw, 100vw"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-center p-5 sm:p-8">
+                    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
+                      <Sparkles className="h-3 w-3" />
+                      Latest · {blogs[0].category}
+                    </span>
+                    <h2 className="mt-3 text-2xl font-black leading-tight tracking-[-0.03em] text-[var(--foreground)] sm:text-3xl">
+                      {blogs[0].title}
+                    </h2>
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--muted)]">
+                      {blogs[0].excerpt || blogs[0].metaDescription}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[var(--accent)]">
+                      Read article
+                      <ArrowRight className="h-4 w-4 -translate-x-0.5 transition-transform group-hover:translate-x-0" />
+                    </span>
+                  </div>
+                </Link>
+              </div>
+
+              <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3">
+              {blogs.slice(1).map((blog) => (
                 <Link
                   key={blog.id}
                   href={`/blog/${blog.slug}`}
@@ -87,7 +122,8 @@ export default async function BlogIndexPage() {
                   </div>
                 </Link>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       </div>

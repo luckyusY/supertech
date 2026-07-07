@@ -2,8 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
-import { Check, Copy, ExternalLink, Loader2, PenLine, Rocket, Search, Sparkles } from "lucide-react";
+import { FormEvent, useState } from "react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  FileText,
+  Loader2,
+  PenLine,
+  Rocket,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import type { Product } from "@/lib/marketplace";
 import { formatPrice } from "@/lib/utils";
 
@@ -23,30 +33,63 @@ type BlogDraft = {
   hashtags: string[];
 };
 
+type EditableDraft = BlogDraft & {
+  id: string;
+  editableBody: string;
+  publishState: "idle" | "publishing" | "done" | "error";
+  publishedUrl: string;
+  publishError: string;
+};
+
 const toneOptions = ["friendly", "premium", "educational", "social media", "storytelling"];
+const countOptions = [1, 2, 3, 5, 7, 10];
+
+function toEditable(draft: Partial<BlogDraft>, index: number): EditableDraft {
+  const body = String(draft.body || "");
+  return {
+    title: String(draft.title || ""),
+    metaTitle: String(draft.metaTitle || draft.title || ""),
+    metaDescription: String(draft.metaDescription || draft.excerpt || ""),
+    slug: String(draft.slug || ""),
+    keywords: Array.isArray(draft.keywords) ? draft.keywords.map(String) : [],
+    excerpt: String(draft.excerpt || ""),
+    body,
+    hashtags: Array.isArray(draft.hashtags) ? draft.hashtags.map(String) : [],
+    id: `${Date.now()}-${index}`,
+    editableBody: body,
+    publishState: "idle",
+    publishedUrl: "",
+    publishError: "",
+  };
+}
 
 export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProps) {
   const [angle, setAngle] = useState("why this product is useful for everyday life");
   const [tone, setTone] = useState("friendly");
   const [audience, setAudience] = useState("everyday shoppers");
-  const [draft, setDraft] = useState<BlogDraft | null>(null);
-  const [editableBody, setEditableBody] = useState("");
+  const [productDetails, setProductDetails] = useState(product.description);
+  const [count, setCount] = useState(3);
+  const [drafts, setDrafts] = useState<EditableDraft[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
-  const [publishState, setPublishState] = useState<"idle" | "publishing" | "done" | "error">("idle");
-  const [publishError, setPublishError] = useState("");
-  const [publishedUrl, setPublishedUrl] = useState("");
+  const [publishingAll, setPublishingAll] = useState(false);
 
-  const combinedDraft = useMemo(() => {
-    if (!draft) return "";
+  const active = drafts[activeIndex] ?? null;
 
+  function combinedDraft(draft: EditableDraft) {
     const tags = draft.hashtags.length
       ? `\n\n${draft.hashtags.map((tag) => `#${tag}`).join(" ")}`
       : "";
+    return `# ${draft.title}\n\n${draft.excerpt}\n\n${draft.editableBody}${tags}`;
+  }
 
-    return `# ${draft.title}\n\n${draft.excerpt}\n\n${editableBody}${tags}`;
-  }, [draft, editableBody]);
+  function patchDraft(index: number, patch: Partial<EditableDraft>) {
+    setDrafts((current) =>
+      current.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    );
+  }
 
   async function generate(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
@@ -63,27 +106,26 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
           angle,
           tone,
           audience,
+          productDetails,
+          count,
         }),
       });
-      const data = (await response.json()) as Partial<BlogDraft> & { error?: string };
-
-      if (!response.ok || data.error) {
-        throw new Error(data.error ?? "Unable to generate this story.");
-      }
-
-      const nextDraft: BlogDraft = {
-        title: String(data.title || ""),
-        metaTitle: String(data.metaTitle || data.title || ""),
-        metaDescription: String(data.metaDescription || data.excerpt || ""),
-        slug: String(data.slug || ""),
-        keywords: Array.isArray(data.keywords) ? data.keywords.map(String) : [],
-        excerpt: String(data.excerpt || ""),
-        body: String(data.body || ""),
-        hashtags: Array.isArray(data.hashtags) ? data.hashtags.map(String) : [],
+      const data = (await response.json()) as {
+        blogs?: Partial<BlogDraft>[];
+        error?: string;
       };
 
-      setDraft(nextDraft);
-      setEditableBody(nextDraft.body);
+      if (!response.ok || data.error) {
+        throw new Error(data.error ?? "Unable to generate these stories.");
+      }
+
+      const list = Array.isArray(data.blogs) ? data.blogs : [];
+      if (list.length === 0) {
+        throw new Error("The AI did not return any blog drafts.");
+      }
+
+      setDrafts(list.map((item, index) => toEditable(item, index)));
+      setActiveIndex(0);
       setState("idle");
     } catch (err) {
       setError(err instanceof Error ? err.message : "AI story generation failed.");
@@ -93,17 +135,16 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
 
   async function copyText(value: string, key: string) {
     if (!value) return;
-
     await navigator.clipboard.writeText(value);
     setCopied(key);
     window.setTimeout(() => setCopied((current) => (current === key ? null : current)), 1800);
   }
 
-  async function publish() {
-    if (!draft) return;
+  async function publishDraft(index: number) {
+    const draft = drafts[index];
+    if (!draft || draft.publishState === "done") return;
 
-    setPublishState("publishing");
-    setPublishError("");
+    patchDraft(index, { publishState: "publishing", publishError: "" });
 
     try {
       const response = await fetch("/api/blog", {
@@ -116,7 +157,7 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
           metaDescription: draft.metaDescription,
           slug: draft.slug,
           excerpt: draft.excerpt,
-          body: editableBody,
+          body: draft.editableBody,
           keywords: draft.keywords,
           hashtags: draft.hashtags,
         }),
@@ -127,17 +168,30 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
         throw new Error(data.error ?? "Unable to publish this blog.");
       }
 
-      setPublishedUrl(data.url);
-      setPublishState("done");
+      patchDraft(index, { publishState: "done", publishedUrl: data.url });
     } catch (err) {
-      setPublishError(err instanceof Error ? err.message : "Unable to publish this blog.");
-      setPublishState("error");
+      patchDraft(index, {
+        publishState: "error",
+        publishError: err instanceof Error ? err.message : "Unable to publish this blog.",
+      });
     }
   }
 
+  async function publishAll() {
+    setPublishingAll(true);
+    for (let i = 0; i < drafts.length; i += 1) {
+      if (drafts[i].publishState !== "done") {
+        await publishDraft(i);
+      }
+    }
+    setPublishingAll(false);
+  }
+
+  const publishedCount = drafts.filter((draft) => draft.publishState === "done").length;
+
   return (
     <div className="grid gap-5 lg:grid-cols-[340px_minmax(0,1fr)]">
-      <aside className="soft-card overflow-hidden bg-white">
+      <aside className="soft-card overflow-hidden bg-white lg:sticky lg:top-4 lg:self-start">
         <div className="relative aspect-square bg-[#f7f7f7]">
           <Image
             src={product.heroImage}
@@ -175,32 +229,47 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
         <div className="border-b border-[var(--line)] bg-[#fff8ef] p-4 sm:p-6">
           <div className="flex items-center gap-2 text-[var(--accent)]">
             <Sparkles className="h-4 w-4" />
-            <p className="text-xs font-semibold uppercase tracking-[0.18em]">
-              AI SEO blog writer
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em]">AI SEO blog writer</p>
           </div>
           <h1 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--foreground)] sm:text-4xl">
-            Write an SEO blog about this product
+            Write SEO blogs about this product
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            Pick a focus keyword and tone, then generate a search-optimized article with meta title, description, slug, and keywords — ready to publish.
+            Edit the product description, choose how many distinct articles to generate, then publish
+            the ones you like — each optimized for Kigali, Rwanda search.
           </p>
         </div>
 
         <form onSubmit={generate} className="grid gap-4 p-4 sm:p-6">
           <label className="grid gap-2">
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-[var(--foreground)]">
+              <FileText className="h-3.5 w-3.5 text-[var(--accent)]" />
+              Product description (used by AI)
+            </span>
+            <textarea
+              value={productDetails}
+              onChange={(event) => setProductDetails(event.target.value)}
+              className="min-h-28 rounded-md border border-[var(--line)] bg-white px-3 py-2 text-sm leading-6 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
+              placeholder="Describe the product — features, benefits, what makes it special..."
+            />
+            <span className="text-xs text-[var(--muted)]">
+              Prefilled from the product. The AI bases every article on this text.
+            </span>
+          </label>
+
+          <label className="grid gap-2">
             <span className="text-sm font-semibold text-[var(--foreground)]">
               Focus keyword / angle
             </span>
-            <textarea
+            <input
               value={angle}
               onChange={(event) => setAngle(event.target.value)}
-              className="min-h-24 rounded-md border border-[var(--line)] bg-white px-3 py-2 text-sm leading-6 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
-              placeholder="Example: best budget skincare in Rwanda, gift for gamers, affordable home office upgrade..."
+              className="h-11 rounded-md border border-[var(--line)] bg-white px-3 text-sm leading-6 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
+              placeholder="Example: best budget skincare in Kigali, gift for gamers in Rwanda..."
             />
           </label>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-[var(--foreground)]">Tone</span>
               <select
@@ -225,6 +294,21 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
                 placeholder="Example: students, shoppers, parents"
               />
             </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-semibold text-[var(--foreground)]"># of blogs</span>
+              <select
+                value={count}
+                onChange={(event) => setCount(Number(event.target.value))}
+                className="h-11 rounded-md border border-[var(--line)] bg-white px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
+              >
+                {countOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option} {option === 1 ? "blog" : "blogs"}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {error ? (
@@ -243,144 +327,214 @@ export function ProductBlogWriter({ product, vendorName }: ProductBlogWriterProp
             ) : (
               <PenLine className="h-4 w-4" />
             )}
-            {draft ? "Regenerate SEO blog" : "Generate SEO blog"}
+            {state === "loading"
+              ? `Generating ${count} ${count === 1 ? "blog" : "blogs"}…`
+              : drafts.length > 0
+                ? `Regenerate ${count} ${count === 1 ? "blog" : "blogs"}`
+                : `Generate ${count} ${count === 1 ? "blog" : "blogs"}`}
           </button>
         </form>
 
-        {draft ? (
+        {drafts.length > 0 ? (
           <div className="border-t border-[var(--line)] p-4 sm:p-6">
-            {/* SEO panel */}
-            <div className="rounded-lg border border-[var(--line)] bg-[var(--background)] p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
-                  <Search className="h-3.5 w-3.5" />
-                  SEO metadata
-                </p>
-                <div className="flex items-center gap-2">
+            {/* Draft switcher */}
+            {drafts.length > 1 ? (
+              <div className="mb-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-[var(--foreground)]">
+                    {drafts.length} distinct drafts
+                    {publishedCount > 0 ? ` · ${publishedCount} published` : ""}
+                  </p>
                   <button
                     type="button"
-                    onClick={() => copyText(combinedDraft, "article")}
-                    className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white px-3 text-xs font-semibold text-[var(--foreground)]"
+                    onClick={publishAll}
+                    disabled={publishingAll || publishedCount === drafts.length}
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-[var(--foreground)] px-4 text-xs font-bold text-white transition-opacity disabled:opacity-60"
                   >
-                    {copied === "article" ? (
-                      <Check className="h-3.5 w-3.5 text-[#1fae5b]" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    {copied === "article" ? "Copied" : "Copy"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={publish}
-                    disabled={publishState === "publishing"}
-                    className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-xs font-bold text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-60"
-                  >
-                    {publishState === "publishing" ? (
+                    {publishingAll ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
                       <Rocket className="h-3.5 w-3.5" />
                     )}
-                    {publishState === "done" ? "Published" : "Publish"}
+                    {publishedCount === drafts.length ? "All published" : "Publish all"}
                   </button>
                 </div>
-              </div>
-
-              {publishState === "done" && publishedUrl ? (
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#bbf7d0] bg-[#dcfce7] px-3 py-2 text-sm text-[#166534]">
-                  <span className="inline-flex items-center gap-1.5 font-semibold">
-                    <Check className="h-4 w-4" />
-                    Blog published &amp; live for SEO.
-                  </span>
-                  <Link
-                    href={publishedUrl}
-                    target="_blank"
-                    className="inline-flex items-center gap-1.5 font-semibold underline underline-offset-2"
-                  >
-                    View blog
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              ) : null}
-
-              {publishState === "error" && publishError ? (
-                <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-[var(--red)]">
-                  {publishError}
-                </p>
-              ) : null}
-
-              <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-                <SeoField
-                  label="Meta title"
-                  value={draft.metaTitle}
-                  hint={`${draft.metaTitle.length}/60`}
-                  copied={copied === "metaTitle"}
-                  onCopy={() => copyText(draft.metaTitle, "metaTitle")}
-                />
-                <SeoField
-                  label="URL slug"
-                  value={draft.slug}
-                  copied={copied === "slug"}
-                  onCopy={() => copyText(draft.slug, "slug")}
-                />
-                <div className="sm:col-span-2">
-                  <SeoField
-                    label="Meta description"
-                    value={draft.metaDescription}
-                    hint={`${draft.metaDescription.length}/160`}
-                    copied={copied === "metaDescription"}
-                    onCopy={() => copyText(draft.metaDescription, "metaDescription")}
-                  />
-                </div>
-              </dl>
-
-              {draft.keywords.length ? (
-                <div className="mt-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                    Keywords
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {draft.keywords.map((keyword) => (
-                      <span
-                        key={keyword}
-                        className="rounded-full border border-[var(--line)] bg-white px-2.5 py-0.5 text-xs font-medium text-[var(--foreground)]"
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {drafts.map((item, index) => {
+                    const isActive = index === activeIndex;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveIndex(index)}
+                        className={`flex items-start gap-2 rounded-lg border p-3 text-left transition-colors ${
+                          isActive
+                            ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                            : "border-[var(--line)] bg-white hover:border-[var(--accent)]/50"
+                        }`}
                       >
-                        {keyword}
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--foreground)] text-[10px] font-bold text-white">
+                          {index + 1}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="line-clamp-2 text-sm font-semibold text-[var(--foreground)]">
+                            {item.title}
+                          </span>
+                          <span className="mt-1 flex items-center gap-1.5 text-[11px] font-medium">
+                            {item.publishState === "done" ? (
+                              <span className="inline-flex items-center gap-1 text-[#166534]">
+                                <Check className="h-3 w-3" /> Published
+                              </span>
+                            ) : item.publishState === "error" ? (
+                              <span className="text-[var(--red)]">Failed — retry</span>
+                            ) : item.publishState === "publishing" ? (
+                              <span className="text-[var(--muted)]">Publishing…</span>
+                            ) : (
+                              <span className="text-[var(--muted)]">Draft</span>
+                            )}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {active ? (
+              <>
+                {/* SEO panel */}
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--background)] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">
+                      <Search className="h-3.5 w-3.5" />
+                      SEO metadata
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => copyText(combinedDraft(active), "article")}
+                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[var(--line)] bg-white px-3 text-xs font-semibold text-[var(--foreground)]"
+                      >
+                        {copied === "article" ? (
+                          <Check className="h-3.5 w-3.5 text-[#1fae5b]" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                        {copied === "article" ? "Copied" : "Copy"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => publishDraft(activeIndex)}
+                        disabled={active.publishState === "publishing"}
+                        className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-xs font-bold text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-60"
+                      >
+                        {active.publishState === "publishing" ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Rocket className="h-3.5 w-3.5" />
+                        )}
+                        {active.publishState === "done" ? "Published" : "Publish"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {active.publishState === "done" && active.publishedUrl ? (
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#bbf7d0] bg-[#dcfce7] px-3 py-2 text-sm text-[#166534]">
+                      <span className="inline-flex items-center gap-1.5 font-semibold">
+                        <Check className="h-4 w-4" />
+                        Blog published &amp; live for SEO.
+                      </span>
+                      <Link
+                        href={active.publishedUrl}
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 font-semibold underline underline-offset-2"
+                      >
+                        View blog
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  ) : null}
+
+                  {active.publishState === "error" && active.publishError ? (
+                    <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-[var(--red)]">
+                      {active.publishError}
+                    </p>
+                  ) : null}
+
+                  <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <SeoField
+                      label="Meta title"
+                      value={active.metaTitle}
+                      hint={`${active.metaTitle.length}/60`}
+                      copied={copied === "metaTitle"}
+                      onCopy={() => copyText(active.metaTitle, "metaTitle")}
+                    />
+                    <SeoField
+                      label="URL slug"
+                      value={active.slug}
+                      copied={copied === "slug"}
+                      onCopy={() => copyText(active.slug, "slug")}
+                    />
+                    <div className="sm:col-span-2">
+                      <SeoField
+                        label="Meta description"
+                        value={active.metaDescription}
+                        hint={`${active.metaDescription.length}/160`}
+                        copied={copied === "metaDescription"}
+                        onCopy={() => copyText(active.metaDescription, "metaDescription")}
+                      />
+                    </div>
+                  </dl>
+
+                  {active.keywords.length ? (
+                    <div className="mt-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                        Keywords
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {active.keywords.map((keyword) => (
+                          <span
+                            key={keyword}
+                            className="rounded-full border border-[var(--line)] bg-white px-2.5 py-0.5 text-xs font-medium text-[var(--foreground)]"
+                          >
+                            {keyword}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="mt-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                    Editable article (markdown)
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--foreground)]">
+                    {active.title}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{active.excerpt}</p>
+                </div>
+
+                <textarea
+                  value={active.editableBody}
+                  onChange={(event) => patchDraft(activeIndex, { editableBody: event.target.value })}
+                  className="mt-4 min-h-[360px] w-full rounded-md border border-[var(--line)] bg-[#fffdf9] px-3 py-3 font-mono text-[13px] leading-7 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
+                />
+
+                {active.hashtags.length ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {active.hashtags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent)]"
+                      >
+                        #{tag}
                       </span>
                     ))}
                   </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-5 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                  Editable article (markdown)
-                </p>
-                <h2 className="mt-2 text-2xl font-black tracking-[-0.03em] text-[var(--foreground)]">
-                  {draft.title}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{draft.excerpt}</p>
-              </div>
-            </div>
-
-            <textarea
-              value={editableBody}
-              onChange={(event) => setEditableBody(event.target.value)}
-              className="mt-4 min-h-[360px] w-full rounded-md border border-[var(--line)] bg-[#fffdf9] px-3 py-3 font-mono text-[13px] leading-7 text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
-            />
-
-            {draft.hashtags.length ? (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {draft.hashtags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent)]"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+                ) : null}
+              </>
             ) : null}
           </div>
         ) : null}
@@ -420,9 +574,7 @@ function SeoField({ label, value, hint, copied, onCopy }: SeoFieldProps) {
           </button>
         </div>
       </div>
-      <p className="mt-1 break-words text-sm font-medium text-[var(--foreground)]">
-        {value || "—"}
-      </p>
+      <p className="mt-1 break-words text-sm font-medium text-[var(--foreground)]">{value || "—"}</p>
     </div>
   );
 }
