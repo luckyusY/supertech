@@ -2,14 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
+  BarChart3,
   CheckCircle2,
   CreditCard,
+  FileText,
   ImagePlus,
   LayoutDashboard,
   Package,
   Sparkles,
   Star,
   ShoppingBag,
+  Store,
+  UserRound,
+  Wallet,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { getIntegrationStatus } from "@/lib/integrations";
@@ -61,6 +66,17 @@ export default async function VendorDashboardPage() {
     },
   ];
 
+  const allPages = [
+    { href: "/dashboard/vendor/products", label: "Products", icon: Package, color: "text-indigo-500", bg: "bg-indigo-50" },
+    { href: "/dashboard/vendor/orders", label: "Orders", icon: ShoppingBag, color: "text-[var(--accent)]", bg: "bg-[rgba(37,99,235,0.08)]" },
+    { href: "/dashboard/vendor/ai", label: "AI Studio", icon: Sparkles, color: "text-fuchsia-500", bg: "bg-fuchsia-50" },
+    { href: "/dashboard/vendor/blogs", label: "Blogs", icon: FileText, color: "text-rose-500", bg: "bg-rose-50" },
+    { href: "/dashboard/vendor/storefront", label: "Storefront", icon: Store, color: "text-[var(--teal)]", bg: "bg-[rgba(8,145,178,0.08)]" },
+    { href: "/dashboard/vendor/payments", label: "Payments", icon: CreditCard, color: "text-amber-600", bg: "bg-amber-50" },
+    { href: "/dashboard/vendor/payouts", label: "Payouts", icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
+    { href: "/dashboard/vendor/profile", label: "Profile", icon: UserRound, color: "text-slate-500", bg: "bg-slate-100" },
+  ];
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
       <AdminPageHeader
@@ -86,6 +102,25 @@ export default async function VendorDashboardPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* All Pages — visible on mobile so every section is one tap away */}
+      <div className="mt-6 xl:hidden">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">All sections</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {allPages.map((page) => (
+            <Link
+              key={page.href}
+              href={page.href}
+              className="soft-card flex items-center gap-3 p-4 transition-shadow hover:shadow-md"
+            >
+              <span className={`inline-flex rounded-[0.75rem] p-2 ${page.bg}`}>
+                <page.icon className={`h-5 w-5 ${page.color}`} />
+              </span>
+              <span className="text-sm font-semibold">{page.label}</span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
