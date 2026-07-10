@@ -9,7 +9,7 @@ const navItems = [
   { label: "Home", href: "/", icon: Home },
   { label: "Shop", href: "/catalog", icon: Grid3X3 },
   { label: "Cart", href: "/cart", icon: ShoppingCart },
-  { label: "Account", href: "/sign-in", icon: User },
+  { label: "Account", href: "/account", icon: User },
 ];
 
 export function MobileBottomNav() {

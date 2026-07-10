@@ -11,6 +11,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SiteHeaderFallback } from "@/components/site-header-fallback";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { NativeAppBridge } from "@/components/native-app-bridge";
 import { getAppUrl, getAbsoluteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -87,6 +88,7 @@ export default function RootLayout({
         <CartProvider>
           <PwaRegister />
           <SmoothScroll />
+          <NativeAppBridge />
           <div className="noise fixed inset-0 -z-10 opacity-40" />
           <div className="relative flex min-h-full flex-col">
             <SiteChrome

@@ -15,7 +15,7 @@ const config: CapacitorConfig = {
   appName: "SuperTech",
   webDir: "capacitor-www",
   server: {
-    url: "https://www.supertech.africa/app",
+    url: "https://www.supertech.africa/",
     androidScheme: "https",
   },
   android: {

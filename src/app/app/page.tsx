@@ -1,17 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowRight,
   Bell,
   ChevronRight,
   MessageCircle,
   PackageSearch,
   Search,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Store,
   Truck,
 } from "lucide-react";
 import { AppProductCard, AppRequestButton } from "@/components/app-product-card";
+import { CategoryIconTile, HeroDecor } from "@/components/app-graphics";
 import {
   getPublicCategorySummaries,
   getPublicProducts,
@@ -56,7 +59,7 @@ export default async function AppHomePage() {
               width={38}
               height={38}
               priority
-              className="h-10 w-10 rounded-lg bg-white object-contain shadow-sm"
+              className="h-10 w-10 rounded-xl bg-white object-contain shadow-sm"
             />
             <div className="min-w-0">
               <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#66736b]">
@@ -68,14 +71,14 @@ export default async function AppHomePage() {
           <div className="flex items-center gap-2">
             <Link
               href="/track-order"
-              className="app-tap grid h-10 w-10 place-items-center rounded-lg bg-white text-[#102019] shadow-sm"
+              className="app-tap grid h-10 w-10 place-items-center rounded-xl bg-white text-[#102019] shadow-sm"
               aria-label="Track order"
             >
               <PackageSearch className="h-5 w-5" />
             </Link>
             <Link
               href="/account"
-              className="app-tap grid h-10 w-10 place-items-center rounded-lg bg-[#102019] text-white shadow-sm"
+              className="app-tap grid h-10 w-10 place-items-center rounded-xl bg-[#102019] text-white shadow-sm"
               aria-label="Account"
             >
               <Bell className="h-5 w-5" />
@@ -84,33 +87,50 @@ export default async function AppHomePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-md space-y-4 px-4 py-4">
-        <section className="overflow-hidden rounded-lg bg-[#102019] text-white shadow-[0_16px_42px_rgba(16,32,25,0.22)]">
-          <div className="relative min-h-[19rem] p-4">
+      <main className="mx-auto max-w-md space-y-5 px-4 py-4">
+        <section className="overflow-hidden rounded-2xl bg-[#102019] text-white shadow-[0_16px_42px_rgba(16,32,25,0.22)]">
+          <div className="relative min-h-[19rem] p-5">
             {heroProduct ? (
               <Image
                 src={heroProduct.heroImage}
                 alt={heroProduct.name}
                 fill
                 priority
-                className="object-cover opacity-40"
+                className="object-cover opacity-35"
                 sizes="448px"
               />
             ) : null}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#102019]/72 via-[#102019]/58 to-[#102019]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#102019]/76 via-[#102019]/60 to-[#102019]" />
+            <HeroDecor />
             <div className="relative flex min-h-[17rem] flex-col justify-between">
               <div>
-                <p className="inline-flex rounded bg-white/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#f4c95d]">
+                <p className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#f4c95d]">
+                  <Sparkles className="h-3.5 w-3.5" />
                   App shopping
                 </p>
                 <h2 className="mt-4 max-w-xs text-4xl font-black leading-10 tracking-[-0.04em]">
                   Faster shopping made for your phone.
                 </h2>
                 <p className="mt-3 max-w-xs text-sm leading-6 text-white/74">
-                  Browse products, request items, track orders, and chat with vendors from one clean app home.
+                  Browse products, request items, track orders, and chat with vendors in one place.
                 </p>
+                <div className="mt-4 flex gap-2">
+                  <Link
+                    href="/app/shop"
+                    className="app-tap inline-flex h-11 items-center gap-1.5 rounded-xl bg-[#f68b1e] px-4 text-sm font-black text-white shadow-[0_8px_20px_rgba(246,139,30,0.4)]"
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                    Shop now
+                  </Link>
+                  <Link
+                    href="/request-product"
+                    className="app-tap inline-flex h-11 items-center gap-1.5 rounded-xl border border-white/24 bg-white/8 px-4 text-sm font-black text-white backdrop-blur"
+                  >
+                    Request item
+                  </Link>
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="mt-5 grid grid-cols-3 gap-2">
                 <MiniStat label="Products" value={formatCompactNumber(products.length)} />
                 <MiniStat label="Vendors" value={formatCompactNumber(vendors.length)} />
                 <MiniStat label="Support" value="AI" />
@@ -126,12 +146,12 @@ export default async function AppHomePage() {
               name="query"
               type="search"
               placeholder="Search products"
-              className="h-12 w-full rounded-lg border border-black/10 bg-white pl-12 pr-4 text-sm font-semibold outline-none placeholder:text-[#8a948e]"
+              className="h-12 w-full rounded-xl border border-black/10 bg-white pl-12 pr-4 text-sm font-semibold shadow-sm outline-none placeholder:text-[#8a948e] focus:border-[#f68b1e]"
             />
           </label>
           <button
             type="submit"
-            className="grid h-12 place-items-center rounded-lg bg-[#f68b1e] text-white"
+            className="app-tap grid h-12 place-items-center rounded-xl bg-[#f68b1e] text-white shadow-[0_6px_16px_rgba(246,139,30,0.35)]"
             aria-label="Search"
           >
             <Search className="h-5 w-5" />
@@ -139,13 +159,13 @@ export default async function AppHomePage() {
         </form>
 
         <section className="grid grid-cols-4 gap-2">
-          <QuickAction href="/app/shop" label="Shop" icon={Search} />
-          <QuickAction href="/app/vendors" label="Vendors" icon={Store} />
-          <QuickAction href="/request-product" label="Request" icon={Sparkles} />
-          <QuickAction href="/app/track" label="Track" icon={Truck} />
+          <QuickAction href="/app/shop" label="Shop" icon={ShoppingBag} from="#f68b1e" to="#dd7106" />
+          <QuickAction href="/app/vendors" label="Vendors" icon={Store} from="#1fae5b" to="#158243" />
+          <QuickAction href="/request-product" label="Request" icon={Sparkles} from="#8b5cf6" to="#6d28d9" />
+          <QuickAction href="/app/track" label="Track" icon={Truck} from="#38bdf8" to="#0284c7" />
         </section>
 
-        <section className="rounded-lg border border-black/10 bg-white p-3">
+        <section className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6b746e]">
@@ -157,10 +177,10 @@ export default async function AppHomePage() {
             </div>
             <AppRequestButton />
           </div>
-          <div className="mt-3 grid gap-2">
-            <AppStep icon={Search} title="Find a product" text="Search or browse category shelves." />
-            <AppStep icon={MessageCircle} title="Chat with seller" text="Ask questions directly on WhatsApp." />
-            <AppStep icon={PackageSearch} title="Track request" text="Use your request ID and email anytime." />
+          <div className="mt-4 grid gap-2">
+            <AppStep step={1} icon={Search} title="Find a product" text="Search or browse category shelves." from="#f68b1e" to="#dd7106" />
+            <AppStep step={2} icon={MessageCircle} title="Chat with seller" text="Ask questions directly on WhatsApp." from="#1fae5b" to="#158243" />
+            <AppStep step={3} icon={PackageSearch} title="Track request" text="Use your request ID and email anytime." from="#38bdf8" to="#0284c7" />
           </div>
         </section>
 
@@ -173,8 +193,9 @@ export default async function AppHomePage() {
                 </p>
                 <h2 className="text-xl font-black tracking-[-0.03em]">Browse by lane</h2>
               </div>
-                <Link href="/app/shop" className="text-sm font-black text-[#f68b1e]">
+              <Link href="/app/shop" className="inline-flex items-center gap-1 text-sm font-black text-[#f68b1e]">
                 All
+                <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -182,12 +203,13 @@ export default async function AppHomePage() {
                 <Link
                   key={category.name}
                   href={`/app/shop?category=${encodeURIComponent(category.name)}`}
-                  className="app-tap min-w-[9rem] rounded-lg border border-black/10 bg-white p-3 shadow-sm"
+                  className="app-tap min-w-[9.5rem] rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
                 >
-                  <p className="line-clamp-2 min-h-10 text-sm font-black leading-5">
+                  <CategoryIconTile name={category.name} />
+                  <p className="mt-3 line-clamp-2 min-h-10 text-sm font-black leading-5">
                     {category.name}
                   </p>
-                  <p className="mt-3 text-xs font-bold text-[#6b746e]">
+                  <p className="mt-1 text-xs font-bold text-[#6b746e]">
                     {category.productCount} items
                   </p>
                 </Link>
@@ -205,6 +227,35 @@ export default async function AppHomePage() {
           />
         ) : null}
 
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#f68b1e] to-[#dd7106] p-5 text-white shadow-[0_14px_34px_rgba(246,139,30,0.35)]">
+          <svg
+            viewBox="0 0 448 160"
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            aria-hidden
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <circle cx="420" cy="20" r="68" fill="#ffffff" fillOpacity="0.1" />
+            <circle cx="420" cy="20" r="42" fill="#ffffff" fillOpacity="0.1" />
+            <circle cx="20" cy="150" r="50" fill="#ffffff" fillOpacity="0.08" />
+            <path d="M376 110l3 7.6 7.6 3-7.6 3-3 7.6-3-7.6-7.6-3 7.6-3z" fill="#f4c95d" />
+          </svg>
+          <div className="relative">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/80">
+              Can&apos;t find it?
+            </p>
+            <h2 className="mt-1 max-w-[15rem] text-2xl font-black leading-7 tracking-[-0.03em]">
+              Request any product and we source it for you.
+            </h2>
+            <Link
+              href="/request-product"
+              className="app-tap mt-4 inline-flex h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-black text-[#dd7106]"
+            >
+              Request now
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+
         {beautyProducts.length > 0 ? (
           <ProductShelf
             title="Beauty picks"
@@ -215,42 +266,57 @@ export default async function AppHomePage() {
         ) : null}
 
         {vendors.length > 0 ? (
-          <section className="rounded-lg bg-[#102019] p-4 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/58">
-                  Official stores
-                </p>
-                <h2 className="text-xl font-black tracking-[-0.03em]">
-                  Trusted vendors
-                </h2>
-              </div>
-              <Link href="/app/vendors" className="grid h-10 w-10 place-items-center rounded-lg bg-white/10">
-                <ChevronRight className="h-5 w-5" />
-              </Link>
-            </div>
-            <div className="mt-3 grid gap-2">
-              {vendors.slice(0, 3).map((vendor) => (
+          <section className="relative overflow-hidden rounded-2xl bg-[#102019] p-4 text-white">
+            <svg
+              viewBox="0 0 448 220"
+              className="pointer-events-none absolute inset-0 h-full w-full"
+              aria-hidden
+              preserveAspectRatio="xMidYMid slice"
+            >
+              <circle cx="430" cy="10" r="80" fill="none" stroke="#f4c95d" strokeOpacity="0.2" strokeWidth="1.5" />
+              <circle cx="430" cy="10" r="52" fill="none" stroke="#f4c95d" strokeOpacity="0.14" strokeWidth="1.5" />
+            </svg>
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/58">
+                    Official stores
+                  </p>
+                  <h2 className="text-xl font-black tracking-[-0.03em]">
+                    Trusted vendors
+                  </h2>
+                </div>
                 <Link
-                  key={vendor.id}
-                  href={`/vendors/${vendor.slug}`}
-                  className="app-tap flex items-center gap-3 rounded-lg bg-white/10 p-3"
+                  href="/app/vendors"
+                  className="app-tap grid h-10 w-10 place-items-center rounded-xl bg-white/10"
+                  aria-label="All vendors"
                 >
-                  <div
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-sm font-black text-white"
-                    style={{ backgroundColor: vendor.accent }}
-                  >
-                    {vendor.logoMark}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-black">{vendor.name}</p>
-                    <p className="truncate text-xs text-white/62">
-                      {vendor.activeProducts} products
-                    </p>
-                  </div>
-                  <ShieldCheck className="h-5 w-5 text-[#f4c95d]" />
+                  <ChevronRight className="h-5 w-5" />
                 </Link>
-              ))}
+              </div>
+              <div className="mt-3 grid gap-2">
+                {vendors.slice(0, 3).map((vendor) => (
+                  <Link
+                    key={vendor.id}
+                    href={`/vendors/${vendor.slug}`}
+                    className="app-tap flex items-center gap-3 rounded-xl bg-white/10 p-3"
+                  >
+                    <div
+                      className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-sm font-black text-white"
+                      style={{ backgroundColor: vendor.accent }}
+                    >
+                      {vendor.logoMark}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black">{vendor.name}</p>
+                      <p className="truncate text-xs text-white/62">
+                        {vendor.activeProducts} products
+                      </p>
+                    </div>
+                    <ShieldCheck className="h-5 w-5 text-[#f4c95d]" />
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         ) : null}
@@ -261,7 +327,7 @@ export default async function AppHomePage() {
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-white/10 p-2">
+    <div className="rounded-xl border border-white/10 bg-white/10 p-2.5 backdrop-blur">
       <p className="text-lg font-black">{value}</p>
       <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/58">
         {label}
@@ -274,17 +340,24 @@ function QuickAction({
   href,
   label,
   icon: Icon,
+  from,
+  to,
 }: {
   href: string;
   label: string;
   icon: typeof Search;
+  from: string;
+  to: string;
 }) {
   return (
     <Link
       href={href}
-      className="app-tap flex min-w-0 flex-col items-center gap-2 rounded-lg border border-black/10 bg-white p-3 shadow-sm"
+      className="app-tap flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-black/10 bg-white p-3 shadow-sm"
     >
-      <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#fff4e5] text-[#f68b1e]">
+      <span
+        className="grid h-11 w-11 place-items-center rounded-xl text-white shadow-sm"
+        style={{ background: `linear-gradient(140deg, ${from}, ${to})` }}
+      >
         <Icon className="h-5 w-5" />
       </span>
       <span className="truncate text-xs font-black">{label}</span>
@@ -293,18 +366,30 @@ function QuickAction({
 }
 
 function AppStep({
+  step,
   icon: Icon,
   title,
   text,
+  from,
+  to,
 }: {
+  step: number;
   icon: typeof Search;
   title: string;
   text: string;
+  from: string;
+  to: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg bg-[#f3f6f2] p-3">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white text-[#102019]">
+    <div className="relative flex items-center gap-3 rounded-xl bg-[#f3f6f2] p-3">
+      <span
+        className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white shadow-sm"
+        style={{ background: `linear-gradient(140deg, ${from}, ${to})` }}
+      >
         <Icon className="h-5 w-5" />
+        <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-[#102019] text-[10px] font-black text-white">
+          {step}
+        </span>
       </span>
       <div className="min-w-0">
         <p className="text-sm font-black">{title}</p>

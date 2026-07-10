@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
   appName: "SuperTech",
   webDir: "www",
   server: {
-    url: "https://www.supertech.africa/app",
+    url: "https://www.supertech.africa/",
     cleartext: false,
     // Open these hosts inside the app's webview; everything else (WhatsApp,
     // payment USSD, external links) is handed off to the OS.

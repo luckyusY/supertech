@@ -18,7 +18,11 @@ export function SiteChrome({
   support,
 }: SiteChromeProps) {
   const pathname = usePathname();
-  const isAppShell = pathname === "/app" || pathname.startsWith("/app/");
+  const isAppShell =
+    pathname === "/app" ||
+    pathname.startsWith("/app/") ||
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/");
 
   if (isAppShell) {
     return <main className="min-h-screen flex-1">{children}</main>;

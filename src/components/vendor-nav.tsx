@@ -12,6 +12,7 @@ import {
   Palette,
   ShoppingBag,
   Sparkles,
+  UserRound,
   Wallet,
   X,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/vendor/storefront", label: "Storefront", icon: Palette },
   { href: "/dashboard/vendor/payments", label: "Payment method", icon: CreditCard },
   { href: "/dashboard/vendor/payouts", label: "Payouts", icon: Wallet },
+  { href: "/dashboard/vendor/profile", label: "Profile", icon: UserRound },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -119,6 +121,12 @@ export function VendorNav({ storeName, subtitle }: { storeName: string; subtitle
             <div className="mt-auto rounded-[0.85rem] border border-white/10 bg-white/5 px-3.5 py-3">
               <p className="truncate text-sm font-semibold">{storeName}</p>
               <p className="truncate text-xs text-white/55">{subtitle}</p>
+              <Link
+                href="/"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gold)] hover:underline"
+              >
+                ← Back to store
+              </Link>
             </div>
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Sparkles,
   Store,
+  UserRound,
   X,
 } from "lucide-react";
 
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/admin/ai", label: "AI Studio", icon: Sparkles },
   { href: "/dashboard/admin/recovery", label: "Recovery", icon: KeyRound },
+  { href: "/dashboard/admin/profile", label: "Profile", icon: UserRound },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -127,6 +129,12 @@ export function AdminNav({ name, email }: { name: string; email: string }) {
             <div className="mt-auto rounded-[0.85rem] border border-white/10 bg-white/5 px-3.5 py-3">
               <p className="truncate text-sm font-semibold">{name}</p>
               <p className="truncate text-xs text-white/55">{email}</p>
+              <Link
+                href="/"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gold)] hover:underline"
+              >
+                ← Back to store
+              </Link>
             </div>
           </div>
         </div>
