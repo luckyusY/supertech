@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:name=".App"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:name=".WelcomeActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTask"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTask"
+            android:exported="false" />
+
+        <activity
+            android:name=".WebActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".AiSupportActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".SignInActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".SignUpActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".DashboardActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".ProductDetailActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
+
+        <activity
+            android:name=".CheckoutActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".VendorProductActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminModerationActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminVendorsActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminCategoriesActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminRecoveryActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminProductsActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminAnalyticsActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminAiStudioActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".OrdersActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".PayoutsActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".TrackOrderActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".BecomeVendorActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".RequestProductActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".StorefrontActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".BlogActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".BlogPostActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
+
+        <activity
+            android:name=".AdminBlogsActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".VendorBlogsActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".PasswordRecoveryActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".VendorProfileActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".PrivacyActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
+    </application>
+
+    <!-- Permissions -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SuperTech</string>
+    <string name="title_activity_main">SuperTech</string>
+    <string name="package_name">africa.supertech.marketplace</string>
+    <string name="custom_url_scheme">africa.supertech.marketplace</string>
+</resources>

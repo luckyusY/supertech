@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#F68B1E</color>
+    <color name="colorPrimaryDark">#E07E17</color>
+    <color name="colorAccent">#F68B1E</color>
+    <color name="supertechBackground">#F1F1F2</color>
+    <color name="supertechForeground">#313133</color>
+    <color name="supertechMuted">#75757A</color>
+    <color name="supertechLine">#DCDDE1</color>
+    <color name="supertechTeal">#276076</color>
+    <color name="supertechGold">#F9B54C</color>
+</resources>
