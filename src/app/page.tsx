@@ -356,105 +356,63 @@ export default async function Home() {
   const heroSlides: HeroSlide[] = [
     {
       label: "Live now",
-      brand: "VIP",
-      accentWord: "Rewards",
+      brand: "VIP Rewards",
       title: "Earn more when you shop SuperTech.",
       body: "Verified sellers, exclusive marketplace deals, and trackable orders — built for shoppers across Africa.",
       priceLine: "Request · Cart · MoMoPay",
       ctaText: "Shop flash sale",
       ctaHref: "#flash-sale",
-      secondaryCtaText: "Browse catalog",
-      secondaryCtaHref: "/catalog",
-      image: "/banners/hero-flash-sale.jpg",
+      image: "/banners/hero-shopping-desktop.jpg",
+      mobileImage: "/banners/hero-shopping-mobile.jpg",
       tone: "dark",
-      features: [
-        { title: "Earn trust with every order", icon: "coins" },
-        { title: "Bonus deal events", icon: "zap" },
-        { title: "Exclusive verified sellers", icon: "user" },
-        { title: "Track & re-order easily", icon: "thumb" },
-      ],
+      copyPosition: "left",
     },
   ];
 
   if (beautyDeals.length > 0) {
     heroSlides.push({
       label: "Beauty shelf",
-      brand: "Glow",
-      accentWord: "Essentials",
+      brand: "Glow Essentials",
       title: "Routines from approved sellers.",
       body: "Serums, SPF, and daily personal care — clear prices and assisted checkout.",
       ctaText: "Shop beauty",
       ctaHref: "/catalog?category=Beauty+%26+Personal+Care",
-      image: "/banners/hero-beauty.jpg",
+      image: "/banners/hero-beauty-desktop.jpg",
+      mobileImage: "/banners/hero-beauty-mobile.jpg",
       tone: "dark",
-      features: [
-        { title: "Approved beauty sellers", icon: "shield" },
-        { title: "Fresh catalog drops", icon: "check" },
-        { title: "Request missing items", icon: "store" },
-        { title: "Fast order tracking", icon: "truck" },
-      ],
+      copyPosition: "center",
     });
   }
 
   if (phoneDeals.length > 0) {
     heroSlides.push({
       label: "Tech lane",
-      brand: "Smart",
-      accentWord: "Gadgets",
+      brand: "Smart Gadgets",
       title: "Phones, wearables, everyday gear.",
       body: "Mobile essentials from verified marketplace sellers — request or cart in one flow.",
       ctaText: "Shop gadgets",
       ctaHref: "/catalog?category=Mobile+Essentials",
-      image: "/banners/hero-gadgets.jpg",
+      image: "/banners/hero-tech-desktop.jpg",
+      mobileImage: "/banners/hero-tech-mobile.jpg",
       tone: "dark",
-      features: [
-        { title: "Phones & wearables", icon: "zap" },
-        { title: "Verified stock", icon: "shield" },
-        { title: "Seller support", icon: "user" },
-        { title: "Track delivery", icon: "truck" },
-      ],
+      copyPosition: "left",
     });
   }
 
   if (carDeals.length > 0 || propertyDeals.length > 0) {
     heroSlides.push({
       label: "Motors & property",
-      brand: "Big",
-      accentWord: "Listings",
+      brand: "Big Listings",
       title: "Cars, rentals, apartments, land.",
       body: "Enquiry-led listings from dealers and agents — SuperTech helps coordinate next steps.",
       ctaText: "Explore listings",
       ctaHref: "/catalog?category=Cars+for+Sale",
-      image: "/banners/hero-motors-property.jpg",
+      image: "/banners/hero-motors-desktop.jpg",
+      mobileImage: "/banners/hero-motors-mobile.jpg",
       tone: "dark",
-      features: [
-        { title: "Cars for sale & rent", icon: "store" },
-        { title: "Property listings", icon: "check" },
-        { title: "Direct enquiries", icon: "user" },
-        { title: "Trusted coordination", icon: "shield" },
-      ],
+      copyPosition: "left",
     });
   }
-
-  heroSlides.push({
-    label: "Shopper tools",
-    brand: "Request",
-    accentWord: "& Track",
-    title: "Missing a product? We help source it.",
-    body: "Send a product request or follow any order status without leaving SuperTech.",
-    ctaText: "Request a product",
-    ctaHref: "/request-product",
-    secondaryCtaText: "Track order",
-    secondaryCtaHref: "/track-order",
-    image: "/banners/hero-request-track.jpg",
-    tone: "dark",
-    features: [
-      { title: "Product requests", icon: "check" },
-      { title: "Live order tracking", icon: "truck" },
-      { title: "Official stores", icon: "store" },
-      { title: "Buyer protection", icon: "shield" },
-    ],
-  });
 
   // Photo Factory visual categories: first product image per category
   const categoryImageMap = new Map<string, string>();
@@ -476,7 +434,7 @@ export default async function Home() {
   return (
     <div className="marketplace-campaign-bg pb-20 sm:pb-0">
       {/* Adorama-style full-bleed hero + blue category product strip */}
-      <HeroSlider slides={heroSlides} layout="fullBleed" />
+      <HeroSlider slides={heroSlides} />
       <VisualCategoryRail items={visualCategories} />
       <VisualCategoryGrid items={visualCategories} />
 
