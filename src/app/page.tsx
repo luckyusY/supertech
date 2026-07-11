@@ -25,6 +25,10 @@ import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { ProductCard } from "@/components/product-card";
 import { TrustStrip } from "@/components/trust-strip";
 import {
+  VisualCategoryGrid,
+  VisualCategoryRail,
+} from "@/components/visual-category-grid";
+import {
   getPublicCategorySummaries,
   getPublicFeaturedProducts,
   getPublicProducts,
@@ -401,14 +405,40 @@ export default async function Home() {
     secondaryCtaHref: "/track-order",
   });
 
-  const mobileCategoryChips = homepageCategories.slice(0, 10);
+  // Photo Factory visual categories: first product image per category
+  const categoryImageMap = new Map<string, string>();
+  for (const product of publicProducts) {
+    if (!categoryImageMap.has(product.category) && product.heroImage) {
+      categoryImageMap.set(product.category, product.heroImage);
+    }
+  }
+  const visualCategories = homepageCategories
+    .filter((category) => category.category)
+    .slice(0, 12)
+    .map((category) => ({
+      name: category.name,
+      href: category.href,
+      image: category.category ? categoryImageMap.get(category.category) : undefined,
+      icon: category.icon,
+    }));
 
   return (
     <div className="marketplace-campaign-bg pb-20 sm:pb-0">
+      {/* Full-bleed hero + visual categories on mobile — Photo Factory pattern */}
+      <div className="lg:hidden">
+        <HeroSlider slides={heroSlides} layout="fullBleed" />
+        <VisualCategoryGrid items={visualCategories} />
+      </div>
+
+      {/* Tablet image category rail — Photo Factory CardSwiper density */}
+      <div className="hidden md:block lg:hidden">
+        <VisualCategoryRail items={visualCategories} />
+      </div>
+
       <section className="page-shell py-4 sm:py-6">
-        {/* ——— Hero triad ——— */}
-        <div className="grid gap-3 lg:grid-cols-[210px_minmax(0,1fr)_250px] lg:items-stretch">
-          <aside className="hidden lg:block">
+        {/* ——— Desktop hero triad ——— */}
+        <div className="hidden gap-3 lg:grid lg:grid-cols-[210px_minmax(0,1fr)_250px] lg:items-stretch">
+          <aside>
             <div className="flex h-full max-h-[440px] flex-col overflow-hidden rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
               <div className="flex items-center justify-between border-b border-[var(--line)] px-3 py-2.5">
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
@@ -441,7 +471,7 @@ export default async function Home() {
             </div>
           </aside>
 
-          <div className="min-h-[300px] sm:min-h-[380px] lg:min-h-[420px]">
+          <div className="min-h-[420px]">
             <HeroSlider slides={heroSlides} />
           </div>
 
@@ -496,32 +526,24 @@ export default async function Home() {
           </div>
         </div>
 
+        {/* Mobile right-rail tools under category grid */}
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:hidden">
+          {sidebarProduct ? (
+            <PromoProductCard
+              eyebrow="Deal of the day"
+              title={sidebarProduct.name}
+              price={formatPrice(sidebarProduct.price)}
+              compareAt={
+                sidebarProduct.compareAt ? formatPrice(sidebarProduct.compareAt) : null
+              }
+              href={`/products/${sidebarProduct.slug}`}
+              image={sidebarProduct.heroImage}
+            />
+          ) : null}
+        </div>
+
         <GsapReveal className="mt-4" y={16} stagger={0}>
           <TrustStrip stats={heroStats} />
-        </GsapReveal>
-
-        {/* Mobile category chips — primary mobile entry (no duplicate shortcut grid) */}
-        <GsapReveal className="mt-4 lg:hidden" y={18} delay={0.05}>
-          <div className="scroll-x gap-2 pb-0.5">
-            {mobileCategoryChips.map((category) => (
-              <Link
-                key={category.name}
-                href={category.href}
-                data-reveal-item
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2 text-xs font-semibold text-[var(--foreground)] shadow-[var(--elevation-1)]"
-              >
-                <category.icon className="h-3.5 w-3.5 text-[var(--accent)]" />
-                {category.name}
-              </Link>
-            ))}
-            <Link
-              href="/catalog"
-              data-reveal-item
-              className="inline-flex shrink-0 items-center rounded-full bg-[var(--accent)] px-3.5 py-2 text-xs font-bold text-white"
-            >
-              All
-            </Link>
-          </div>
         </GsapReveal>
 
         {/* Desktop quick lanes — compact icon rail */}

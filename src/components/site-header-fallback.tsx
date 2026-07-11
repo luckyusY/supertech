@@ -1,89 +1,77 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CircleHelp, PackageSearch, Search, ShieldCheck, Store, Truck, User } from "lucide-react";
+import {
+  CircleHelp,
+  PackageSearch,
+  ShieldCheck,
+  Store,
+  Truck,
+  User,
+} from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
+import { HeaderSearch } from "@/components/header-search";
 import { MobileNav } from "@/components/mobile-nav";
-import { getPublicCategories } from "@/lib/public-marketplace";
 
 const shopperLinks = [
-  { label: "Vendors", mobileLabel: "Vendors", href: "/vendors", icon: Store },
-  { label: "Request Product", mobileLabel: "Request", href: "/request-product", icon: PackageSearch },
-  { label: "Track Your Order", mobileLabel: "Track", href: "/track-order", icon: Truck },
-  { label: "Become a Vendor", mobileLabel: "Sell", href: "/become-vendor", icon: ShieldCheck },
+  { label: "Vendors", href: "/vendors", icon: Store },
+  { label: "Request Product", href: "/request-product", icon: PackageSearch },
+  { label: "Track Order", href: "/track-order", icon: Truck },
+  { label: "Sell on SuperTech", href: "/become-vendor", icon: ShieldCheck },
 ] as const;
 
+/**
+ * Lightweight static fallback while SiteHeader streams.
+ * Mirrors Photo Factory–style dense chrome without auth/session fetch.
+ */
 export async function SiteHeaderFallback() {
-  const categories = await getPublicCategories().catch(() => ["All"]);
-  const headerCategories = categories.filter((category) => category !== "All");
-
   return (
-    <header className="sticky top-0 z-50">
-      <div className="hidden border-b border-[var(--line)] bg-white lg:block">
-        <div className="page-shell flex h-9 items-center justify-between gap-4 text-xs text-[var(--muted)]">
-          <Link href="/become-vendor" className="inline-flex items-center gap-2 font-semibold text-[var(--accent)]">
-            <Store className="h-3.5 w-3.5" />
-            Sell on SuperTech
-          </Link>
-          <div className="flex items-center gap-5">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-[var(--accent)]" />
-              Verified marketplace
-            </span>
-            <span>Beauty, wellness, tech, and home essentials</span>
-          </div>
-        </div>
+    <header className="sticky top-0 z-[var(--z-header)]">
+      <div className="bg-[var(--background-strong)] px-2 py-1 text-center text-[11px] font-semibold leading-snug text-white sm:px-4">
+        <span className="text-[var(--accent)]">Verified sellers</span>
+        {" · "}
+        Request missing products · Track every order
       </div>
 
-      <div className="bg-[var(--accent)] shadow-[0_4px_18px_rgba(24,24,26,0.20)]">
-        <div className="page-shell py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 md:hidden">
-              <MobileNav categories={headerCategories} />
+      <div className="bg-[var(--accent)] shadow-[var(--elevation-2)]">
+        <div className="page-shell py-2 sm:py-2.5">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
+              <div className="md:hidden">
+                <MobileNav categories={[]} />
+              </div>
+              <Link href="/" className="flex shrink-0 items-center gap-2 text-white">
+                <Image
+                  src="/logo.png"
+                  alt="SuperTech logo"
+                  width={40}
+                  height={40}
+                  priority
+                  className="h-9 w-9 rounded-[var(--radius-sm)] bg-white object-contain sm:h-10 sm:w-10"
+                />
+                <div className="hidden min-[400px]:block">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/85">
+                    SuperTech
+                  </p>
+                  <p className="text-base font-bold leading-none tracking-[-0.03em] sm:text-lg">
+                    Marketplace
+                  </p>
+                </div>
+              </Link>
             </div>
 
-            <Link href="/" className="flex shrink-0 items-center gap-2.5 text-white">
-              <Image
-                src="/logo.png"
-                alt="SuperTech logo"
-                width={40}
-                height={40}
-                priority
-                className="h-10 w-10 rounded-md bg-white object-contain"
-              />
-              <div className="hidden min-[420px]:block">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">
-                  SuperTech
-                </p>
-                <p className="text-lg font-black leading-none tracking-[-0.04em]">Marketplace</p>
-              </div>
-            </Link>
+            <HeaderSearch variant="desktop" />
 
-            <form action="/catalog" className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
-              <div className="relative min-w-0 flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-                <input
-                  type="search"
-                  name="query"
-                  placeholder="Search products, stores and categories"
-                  className="h-11 w-full rounded-md border border-white/55 bg-white pl-10 pr-4 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)]"
-                />
-              </div>
-              <button
-                type="submit"
-                className="inline-flex h-11 items-center justify-center rounded-md bg-[var(--foreground)] px-5 text-sm font-semibold text-white"
+            <div className="hidden items-center gap-2 md:flex">
+              <Link
+                href="/sign-in"
+                className="inline-flex h-9 items-center gap-2 rounded-full border border-white/55 bg-white px-3 text-sm font-semibold text-[var(--foreground)] shadow-sm"
               >
-                Search
-              </button>
-            </form>
-
-            <div className="ml-auto hidden items-center gap-2 md:flex">
-              <div className="inline-flex h-10 items-center gap-2 rounded-md border border-white/55 bg-white px-3 text-sm font-semibold text-[var(--foreground)] shadow-sm transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]">
                 <User className="h-4 w-4" />
                 Account
-              </div>
+              </Link>
               <Link
                 href="/track-order"
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-white/25 bg-white/12 px-3 text-sm font-semibold text-white transition-colors hover:bg-white/22"
+                className="inline-flex h-9 items-center gap-2 rounded-full border border-white/25 bg-white/12 px-3 text-sm font-semibold text-white"
               >
                 <CircleHelp className="h-4 w-4" />
                 Help
@@ -91,82 +79,36 @@ export async function SiteHeaderFallback() {
               <CartStatusLink />
             </div>
 
-            <div className="ml-auto flex items-center gap-2 md:hidden">
+            <div className="flex items-center gap-1.5 md:hidden">
               <Link
-                href="/track-order"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/25 bg-white/12 text-white"
-                aria-label="Track order"
+                href="/sign-in"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/12 text-white"
+                aria-label="Sign in"
               >
-                <PackageSearch className="h-4 w-4" />
+                <User className="h-4 w-4" />
               </Link>
               <CartStatusLink compact />
             </div>
           </div>
 
-          <form action="/catalog" className="mt-3 grid grid-cols-[minmax(0,1fr)_92px] gap-2 md:hidden">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" />
-              <input
-                type="search"
-                name="query"
-                placeholder="Search products"
-                className="h-11 w-full rounded-md border border-white/55 bg-white pl-10 pr-4 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)]"
-              />
-            </div>
-            <button
-              type="submit"
-              className="inline-flex h-11 items-center justify-center rounded-md bg-[var(--foreground)] px-4 text-sm font-semibold text-white"
+          <HeaderSearch variant="mobile" />
+        </div>
+      </div>
+
+      <nav className="hidden border-b border-[var(--line)] bg-[var(--background-strong)] text-white lg:block">
+        <div className="page-shell flex h-11 items-center gap-1 overflow-x-auto">
+          {shopperLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex shrink-0 items-center gap-1.5 px-3 py-2 text-sm font-semibold text-white/90 hover:bg-white/10 hover:text-white"
             >
-              Search
-            </button>
-          </form>
-
-          <div className="mt-3 grid grid-cols-3 gap-2 md:hidden">
-            {shopperLinks.slice(0, 3).map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="inline-flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-md border border-white/35 bg-white/12 px-2 text-xs font-semibold text-white"
-              >
-                <link.icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{link.mobileLabel}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="hidden border-b border-[var(--line)] bg-white lg:block">
-        <div className="page-shell flex h-11 items-center gap-4 overflow-x-auto text-sm font-semibold text-[var(--foreground)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <nav aria-label="Marketplace quick links" className="flex shrink-0 items-center gap-2">
-            {shopperLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-[var(--line)] bg-[var(--accent-soft)] px-2.5 text-xs font-bold text-[var(--accent)] transition-colors hover:border-[var(--accent)]"
-              >
-                <link.icon className="h-3.5 w-3.5" />
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <span className="h-5 w-px shrink-0 bg-[var(--line)]" />
-          <nav aria-label="Product categories" className="flex min-w-0 items-center gap-6">
-            {headerCategories.map((category) => (
-              <Link
-                key={category}
-                href={`/catalog?category=${encodeURIComponent(category)}`}
-                className="relative whitespace-nowrap py-3 text-[var(--foreground)] transition-colors hover:text-[var(--accent)] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-[var(--accent)] after:transition-[width] after:duration-200 hover:after:w-full"
-              >
-                {category}
-              </Link>
-            ))}
-            <Link href="/vendors" className="relative whitespace-nowrap py-3 text-[var(--foreground)] transition-colors hover:text-[var(--accent)] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-[var(--accent)] after:transition-[width] after:duration-200 hover:after:w-full">
-              Official Stores
+              <link.icon className="h-3.5 w-3.5" />
+              {link.label}
             </Link>
-          </nav>
+          ))}
         </div>
-      </div>
+      </nav>
     </header>
   );
 }

@@ -188,11 +188,11 @@ export function ProductBuyBox({
         ) : null}
       </div>
 
-      {/* Sticky mobile CTA */}
+      {/* Sticky mobile CTA sits above the 5-tab dock (Photo Factory density) */}
       <div
         className={cn(
-          "fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--surface)]/95 px-4 py-3 backdrop-blur-md sm:hidden",
-          "pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+          "fixed inset-x-0 z-40 border-t border-[var(--line)] bg-[var(--surface)]/95 px-4 py-2.5 backdrop-blur-md sm:hidden",
+          "bottom-[calc(3.5rem+env(safe-area-inset-bottom))]",
         )}
       >
         <div className="flex items-center gap-3">

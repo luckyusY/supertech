@@ -496,6 +496,47 @@ img {
   width: 32px !important;
 }
 
+/* Full-bleed hero swiper (Photo Factory pattern) */
+.hero-swiper .swiper {
+  height: 100%;
+}
+
+.hero-swiper .swiper-button-prev,
+.hero-swiper .swiper-button-next {
+  color: white !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+}
+
+.hero-swiper .swiper-button-prev::after,
+.hero-swiper .swiper-button-next::after {
+  font-size: 14px !important;
+  font-weight: 700;
+}
+
+.hero-swiper .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.55) !important;
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.hero-swiper .swiper-pagination-bullet-active {
+  background: var(--accent) !important;
+  width: 18px !important;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Product card gallery Swiper */
 .product-card-gallery .swiper {
   height: 100%;
