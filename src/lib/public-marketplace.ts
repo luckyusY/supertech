@@ -160,17 +160,23 @@ export const getPublicVendors = cache(async () => {
     );
   }
 
+  const { getVendorOverridesMap, mergeVendorWithOverride } = await import(
+    "@/lib/vendor-overrides"
+  );
+  const seedOverrides = await getVendorOverridesMap(seedVendors.map((v) => v.slug));
+
   const seedWithSubmissions = seedVendors.filter((v) => !hiddenSlugs.has(v.slug)).map((vendor) => {
+    const base = mergeVendorWithOverride(vendor, seedOverrides.get(vendor.slug));
     const approvedForVendor = approvedSubmissions.filter(
-      (submission) => submission.vendorSlug === vendor.slug,
+      (submission) => submission.vendorSlug === base.slug,
     );
     const categories = new Set([
-      ...vendor.categories,
+      ...base.categories,
       ...approvedForVendor.map((submission) => submission.category),
     ]);
 
     return {
-      ...vendor,
+      ...base,
       activeProducts: productCountByVendor.get(vendor.slug) ?? 0,
       categories: Array.from(categories),
     } satisfies Vendor;
@@ -301,7 +307,14 @@ export async function getPublicTopVendors() {
   return vendors.slice(0, 4);
 }
 
-export async function getAdminVendors() {
+export type AdminVendorRecord = Vendor & {
+  activeProducts: number;
+  isSeed: boolean;
+  disabled: boolean;
+  email?: string;
+};
+
+export async function getAdminVendors(): Promise<AdminVendorRecord[]> {
   const [mongoVendors, hiddenSlugs, publicProducts] = await Promise.all([
     getMongoVendors(),
     getHiddenSlugs("vendor"),
@@ -315,13 +328,24 @@ export async function getAdminVendors() {
     );
   }
   const seedSlugs = new Set(seedVendors.map((v) => v.slug));
-  return [
-    ...seedVendors.map((v) => ({
-      ...v,
+
+  const { getVendorOverridesMap, mergeVendorWithOverride } = await import(
+    "@/lib/vendor-overrides"
+  );
+  const overrides = await getVendorOverridesMap(seedVendors.map((v) => v.slug));
+
+  const seeds = seedVendors.map((v) => {
+    const merged = mergeVendorWithOverride(v, overrides.get(v.slug));
+    return {
+      ...merged,
       activeProducts: productCountByVendor.get(v.slug) ?? 0,
       isSeed: true as const,
       disabled: hiddenSlugs.has(v.slug),
-    })),
+    };
+  });
+
+  return [
+    ...seeds,
     ...mongoVendors
       .filter((v) => !seedSlugs.has(v.slug))
       .map((v) => ({
@@ -331,6 +355,11 @@ export async function getAdminVendors() {
         disabled: false,
       })),
   ];
+}
+
+export async function getAdminVendorBySlug(slug: string): Promise<AdminVendorRecord | null> {
+  const vendors = await getAdminVendors();
+  return vendors.find((v) => v.slug === slug) ?? null;
 }
 
 export async function getAdminProductHiddenSlugs() {

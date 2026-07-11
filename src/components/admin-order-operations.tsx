@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { ChevronDown, MessageSquareMore, RefreshCw, Search } from "lucide-react";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { EmptyState } from "@/components/ui";
+import { getPageSlice, TablePagination } from "@/components/ui/table-pagination";
 import { ORDER_STATUS_META, type OrderRequestStatus } from "@/lib/product-rules";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
 
@@ -79,12 +80,14 @@ export function AdminOrderOperations() {
   const [actionError, setActionError] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   async function loadOrders() {
     try {
-      const response = await fetch("/api/order-requests?limit=50", {
+      const response = await fetch("/api/order-requests?limit=200", {
         cache: "no-store",
       });
 
@@ -152,6 +155,11 @@ export function AdminOrderOperations() {
       return haystack.includes(q);
     });
   }, [state, filter, query]);
+
+  const pageSlice = useMemo(
+    () => getPageSlice(filteredOrders, page, pageSize),
+    [filteredOrders, page, pageSize],
+  );
 
   function saveOrder(id: string) {
     const status = statusDrafts[id];
@@ -238,7 +246,10 @@ export function AdminOrderOperations() {
             <button
               key={item.id}
               type="button"
-              onClick={() => setFilter(item.id)}
+              onClick={() => {
+                setFilter(item.id);
+                setPage(1);
+              }}
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
                 filter === item.id
@@ -256,7 +267,10 @@ export function AdminOrderOperations() {
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
               placeholder="Search ID, customer, vendor…"
               className="h-10 w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-white pl-9 pr-3 text-sm outline-none focus:border-[var(--accent)]"
             />
@@ -289,6 +303,7 @@ export function AdminOrderOperations() {
             <table className="w-full min-w-[52rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)] text-xs uppercase tracking-[0.1em] text-[var(--muted)]">
+                  <th className="w-12 px-3 py-3 font-semibold">#</th>
                   <th className="px-3 py-3 font-semibold">Request</th>
                   <th className="px-3 py-3 font-semibold">Customer</th>
                   <th className="px-3 py-3 font-semibold">Items</th>
@@ -301,12 +316,13 @@ export function AdminOrderOperations() {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order) => {
+                {pageSlice.rows.map((order, index) => {
                   const open = expandedId === order.id;
                   return (
                     <OrderRow
                       key={order.id}
                       order={order}
+                      rowNumber={pageSlice.rowOffset + index + 1}
                       open={open}
                       onToggle={() => setExpandedId(open ? null : order.id)}
                       statusDraft={statusDrafts[order.id] ?? order.status}
@@ -325,6 +341,16 @@ export function AdminOrderOperations() {
               </tbody>
             </table>
           </div>
+          <TablePagination
+            page={pageSlice.page}
+            pageSize={pageSize}
+            total={pageSlice.total}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
         </div>
       )}
     </div>
@@ -333,6 +359,7 @@ export function AdminOrderOperations() {
 
 function OrderRow({
   order,
+  rowNumber,
   open,
   onToggle,
   statusDraft,
@@ -343,6 +370,7 @@ function OrderRow({
   isPending,
 }: {
   order: OrderRecord;
+  rowNumber: number;
   open: boolean;
   onToggle: () => void;
   statusDraft: OrderStatus;
@@ -360,6 +388,9 @@ function OrderRow({
           open && "bg-[var(--accent-soft)]/40",
         )}
       >
+        <td className="px-3 py-3">
+          <span className="font-numeric text-caption text-[var(--muted)]">{rowNumber}</span>
+        </td>
         <td className="px-3 py-3">
           <p className="font-mono text-xs font-semibold uppercase tracking-[0.08em]">
             {order.requestId}
@@ -400,7 +431,7 @@ function OrderRow({
       </tr>
       {open ? (
         <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)]">
-          <td colSpan={7} className="px-3 py-4">
+          <td colSpan={8} className="px-3 py-4">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
               <div className="space-y-3">
                 <div className="rounded-[var(--radius-md)] border border-[var(--line)] bg-white p-4">

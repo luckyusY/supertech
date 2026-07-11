@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Activity, MousePointerClick, Radio } from "lucide-react";
+import { AdminEventsStream } from "@/components/admin-events-stream";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { EmptyState } from "@/components/ui";
 import { requirePageSession } from "@/lib/auth";
 import { getProductEventsSnapshot } from "@/lib/product-events";
-import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Product events — Admin",
@@ -31,7 +31,7 @@ export default async function AdminEventsPage() {
     nextPath: "/dashboard/admin/events",
   });
 
-  const snapshot = await getProductEventsSnapshot(50);
+  const snapshot = await getProductEventsSnapshot(200);
   const maxCount = Math.max(...snapshot.byName.map((row) => row.count), 1);
 
   return (
@@ -105,50 +105,12 @@ export default async function AdminEventsPage() {
 
             <section className="soft-card overflow-hidden">
               <div className="border-b border-[var(--line)] px-5 py-4 sm:px-6">
-                <h2 className="text-lg font-semibold tracking-[-0.03em]">Recent stream</h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">
+                <h2 className="text-subtitle">Recent stream</h2>
+                <p className="mt-1 text-caption text-[var(--muted)]">
                   Latest {snapshot.recent.length} events (newest first).
                 </p>
               </div>
-              {snapshot.recent.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-[var(--muted)] sm:px-6">
-                  Waiting for the first tracked interactions.
-                </p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[36rem] text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)] text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
-                        <th className="px-4 py-3 font-semibold">When</th>
-                        <th className="px-4 py-3 font-semibold">Event</th>
-                        <th className="px-4 py-3 font-semibold">Path</th>
-                        <th className="px-4 py-3 font-semibold">Props</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {snapshot.recent.map((event) => (
-                        <tr
-                          key={event.id}
-                          className="border-b border-[var(--line)] last:border-0"
-                        >
-                          <td className="whitespace-nowrap px-4 py-3 text-[var(--muted)]">
-                            {formatDateTime(event.createdAt)}
-                          </td>
-                          <td className="px-4 py-3 font-medium">
-                            {EVENT_LABELS[event.name] ?? event.name}
-                          </td>
-                          <td className="max-w-[10rem] truncate px-4 py-3 text-[var(--muted)]">
-                            {event.path ?? "—"}
-                          </td>
-                          <td className="max-w-[14rem] truncate px-4 py-3 font-mono text-xs text-[var(--muted)]">
-                            {summarizeProps(event.props)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <AdminEventsStream events={snapshot.recent} />
             </section>
           </div>
         </>
@@ -177,11 +139,4 @@ function MetricCard({
   );
 }
 
-function summarizeProps(props: Record<string, unknown>) {
-  const entries = Object.entries(props).slice(0, 4);
-  if (entries.length === 0) return "—";
-  return entries
-    .map(([key, value]) => `${key}=${String(value ?? "")}`)
-    .join(" · ")
-    .slice(0, 120);
-}
+

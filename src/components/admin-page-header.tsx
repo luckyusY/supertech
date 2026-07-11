@@ -24,15 +24,11 @@ export function AdminPageHeader({
         </span>
         <div>
           {eyebrow ? (
-            <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[var(--muted)]">
-              {eyebrow}
-            </p>
+            <p className="text-overline text-[var(--muted)]">{eyebrow}</p>
           ) : null}
-          <h1 className="text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{title}</h1>
+          <h1 className="text-title text-[var(--foreground)]">{title}</h1>
           {description ? (
-            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-              {description}
-            </p>
+            <p className="mt-1.5 max-w-2xl text-body text-[var(--muted)]">{description}</p>
           ) : null}
         </div>
       </div>

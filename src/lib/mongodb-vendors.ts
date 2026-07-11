@@ -101,6 +101,8 @@ export async function updateMongoVendorProfile(
     coverImage?: string;
     logoMark?: string;
     headline?: string;
+    responseTime?: string;
+    accent?: string;
     momoMerchantCode?: string;
     momoBusinessName?: string;
   },
@@ -139,6 +141,12 @@ export async function updateMongoVendorProfile(
   }
   if (typeof input.headline === "string") {
     set.headline = input.headline.trim().slice(0, 160);
+  }
+  if (typeof input.responseTime === "string") {
+    set.responseTime = input.responseTime.trim().slice(0, 40);
+  }
+  if (typeof input.accent === "string") {
+    set.accent = input.accent.trim().slice(0, 20) || "#102019";
   }
   if (typeof input.momoMerchantCode === "string") {
     // Keep digits only — MoMoPay merchant codes are numeric.

@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { ChevronDown, RefreshCw, Search } from "lucide-react";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { EmptyState } from "@/components/ui";
+import { getPageSlice, TablePagination } from "@/components/ui/table-pagination";
 import type { Vendor } from "@/lib/marketplace";
 import type { OrderRequestStatus } from "@/lib/product-rules";
 import { cn, formatDateTime, formatPrice } from "@/lib/utils";
@@ -80,6 +81,8 @@ export function VendorOrderQueue({
   const [state, setState] = useState<VendorQueueState>({ status: "loading" });
   const [filter, setFilter] = useState<FilterId>("all");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -90,7 +93,7 @@ export function VendorOrderQueue({
     setState({ status: "loading" });
     try {
       const response = await fetch(
-        `/api/order-requests?vendorSlug=${encodeURIComponent(slug)}&limit=50`,
+        `/api/order-requests?vendorSlug=${encodeURIComponent(slug)}&limit=200`,
         { cache: "no-store" },
       );
       if (!response.ok) throw new Error("Unable to load vendor order queue.");
@@ -107,7 +110,7 @@ export function VendorOrderQueue({
       setState({ status: "loading" });
       try {
         const response = await fetch(
-          `/api/order-requests?vendorSlug=${encodeURIComponent(vendorSlug)}&limit=50`,
+          `/api/order-requests?vendorSlug=${encodeURIComponent(vendorSlug)}&limit=200`,
           { cache: "no-store" },
         );
         if (!response.ok) throw new Error("fail");
@@ -157,6 +160,11 @@ export function VendorOrderQueue({
       return haystack.includes(q);
     });
   }, [state, filter, query]);
+
+  const pageSlice = useMemo(
+    () => getPageSlice(filteredOrders, page, pageSize),
+    [filteredOrders, page, pageSize],
+  );
 
   return (
     <div className="space-y-5">
@@ -222,7 +230,10 @@ export function VendorOrderQueue({
             <button
               key={item.id}
               type="button"
-              onClick={() => setFilter(item.id)}
+              onClick={() => {
+                setFilter(item.id);
+                setPage(1);
+              }}
               className={cn(
                 "rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
                 filter === item.id
@@ -240,7 +251,10 @@ export function VendorOrderQueue({
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
               placeholder="Search ID, customer, city…"
               className="h-10 w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-white pl-9 pr-3 text-sm outline-none focus:border-[var(--accent)]"
             />
@@ -298,6 +312,7 @@ export function VendorOrderQueue({
             <table className="w-full min-w-[48rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)] text-xs uppercase tracking-[0.1em] text-[var(--muted)]">
+                  <th className="w-12 px-3 py-3 font-semibold">#</th>
                   <th className="px-3 py-3 font-semibold">Request</th>
                   <th className="px-3 py-3 font-semibold">Customer</th>
                   <th className="px-3 py-3 font-semibold">Your items</th>
@@ -310,7 +325,7 @@ export function VendorOrderQueue({
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order) => {
+                {pageSlice.rows.map((order, index) => {
                   const lines = order.lineItems.filter((item) => item.vendorSlug === vendorSlug);
                   const subtotal = lines.reduce((t, item) => t + item.lineTotal, 0);
                   const open = expandedId === order.id;
@@ -324,6 +339,11 @@ export function VendorOrderQueue({
                           open && "bg-[var(--accent-soft)]/40",
                         )}
                       >
+                        <td className="px-3 py-3">
+                          <span className="font-numeric text-caption text-[var(--muted)]">
+                            {pageSlice.rowOffset + index + 1}
+                          </span>
+                        </td>
                         <td className="px-3 py-3">
                           <p className="font-mono text-xs font-semibold uppercase tracking-[0.08em]">
                             {order.requestId}
@@ -368,7 +388,7 @@ export function VendorOrderQueue({
                       </tr>
                       {open ? (
                         <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)]">
-                          <td colSpan={7} className="px-3 py-4">
+                          <td colSpan={8} className="px-3 py-4">
                             <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
                               <div className="rounded-[var(--radius-md)] border border-[var(--line)] bg-white p-4">
                                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
@@ -446,6 +466,16 @@ export function VendorOrderQueue({
               </tbody>
             </table>
           </div>
+          <TablePagination
+            page={pageSlice.page}
+            pageSize={pageSize}
+            total={pageSlice.total}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
         </div>
       ) : null}
     </div>

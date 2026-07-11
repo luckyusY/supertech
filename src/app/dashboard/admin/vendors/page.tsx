@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ExternalLink, MapPin, Package, Star, Store } from "lucide-react";
+import { Store } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { AdminVendorsTable } from "@/components/admin-vendors-table";
 import { requirePageSession } from "@/lib/auth";
 import { getAdminVendors } from "@/lib/public-marketplace";
-import { AdminDeleteButton } from "@/components/admin-delete-button";
-import { AdminToggleButton } from "@/components/admin-toggle-button";
-import { deleteVendorAction, toggleVendorAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Manage Vendors — Admin",
@@ -24,15 +21,15 @@ export default async function ManageVendorsPage() {
       <AdminPageHeader
         icon={Store}
         eyebrow="Sellers"
-        title="Manage Vendors"
-        description="Monitor every seller, disable built-in stores, or remove vendor accounts."
+        title="Manage vendors"
+        description="Search, open detail, edit profiles, disable built-in stores, or remove accounts."
         actions={
           <>
-            <span className="rounded-full bg-[rgba(8,145,178,0.1)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
+            <span className="rounded-full bg-[var(--info-soft)] px-3 py-1 text-xs font-semibold text-[var(--info)]">
               {activeCount} active
             </span>
             {vendors.length > activeCount ? (
-              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
+              <span className="rounded-full bg-[var(--warning-soft)] px-3 py-1 text-xs font-semibold text-[var(--warning)]">
                 {vendors.length - activeCount} disabled
               </span>
             ) : null}
@@ -40,106 +37,8 @@ export default async function ManageVendorsPage() {
         }
       />
 
-      <div className="mt-6 overflow-x-auto rounded-[1.25rem] border border-[var(--line)] bg-white">
-          <table className="w-full min-w-[48rem] text-sm">
-            <thead>
-              <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
-                {["Vendor", "Location", "Categories", "Products", "Rating", "Joined", ""].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {vendors.map((vendor, i) => (
-                <tr
-                  key={vendor.slug}
-                  className={`border-b border-[var(--line)] last:border-0 ${
-                    vendor.disabled
-                      ? "opacity-50"
-                      : i % 2 === 0
-                      ? "bg-white"
-                      : "bg-[rgba(15,23,42,0.015)]"
-                  }`}
-                >
-                  <td className="px-5 py-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold">{vendor.name}</p>
-                        {vendor.isSeed && (
-                          <span className="rounded-full bg-[rgba(8,145,178,0.1)] px-2 py-0.5 text-[9px] font-semibold text-[var(--teal)]">
-                            Built-in
-                          </span>
-                        )}
-                        {vendor.disabled && (
-                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-600">
-                            Disabled
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-xs text-[var(--muted)]">
-                        {vendor.headline?.slice(0, 50)}{vendor.headline && vendor.headline.length > 50 ? "…" : ""}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="flex items-center gap-1.5 text-[var(--muted)]">
-                      <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      {vendor.location}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {vendor.categories.slice(0, 2).map((cat) => (
-                        <span key={cat} className="rounded-full bg-[rgba(15,23,42,0.06)] px-2 py-0.5 text-[10px] font-medium">
-                          {cat}
-                        </span>
-                      ))}
-                      {vendor.categories.length > 2 && (
-                        <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-2 py-0.5 text-[10px] font-medium text-[var(--muted)]">
-                          +{vendor.categories.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="flex items-center gap-1.5">
-                      <Package className="h-3.5 w-3.5 text-[var(--muted)]" />
-                      {vendor.activeProducts}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="flex items-center gap-1">
-                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                      <span className="font-semibold">{vendor.rating > 0 ? vendor.rating.toFixed(1) : "—"}</span>
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{vendor.joined}</td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/vendors/${vendor.slug}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-3 py-1.5 text-xs font-medium hover:bg-[rgba(15,23,42,0.04)]"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        View
-                      </Link>
-                      {vendor.isSeed ? (
-                        <AdminToggleButton
-                          disabled={vendor.disabled}
-                          onToggle={toggleVendorAction.bind(null, vendor.slug, vendor.disabled)}
-                        />
-                      ) : (
-                        <AdminDeleteButton onDelete={deleteVendorAction.bind(null, vendor.slug, false)} />
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="mt-6">
+        <AdminVendorsTable vendors={vendors} />
       </div>
     </div>
   );

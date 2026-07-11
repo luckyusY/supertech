@@ -94,6 +94,12 @@
   --footer-bg: #1e1e20;
   --announcement-bg: #1e1e20;
 
+  /* Ambient canvas */
+  --canvas-base: #f5f4f0;
+  --canvas-glow-brand: rgba(232, 119, 10, 0.55);
+  --canvas-glow-cool: rgba(28, 84, 104, 0.45);
+  --canvas-vignette: rgba(24, 24, 26, 0.55);
+
   /* Per-shelf gradient tokens (slightly softened) */
   --shelf-flash:    linear-gradient(90deg, #d93a24 0%, #ef6419 48%, #f57b10 100%);
   --shelf-topsell:  #1e1e20;
@@ -119,6 +125,69 @@
   --color-accent: var(--accent);
   --font-sans: var(--font-inter), var(--font-space-grotesk), sans-serif;
   --font-mono: var(--font-ibm-plex-mono);
+}
+
+/* ——— Typography roles ——— */
+.text-display {
+  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  font-size: clamp(1.75rem, 2.5vw, var(--text-display));
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.text-title {
+  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  font-size: clamp(1.25rem, 1.6vw, var(--text-title));
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.text-subtitle {
+  font-size: var(--text-subtitle);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+
+.text-body {
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.text-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.text-caption {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.text-overline {
+  font-size: var(--text-overline);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.font-numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-canvas="dashboard"] {
+  --background: #f3f3f1;
+  --canvas-base: #f3f3f1;
+}
+
+html[data-canvas="app"] {
+  --canvas-base: #f5f4f0;
 }
 
 * {
