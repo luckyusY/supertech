@@ -16,7 +16,7 @@ export function AnnouncementBar() {
   if (!visible) return null;
 
   return (
-    <div className="relative z-50 overflow-hidden bg-[var(--foreground)] py-2.5 text-white">
+    <div className="relative z-50 overflow-hidden bg-[var(--announcement-bg)] py-2.5 text-white">
       <div className="announcement-scroll flex gap-0 whitespace-nowrap" aria-hidden="true">
         {[...messages, ...messages].map((msg, i) => (
           <span key={i} className="flex shrink-0 items-center gap-0">

@@ -421,13 +421,13 @@ export default async function Home() {
                   <Link
                     key={category.name}
                     href={category.href}
-                    className="flex items-start gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-[var(--accent-soft)]"
+                    className="group flex items-start gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-[var(--accent-soft)]"
                   >
                     <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fff3e1] text-[var(--accent)]">
                       <category.icon className="h-4 w-4" />
                     </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-[var(--foreground)]">
+                    <span className="min-w-0 transition-transform duration-150 group-hover:translate-x-1">
+                      <span className="block text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors">
                         {category.name}
                       </span>
                       <span className="mt-0.5 block text-xs leading-5 text-[var(--muted)]">
@@ -487,7 +487,7 @@ export default async function Home() {
             <Link
               key={tile.label}
               href={tile.href}
-              className="soft-card flex items-center gap-3 px-3 py-3 transition-colors hover:bg-[var(--accent-soft)]"
+              className="soft-card flex items-center gap-3 px-3 py-3 transition-all duration-150 hover:bg-[var(--accent-soft)] hover:border-[var(--accent)/25] hover:-translate-y-0.5"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#fff3e1] text-[var(--accent)]">
                 <tile.icon className="h-4 w-4" />
@@ -525,7 +525,7 @@ export default async function Home() {
           title="Flash Sales"
           description={`High-discount products with the strongest markdowns across ${formatCompactNumber(flashSaleProducts.length)} live offers.`}
           href="/catalog"
-          headerClass="bg-[linear-gradient(90deg,#df4428_0%,#f26b1d_48%,#ff8a12_100%)] text-white"
+          headerClass="shelf-header-flash"
           theme="dark"
           products={flashSaleProducts}
           compactHeader
@@ -536,7 +536,7 @@ export default async function Home() {
           title="Top selling items"
           description="Best-performing products sorted by review activity and customer traction."
           href="/catalog"
-          headerClass="bg-[#313133] text-white"
+          headerClass="shelf-header-topsell"
           theme="dark"
           products={topSellingProducts}
         />
@@ -549,7 +549,7 @@ export default async function Home() {
             title="Home control picks"
             description="Smart-home and desk utility products merchandised as a home-focused deal shelf."
             href="/catalog?category=Home+Control"
-            headerClass="bg-gradient-to-r from-[#18846f] to-[#44b49a] text-white"
+            headerClass="shelf-header-home"
             theme="dark"
             products={homeDeals}
           />
@@ -563,7 +563,7 @@ export default async function Home() {
               title="Phones & wearables"
               description="The mobile lane combines everyday carry gear, watches, charging, and audio companions."
               href="/catalog?category=Mobile+Essentials"
-              headerClass="bg-gradient-to-r from-[#2258b8] to-[#4b88ff] text-white"
+              headerClass="shelf-header-phones"
               theme="dark"
               products={phoneDeals}
             />
@@ -578,7 +578,7 @@ export default async function Home() {
               title="Beauty & personal care"
               description="Skincare, SPF, and routine staples merchandised as a dedicated beauty lane."
               href="/catalog?category=Beauty+%26+Personal+Care"
-              headerClass="bg-gradient-to-r from-[#c14f7a] to-[#f1a6c3] text-white"
+              headerClass="shelf-header-beauty"
               theme="dark"
               products={beautyDeals}
             />
@@ -591,7 +591,7 @@ export default async function Home() {
             title="Health & wellness"
             description="Recovery kits, gummies, and sleep-support products organized as a wellness shelf."
             href="/catalog?category=Health+%26+Wellness"
-            headerClass="bg-gradient-to-r from-[#3e8f68] to-[#9ad7b6] text-white"
+            headerClass="shelf-header-wellness"
             theme="dark"
             products={wellnessDeals}
           />
@@ -605,7 +605,7 @@ export default async function Home() {
             title="Creator and gaming essentials"
             description="Dense product rows for creator setups, audio hardware, and gaming upgrades."
             href="/catalog?category=Creator+Gear"
-            headerClass="bg-gradient-to-r from-[#6840c6] to-[#9f6cff] text-white"
+            headerClass="shelf-header-creator"
             theme="dark"
             products={creatorDeals}
           />
@@ -619,7 +619,7 @@ export default async function Home() {
               title="Cars for sale & rent"
               description="New and used vehicles plus daily rentals from verified dealers across East & West Africa."
               href="/catalog?category=Cars+for+Sale"
-              headerClass="bg-gradient-to-r from-[#1a3a6e] to-[#2563eb] text-white"
+              headerClass="shelf-header-cars"
               theme="dark"
               products={carDeals}
             />
@@ -635,7 +635,7 @@ export default async function Home() {
             title="Property listings"
             description="Apartments, land, and commercial spaces from trusted agents and landlords."
             href="/catalog?category=Apartments+for+Sale"
-            headerClass="bg-gradient-to-r from-[#14532d] to-[#16a34a] text-white"
+            headerClass="shelf-header-property"
             theme="dark"
             products={propertyDeals}
           />
@@ -691,7 +691,7 @@ type ServiceCardProps = {
 
 function ServiceCard({ icon: Icon, title, description }: ServiceCardProps) {
   return (
-    <div className="soft-card flex items-start gap-3 p-4">
+    <div className="soft-card flex items-start gap-3 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)/25]">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#fff3e1] text-[var(--accent)]">
         <Icon className="h-5 w-5" />
       </span>
@@ -788,7 +788,7 @@ function VendorShelf({ vendors }: { vendors: Vendor[] }) {
 
   return (
     <section className="soft-card overflow-hidden">
-      <div className="flex items-center justify-between gap-4 bg-[#313133] px-4 py-3 text-white">
+      <div className="flex items-center justify-between gap-4 bg-[var(--background-strong)] px-4 py-3 text-white">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
             Trusted sellers

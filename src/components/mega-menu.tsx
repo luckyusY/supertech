@@ -107,8 +107,8 @@ export function MegaMenu() {
                       onClick={() => setOpen(null)}
                       className="flex items-center gap-3 rounded-[0.9rem] px-3 py-2.5 transition-colors hover:bg-[rgba(15,23,42,0.04)]"
                     >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[rgba(15,23,42,0.06)]">
-                        <cat.icon className="h-4 w-4 text-[var(--foreground)]" />
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)]">
+                        <cat.icon className="h-4 w-4 text-[var(--accent)]" />
                       </span>
                       <span>
                         <span className="block text-sm font-semibold">{cat.name}</span>
@@ -144,7 +144,7 @@ export function MegaMenu() {
                   <Link
                     href="/catalog"
                     onClick={() => setOpen(null)}
-                    className="flex items-center gap-2 rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white"
+                    className="flex items-center gap-2 rounded-full bg-[var(--foreground)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent)]"
                   >
                     <Cpu className="h-4 w-4" />
                     View all products

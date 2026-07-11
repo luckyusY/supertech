@@ -84,12 +84,24 @@ export default function RootLayout({
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">
+      <body className="min-h-full transition-colors duration-300">
         <CartProvider>
           <PwaRegister />
           <SmoothScroll />
           <NativeAppBridge />
-          <div className="noise fixed inset-0 -z-10 opacity-40" />
+          {/* Canvas layer 1 — warm grain texture */}
+          <div className="fixed inset-0 -z-10 opacity-[0.028]"
+            style={{
+              backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+              backgroundSize: "180px 180px",
+            }}
+          />
+          {/* Canvas layer 2 — top-left warm radial ambient glow */}
+          <div className="fixed inset-0 -z-10 pointer-events-none"
+            style={{
+              background: "radial-gradient(ellipse 80% 50% at -5% -10%, rgba(245,131,12,0.07), transparent)"
+            }}
+          />
           <div className="relative flex min-h-full flex-col">
             <SiteChrome
               header={

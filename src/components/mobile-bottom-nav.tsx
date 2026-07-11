@@ -32,7 +32,7 @@ export function MobileBottomNav() {
               >
                 <span className={`relative flex h-9 w-9 items-center justify-center rounded-md transition-all ${
                   isActive
-                    ? "bg-[var(--accent-soft)] text-[var(--accent)]"
+                    ? "bg-[var(--accent-soft)] text-[var(--accent)] shadow-[0_2px_8px_rgba(245,131,12,0.22)]"
                     : "text-[var(--muted)]"
                 }`}>
                   <item.icon className="h-5 w-5" />
@@ -42,8 +42,8 @@ export function MobileBottomNav() {
                     </span>
                   )}
                 </span>
-                <span className={`text-[10px] font-medium ${
-                  isActive ? "text-[var(--accent)]" : "text-[var(--muted)]"
+                <span className={`text-[10px] ${
+                  isActive ? "text-[var(--accent)] font-semibold" : "text-[var(--muted)] font-medium"
                 }`}>
                   {item.label}
                 </span>

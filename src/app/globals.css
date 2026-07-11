@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f1f1f2;
-  --background-strong: #313133;
-  --foreground: #313133;
+  --background: #f5f4f0;
+  --background-strong: #1e1e20;
+  --foreground: #18181a;
   --surface: #ffffff;
-  --surface-strong: #2b2b2d;
-  --muted: #75757a;
-  --line: #dcdde1;
+  --surface-strong: #1e1e20;
+  --muted: #66666d;
+  --line: #e3e1db;
 
-  --accent: #f68b1e;
-  --accent-soft: #fff4e5;
-  --accent-hover: #e07e17;
+  --accent: #f5830c;
+  --accent-soft: #fff2db;
+  --accent-hover: #db750a;
 
   --red: #f04438;
   --red-soft: #fde7ea;
 
-  --teal: #276076;
-  --gold: #f9b54c;
+  --teal: #1c5468;
+  --gold: #f5a62a;
 
-  --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  --grid: rgba(49, 49, 51, 0.05);
+  --shadow: 0 2px 14px rgba(24, 24, 26, 0.10);
+  --grid: rgba(24, 24, 26, 0.05);
+
+  /* Semantic surface tokens */
+  --header-bg: var(--accent);       /* Main orange header strip */
+  --footer-bg: #1e1e20;             /* Footer */
+  --announcement-bg: #1e1e20;       /* Announcement bar */
+
+  /* Per-shelf gradient tokens */
+  --shelf-flash:    linear-gradient(90deg, #d93a24 0%, #ef6419 48%, #f57b10 100%);
+  --shelf-topsell:  #1e1e20;
+  --shelf-home:     linear-gradient(90deg, #157060 0%, #3ea48a 100%);
+  --shelf-phones:   linear-gradient(90deg, #1a4ea8 0%, #3d78f0 100%);
+  --shelf-beauty:   linear-gradient(90deg, #a83c69 0%, #de8db2 100%);
+  --shelf-wellness: linear-gradient(90deg, #2d7a54 0%, #80c49a 100%);
+  --shelf-creator:  linear-gradient(90deg, #5330af 0%, #895cf0 100%);
+  --shelf-cars:     linear-gradient(90deg, #122e60 0%, #1d50cc 100%);
+  --shelf-property: linear-gradient(90deg, #0c3c22 0%, #118836 100%);
+
+  /* Radius design contract */
+  --radius-sm:  0.375rem;   /* 6px  — buttons, badges */
+  --radius-md:  0.75rem;    /* 12px — cards, inputs */
+  --radius-lg:  1rem;       /* 16px — modals, drawers */
+  --radius-xl:  1.5rem;     /* 24px — mega-menu, hero */
 }
 
 @theme inline {
@@ -93,9 +115,9 @@ a {
 
 .marketplace-campaign-bg {
   background:
-    radial-gradient(circle at 10% 18%, rgba(255, 236, 130, 0.32), transparent 18rem),
-    radial-gradient(circle at 90% 8%, rgba(255, 255, 255, 0.18), transparent 16rem),
-    linear-gradient(180deg, #ff9900 0%, #ff9900 58%, #f28a00 100%);
+    radial-gradient(circle at 8% 20%, rgba(245, 131, 12, 0.28), transparent 20rem),
+    radial-gradient(circle at 92% 6%,  rgba(255, 210, 130, 0.16), transparent 18rem),
+    linear-gradient(180deg, #f5830c 0%, #f5830c 52%, #e87008 100%);
 }
 
 .marketplace-campaign-bg .soft-card,
@@ -136,12 +158,13 @@ a {
 }
 
 .soft-card:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(24, 24, 26, 0.12);
+  border-color: rgba(245, 131, 12, 0.20);
 }
 
 .market-shelf {
   background: #ffffff;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--line);
   border-radius: 0.25rem;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
@@ -176,10 +199,9 @@ a {
 }
 
 .noise {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
-    radial-gradient(circle at 1px 1px, rgba(49, 49, 51, 0.03) 1px, transparent 0);
-  background-size: auto, 18px 18px;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  background-repeat: repeat;
 }
 
 .hero-orbit {
@@ -221,7 +243,7 @@ a {
 *:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 /* Entrance animations */
@@ -326,4 +348,41 @@ a {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* Shelf header utility classes */
+.shelf-header-flash    { background: var(--shelf-flash);    color: white; }
+.shelf-header-topsell  { background: var(--shelf-topsell);  color: white; }
+.shelf-header-home     { background: var(--shelf-home);     color: white; }
+.shelf-header-phones   { background: var(--shelf-phones);   color: white; }
+.shelf-header-beauty   { background: var(--shelf-beauty);   color: white; }
+.shelf-header-wellness { background: var(--shelf-wellness); color: white; }
+.shelf-header-creator  { background: var(--shelf-creator);  color: white; }
+.shelf-header-cars     { background: var(--shelf-cars);     color: white; }
+.shelf-header-property { background: var(--shelf-property); color: white; }
+
+/* Consistent vertical page rhythm */
+.page-section {
+  padding-block: 2.5rem;
+}
+@media (min-width: 640px) {
+  .page-section {
+    padding-block: 3.5rem;
+  }
+}
+
+/* Shimmer animation for skeletons */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(24, 24, 26, 0.08) 25%,
+    rgba(24, 24, 26, 0.04) 50%,
+    rgba(24, 24, 26, 0.08) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
 }

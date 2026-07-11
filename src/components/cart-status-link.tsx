@@ -19,7 +19,7 @@ export function CartStatusLink({ compact = false }: CartStatusLinkProps) {
         aria-label={`Cart with ${itemCount} item${itemCount === 1 ? "" : "s"}`}
       >
         <ShoppingBag className="h-4 w-4" />
-        <span className="absolute -right-1.5 -top-1.5 rounded-full bg-[var(--foreground)] px-1.5 py-0.5 text-[10px] font-bold text-white">
+        <span className="absolute -right-1.5 -top-1.5 rounded-full bg-[var(--red)] px-1.5 py-0.5 text-[10px] font-bold text-white">
           {itemCount > 99 ? "99+" : itemCount}
         </span>
       </Link>
@@ -33,7 +33,7 @@ export function CartStatusLink({ compact = false }: CartStatusLinkProps) {
     >
       <ShoppingBag className="h-4 w-4" />
       Cart
-      <span className="rounded-full bg-[var(--foreground)] px-2 py-0.5 text-[11px] text-white">
+      <span className="rounded-full bg-[var(--red)] px-2 py-0.5 text-[11px] text-white">
         {itemCount > 99 ? "99+" : itemCount}
       </span>
     </Link>

@@ -34,7 +34,7 @@ export async function SiteHeaderFallback() {
         </div>
       </div>
 
-      <div className="bg-[var(--accent)] shadow-[0_4px_12px_rgba(0,0,0,0.14)]">
+      <div className="bg-[var(--accent)] shadow-[0_4px_18px_rgba(24,24,26,0.20)]">
         <div className="page-shell py-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 md:hidden">
@@ -77,13 +77,13 @@ export async function SiteHeaderFallback() {
             </form>
 
             <div className="ml-auto hidden items-center gap-2 md:flex">
-              <div className="inline-flex h-10 items-center gap-2 rounded-md border border-white/55 bg-white px-3 text-sm font-semibold text-[var(--foreground)] shadow-sm">
+              <div className="inline-flex h-10 items-center gap-2 rounded-md border border-white/55 bg-white px-3 text-sm font-semibold text-[var(--foreground)] shadow-sm transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]">
                 <User className="h-4 w-4" />
                 Account
               </div>
               <Link
                 href="/track-order"
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-white/25 bg-white/12 px-3 text-sm font-semibold text-white"
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-white/25 bg-white/12 px-3 text-sm font-semibold text-white transition-colors hover:bg-white/22"
               >
                 <CircleHelp className="h-4 w-4" />
                 Help
@@ -156,12 +156,12 @@ export async function SiteHeaderFallback() {
               <Link
                 key={category}
                 href={`/catalog?category=${encodeURIComponent(category)}`}
-                className="whitespace-nowrap py-3 transition-colors hover:text-[var(--accent)]"
+                className="relative whitespace-nowrap py-3 text-[var(--foreground)] transition-colors hover:text-[var(--accent)] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-[var(--accent)] after:transition-[width] after:duration-200 hover:after:w-full"
               >
                 {category}
               </Link>
             ))}
-            <Link href="/vendors" className="whitespace-nowrap py-3 transition-colors hover:text-[var(--accent)]">
+            <Link href="/vendors" className="relative whitespace-nowrap py-3 text-[var(--foreground)] transition-colors hover:text-[var(--accent)] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-[var(--accent)] after:transition-[width] after:duration-200 hover:after:w-full">
               Official Stores
             </Link>
           </nav>

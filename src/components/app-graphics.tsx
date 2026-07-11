@@ -29,7 +29,7 @@ const categoryVisuals: Array<{ match: RegExp; visual: CategoryVisual }> = [
 ];
 
 const fallbackPalette: Array<Pick<CategoryVisual, "from" | "to">> = [
-  { from: "#f68b1e", to: "#dd7106" },
+  { from: "#f5830c", to: "#db750a" },
   { from: "#1fae5b", to: "#158243" },
   { from: "#6366f1", to: "#4338ca" },
   { from: "#f43f5e", to: "#be123c" },

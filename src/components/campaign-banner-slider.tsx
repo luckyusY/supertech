@@ -100,7 +100,7 @@ export function CampaignBannerSlider({
         </p>
         <Link
           href={activeSlide.href}
-          className="mt-5 inline-flex items-center gap-2 rounded-md border border-white/25 bg-[#f68b1e] px-4 py-2.5 text-sm font-black text-white shadow-[0_8px_20px_rgba(0,0,0,0.24)] transition-colors hover:bg-[#e07a13] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="mt-5 inline-flex items-center gap-2 rounded-md border border-white/25 bg-[var(--accent)] px-4 py-2.5 text-sm font-black text-white shadow-[0_8px_20px_rgba(0,0,0,0.24)] transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
           {activeSlide.cta}
           <ArrowRight className="h-4 w-4" />
@@ -116,7 +116,7 @@ export function CampaignBannerSlider({
                 type="button"
                 onClick={() => goToSlide(index)}
                 className={`h-2 rounded-full transition-all ${
-                  index === safeCurrent ? "w-8 bg-[#f68b1e]" : "w-2 bg-white/55 hover:bg-white/80"
+                  index === safeCurrent ? "w-8 bg-[var(--accent)]" : "w-2 bg-white/55 hover:bg-white/80"
                 }`}
                 aria-label={`Show campaign ${index + 1}`}
               />
