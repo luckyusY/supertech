@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { ChevronDown, RefreshCw, Search } from "lucide-react";
+import { HoverScrollRegion } from "@/components/hover-scroll-region";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { EmptyState } from "@/components/ui";
 import { getPageSlice, TablePagination } from "@/components/ui/table-pagination";
@@ -308,9 +309,10 @@ export function VendorOrderQueue({
 
       {state.status === "ready" && filteredOrders.length > 0 ? (
         <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)]">
-          <div
+          <HoverScrollRegion
             className="dashboard-table-scroll overflow-auto"
             style={{ maxHeight: "min(32rem, calc(100dvh - 14rem))" }}
+            axis="both"
           >
             <table className="w-full min-w-[48rem] text-left text-sm">
               <thead className="sticky top-0 z-[1]">
@@ -468,7 +470,7 @@ export function VendorOrderQueue({
                 })}
               </tbody>
             </table>
-          </div>
+          </HoverScrollRegion>
           <TablePagination
             page={pageSlice.page}
             pageSize={pageSize}

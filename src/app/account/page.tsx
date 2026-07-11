@@ -11,6 +11,7 @@ import {
   User,
 } from "lucide-react";
 import { AccountProfileForm } from "@/components/account-profile-form";
+import { BrandLogo } from "@/components/brand-logo";
 import { BusinessInfoForm } from "@/components/business-info-form";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
@@ -56,8 +57,9 @@ export default async function AccountPage() {
       <div className="soft-card p-6 sm:p-8 lg:p-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div>
+            <BrandLogo size="md" sublabel="My account" className="mb-4" />
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-              My account
+              Profile
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
               {session.name}

@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { EmptySearchIllustration } from "@/components/app-graphics";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function NotFound() {
   return (
     <div className="page-shell py-12">
-      <div className="soft-card relative overflow-hidden px-6 py-12 text-center sm:px-8 bg-white">
+      <div className="soft-card relative overflow-hidden bg-white px-6 py-12 text-center sm:px-8">
         {/* Top accent bar */}
         <div className="absolute inset-x-0 top-0 h-1 bg-[var(--accent)]" />
 
+        <div className="mb-6 flex justify-center">
+          <BrandLogo size="lg" sublabel="Marketplace" />
+        </div>
         <EmptySearchIllustration className="mx-auto mb-6 h-28 w-28" />
 
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">

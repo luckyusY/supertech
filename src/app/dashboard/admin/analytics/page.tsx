@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BarChart3, DollarSign, Package, TrendingUp } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { DashboardScrollTable } from "@/components/dashboard-scroll-table";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { vendors, products } from "@/lib/marketplace";
@@ -166,10 +167,7 @@ export default async function AdminAnalyticsPage() {
               </span>
             )}
           </div>
-          <div
-            className="dashboard-table-scroll mt-5 overflow-auto rounded-[1.5rem] border border-[var(--line)] bg-white"
-            style={{ maxHeight: "min(28rem, calc(100dvh - 16rem))" }}
-          >
+          <DashboardScrollTable className="mt-5 rounded-[1.5rem]">
             <table className="w-full min-w-[44rem] text-sm">
               <thead className="sticky top-0 z-[1]">
                 <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)] shadow-[0_1px_0_var(--line)]">
@@ -207,7 +205,7 @@ export default async function AdminAnalyticsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </DashboardScrollTable>
         </div>
 
         {/* Avg fulfillment bar */}

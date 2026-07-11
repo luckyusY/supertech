@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { CircleHelp, ShieldCheck, User } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { HeaderScrollShell } from "@/components/header-scroll-shell";
 import { HeaderSearch } from "@/components/header-search";
@@ -76,24 +76,23 @@ export async function SiteHeader() {
                 <div className="md:hidden">
                   <MobileNav categories={headerCategories} categoryImages={categoryImages} />
                 </div>
-                <Link href="/" className="flex shrink-0 items-center gap-2 text-white">
-                  <Image
-                    src="/logo.png"
-                    alt="SuperTech logo"
-                    width={40}
-                    height={40}
-                    priority
-                    className="h-9 w-9 rounded-[var(--radius-sm)] bg-white object-contain sm:h-10 sm:w-10"
-                  />
-                  <div className="hidden min-[400px]:block">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/85">
-                      SuperTech
-                    </p>
-                    <p className="text-base font-bold leading-none tracking-[-0.03em] sm:text-lg">
-                      Marketplace
-                    </p>
-                  </div>
-                </Link>
+                <BrandLogo
+                  size="md"
+                  theme="dark"
+                  wordmark="Marketplace"
+                  sublabel="SuperTech"
+                  priority
+                  className="hidden shrink-0 min-[400px]:inline-flex"
+                  imageClassName="sm:h-10 sm:w-10"
+                />
+                <BrandLogo
+                  size="md"
+                  theme="dark"
+                  showWordmark={false}
+                  priority
+                  className="shrink-0 min-[400px]:hidden"
+                  imageClassName="sm:h-10 sm:w-10"
+                />
               </div>
 
               <HeaderSearch variant="desktop" />

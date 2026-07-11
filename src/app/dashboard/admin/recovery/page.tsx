@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { KeyRound } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { DashboardScrollTable } from "@/components/dashboard-scroll-table";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { getPasswordRecoveryRequests } from "@/lib/password-recovery";
@@ -35,11 +36,8 @@ export default async function AdminRecoveryPage() {
       />
 
       <div className="mt-6 soft-card overflow-hidden p-2 sm:p-2">
-        <div
-          className="dashboard-table-scroll overflow-auto rounded-[1rem]"
-          style={{ maxHeight: "min(28rem, calc(100dvh - 14rem))" }}
-        >
-          {passwordRecoveryRequests.length > 0 ? (
+        {passwordRecoveryRequests.length > 0 ? (
+          <DashboardScrollTable className="rounded-[1rem] border-0 shadow-none">
             <table className="w-full min-w-[36rem] text-sm">
               <thead className="sticky top-0 z-[1]">
                 <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)] shadow-[0_1px_0_var(--line)]">
@@ -73,12 +71,12 @@ export default async function AdminRecoveryPage() {
                 ))}
               </tbody>
             </table>
-          ) : (
-            <p className="px-5 py-10 text-center text-sm text-[var(--muted)]">
-              No password recovery requests yet.
-            </p>
-          )}
-        </div>
+          </DashboardScrollTable>
+        ) : (
+          <p className="px-5 py-10 text-center text-sm text-[var(--muted)]">
+            No password recovery requests yet.
+          </p>
+        )}
       </div>
     </div>
   );

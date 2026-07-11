@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   CircleHelp,
   PackageSearch,
@@ -8,6 +7,7 @@ import {
   Truck,
   User,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { HeaderSearch } from "@/components/header-search";
 import { MobileNav } from "@/components/mobile-nav";
@@ -39,24 +39,15 @@ export async function SiteHeaderFallback() {
               <div className="md:hidden">
                 <MobileNav categories={[]} />
               </div>
-              <Link href="/" className="flex shrink-0 items-center gap-2 text-white">
-                <Image
-                  src="/logo.png"
-                  alt="SuperTech logo"
-                  width={40}
-                  height={40}
-                  priority
-                  className="h-9 w-9 rounded-[var(--radius-sm)] bg-white object-contain sm:h-10 sm:w-10"
-                />
-                <div className="hidden min-[400px]:block">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/85">
-                    SuperTech
-                  </p>
-                  <p className="text-base font-bold leading-none tracking-[-0.03em] sm:text-lg">
-                    Marketplace
-                  </p>
-                </div>
-              </Link>
+              <BrandLogo
+                size="md"
+                theme="dark"
+                wordmark="Marketplace"
+                sublabel="SuperTech"
+                priority
+                className="shrink-0"
+                imageClassName="sm:h-10 sm:w-10"
+              />
             </div>
 
             <HeaderSearch variant="desktop" />

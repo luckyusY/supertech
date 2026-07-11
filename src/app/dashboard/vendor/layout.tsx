@@ -28,9 +28,12 @@ export default async function VendorLayout({ children }: { children: ReactNode }
   });
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[var(--background)] lg:flex-row">
+    <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-[var(--background)] lg:flex-row">
       <VendorNav storeName={currentVendor.name} subtitle={subtitle} badges={badges} />
-      <div className="min-h-0 min-w-0 flex-1 lg:min-h-dvh" id="main-content">
+      <div
+        className="dashboard-main-scroll min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain"
+        id="main-content"
+      >
         {children}
       </div>
     </div>

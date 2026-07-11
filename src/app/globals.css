@@ -537,9 +537,27 @@ img {
   display: none;
 }
 
-/* Dashboard sidebars + table body scrolls */
+/* Dashboard main column + nested scroll panes */
+.dashboard-main-scroll {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+.dashboard-main-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.dashboard-main-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
 .dashboard-sidebar-scroll,
-.dashboard-table-scroll {
+.dashboard-table-scroll,
+.hover-scroll-region {
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.55) transparent;

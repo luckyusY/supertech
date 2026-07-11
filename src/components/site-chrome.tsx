@@ -26,7 +26,7 @@ export function SiteChrome({
 
   if (isAppShell) {
     return (
-      <main id="main-content" className="min-h-dvh flex-1">
+      <main id="main-content" className="h-dvh max-h-dvh flex-1 overflow-hidden">
         {children}
       </main>
     );

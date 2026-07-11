@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = {
   title: "Access Restricted",
@@ -10,6 +11,7 @@ export default function ForbiddenPage() {
   return (
     <div className="page-shell py-8">
       <div className="soft-card p-6 sm:p-8 lg:p-10">
+        <BrandLogo size="lg" sublabel="Marketplace" className="mb-6" />
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Restricted area
         </p>

@@ -19,6 +19,8 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
+import { HoverScrollRegion } from "@/components/hover-scroll-region";
 import type { AdminNavBadges } from "@/lib/dashboard-attention";
 import { cn } from "@/lib/utils";
 
@@ -148,12 +150,17 @@ export function AdminNav({
       {/* Mobile top bar */}
       <div className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-3 border-b border-[var(--line)] bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--foreground)] text-xs font-bold tracking-[0.12em] text-white">
-            ST
-            {totalAttention > 0 ? (
-              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[var(--accent)] ring-2 ring-white" />
-            ) : null}
-          </span>
+          <BrandLogo
+            href="/dashboard/admin"
+            size="sm"
+            showWordmark={false}
+            className="relative"
+            badge={
+              totalAttention > 0 ? (
+                <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[var(--accent)] ring-2 ring-white" />
+              ) : null
+            }
+          />
           <div className="min-w-0 leading-tight">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
               Admin
@@ -191,12 +198,14 @@ export function AdminNav({
             aria-label="Admin menu"
           >
             <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-xs font-bold tracking-[0.12em]">
-                  ST
-                </span>
-                <p className="text-sm font-semibold">SuperTech Admin</p>
-              </div>
+              <BrandLogo
+                href="/"
+                size="md"
+                theme="dark"
+                wordmark="SuperTech"
+                sublabel="Admin"
+                onClick={() => setOpen(false)}
+              />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -206,13 +215,17 @@ export function AdminNav({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="dashboard-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4">
+            <HoverScrollRegion
+              className="dashboard-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4"
+              axis="y"
+              highlightOnHover={false}
+            >
               <NavLinks
                 pathname={pathname}
                 badges={badges}
                 onNavigate={() => setOpen(false)}
               />
-            </div>
+            </HoverScrollRegion>
             <div className="shrink-0 border-t border-white/10 p-3">
               <UserCard name={name} email={email} />
             </div>
@@ -223,22 +236,22 @@ export function AdminNav({
       {/* Desktop sticky sidebar */}
       <aside className="dashboard-sidebar sticky top-0 hidden h-dvh w-[15.75rem] shrink-0 flex-col self-start border-r border-white/8 bg-[#171719] text-white lg:flex">
         <div className="shrink-0 border-b border-white/10 px-4 py-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-xs font-bold tracking-[0.12em]">
-              ST
-            </span>
-            <div className="min-w-0 leading-tight">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/50">
-                SuperTech
-              </p>
-              <p className="text-sm font-semibold">Admin Console</p>
-            </div>
-          </Link>
+          <BrandLogo
+            href="/"
+            size="md"
+            theme="dark"
+            wordmark="SuperTech"
+            sublabel="Admin console"
+            priority
+          />
         </div>
 
-        <div className="dashboard-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4">
+        <HoverScrollRegion
+          className="dashboard-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4"
+          axis="y"
+        >
           <NavLinks pathname={pathname} badges={badges} />
-        </div>
+        </HoverScrollRegion>
 
         <div className="shrink-0 border-t border-white/10 p-3">
           <UserCard name={name} email={email} />

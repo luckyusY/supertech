@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { HoverScrollRegion } from "@/components/hover-scroll-region";
 import { cn } from "@/lib/utils";
 
 type DataTableProps = {
@@ -21,9 +22,7 @@ export function DataTable({
   maxHeight = DEFAULT_MAX_HEIGHT,
 }: DataTableProps) {
   const scrollStyle: CSSProperties | undefined =
-    maxHeight === false
-      ? undefined
-      : { maxHeight };
+    maxHeight === false ? undefined : { maxHeight };
 
   return (
     <div
@@ -32,17 +31,18 @@ export function DataTable({
         className,
       )}
     >
-      <div
+      <HoverScrollRegion
         className={cn(
-          "dashboard-table-scroll min-h-0",
+          "dashboard-table-scroll",
           maxHeight === false ? "overflow-x-auto" : "overflow-auto",
         )}
         style={scrollStyle}
+        axis="both"
       >
         <table className="w-full text-left text-sm" style={{ minWidth }}>
           {children}
         </table>
-      </div>
+      </HoverScrollRegion>
     </div>
   );
 }

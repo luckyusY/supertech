@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 const footerGroups = [
   {
@@ -36,19 +36,12 @@ export function SiteFooter() {
       <div className="page-shell py-8 pb-24 sm:pb-10">
         <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" className="inline-flex items-center gap-3">
-              <Image
-                src="/logo.png"
-                alt="SuperTech logo"
-                width={44}
-                height={44}
-                className="h-11 w-11 rounded-md bg-white object-contain"
-              />
-              <div>
-                <p className="text-sm font-black tracking-[-0.03em]">SuperTech</p>
-                <p className="text-xs text-white/55">African marketplace</p>
-              </div>
-            </Link>
+            <BrandLogo
+              size="lg"
+              theme="dark"
+              wordmark="SuperTech"
+              sublabel="African marketplace"
+            />
             <p className="mt-4 max-w-sm text-sm leading-6 text-white/62">
               Verified products across tech, beauty, and wellness, with ordering
               support for customers and sellers across Africa.
