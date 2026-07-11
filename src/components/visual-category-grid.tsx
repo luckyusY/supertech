@@ -10,8 +10,7 @@ export type VisualCategoryItem = {
 };
 
 /**
- * Photo Factory mobile “Shop by category” visual grid.
- * Prefers product photos; falls back to icon tiles.
+ * Mobile “Shop by category” grid under the hero.
  */
 export function VisualCategoryGrid({
   items,
@@ -23,7 +22,7 @@ export function VisualCategoryGrid({
   if (items.length === 0) return null;
 
   return (
-    <section className="bg-[var(--background-strong)] px-3 pb-4 pt-3">
+    <section className="bg-[var(--background-strong)] px-3 pb-4 pt-3 md:hidden">
       <h2 className="mb-3 text-center text-sm font-bold uppercase tracking-wide text-white">
         {title}
       </h2>
@@ -62,35 +61,40 @@ export function VisualCategoryGrid({
 }
 
 /**
- * Desktop/tablet horizontal category cards with photos (PF CardSwiper style).
+ * Adorama-style blue product strip under the hero — product stills on a blue gradient.
  */
 export function VisualCategoryRail({ items }: { items: VisualCategoryItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="bg-[linear-gradient(90deg,var(--background-strong),#1a1a1c,var(--background-strong))] py-4">
-      <div className="page-shell">
-        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+    <section className="relative overflow-hidden bg-[linear-gradient(90deg,#0b3d91_0%,#1565c0_45%,#0d47a1_100%)] py-3 sm:py-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.12),transparent_42%)]" />
+      <div className="relative">
+        <div className="no-scrollbar flex gap-0 overflow-x-auto px-1 sm:px-2">
           {items.map((item) => (
             <Link
               key={`rail-${item.name}`}
               href={item.href}
-              className="group relative block h-40 w-44 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-black"
+              className="group relative flex h-[7.5rem] w-[7.25rem] shrink-0 flex-col items-center justify-end px-2 pb-2 pt-1 sm:h-36 sm:w-40"
             >
-              {item.image ? (
-                <Image
-                  src={item.image}
-                  alt=""
-                  fill
-                  sizes="176px"
-                  className="object-cover opacity-80 transition duration-300 group-hover:scale-105 group-hover:opacity-100"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[var(--neutral-200)]" />
-              )}
-              <div className="absolute inset-x-0 bottom-0 bg-black/70 px-3 py-2.5">
-                <p className="line-clamp-2 text-sm font-bold text-white">{item.name}</p>
-              </div>
+              <span className="relative mb-1 block h-[4.5rem] w-full sm:h-24">
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    sizes="160px"
+                    className="object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)] transition duration-300 group-hover:scale-105"
+                  />
+                ) : item.icon ? (
+                  <span className="grid h-full w-full place-items-center text-white/90">
+                    <item.icon className="h-10 w-10" />
+                  </span>
+                ) : null}
+              </span>
+              <span className="line-clamp-2 text-center text-[11px] font-semibold leading-tight text-white sm:text-xs">
+                {item.name}
+              </span>
             </Link>
           ))}
         </div>

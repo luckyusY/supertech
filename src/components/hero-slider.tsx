@@ -3,19 +3,37 @@
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  BadgeCheck,
+  Coins,
+  ShieldCheck,
+  Store,
+  ThumbsUp,
+  Truck,
+  UserRound,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { A11y, Autoplay, Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+export type HeroFeature = {
+  title: string;
+  icon: "coins" | "check" | "user" | "thumb" | "shield" | "truck" | "store" | "zap";
+};
+
 /**
- * Photo Factory–style hero slide model.
- * label = ribbon badge · brand = uppercase kicker · title = headline
+ * Adorama-style campaign slide:
+ * left copy · mid feature grid · right lifestyle image
  */
 export type HeroSlide = {
   label?: string;
   brand: string;
+  /** Optional gold-highlighted word rendered after brand line */
+  accentWord?: string;
   title: string;
   body: string;
   priceLine?: string;
@@ -27,24 +45,39 @@ export type HeroSlide = {
   copyPosition?: "left" | "center";
   secondaryCtaText?: string;
   secondaryCtaHref?: string;
-  /** @deprecated prefer brand + label */
+  features?: HeroFeature[];
   badge?: string;
-  /** @deprecated prefer body */
   subtitle?: string;
   chips?: readonly string[];
 };
 
+const FEATURE_ICONS: Record<HeroFeature["icon"], LucideIcon> = {
+  coins: Coins,
+  check: BadgeCheck,
+  user: UserRound,
+  thumb: ThumbsUp,
+  shield: ShieldCheck,
+  truck: Truck,
+  store: Store,
+  zap: Zap,
+};
+
 const fallbackSlides: HeroSlide[] = [
   {
-    label: "Live now",
     brand: "SuperTech",
-    title: "Flash deals from verified sellers.",
-    body: "Shop tech, beauty, wellness, and home essentials with clear prices and trackable orders.",
-    priceLine: "Request · Track · Pay with MoMo",
+    accentWord: "Marketplace",
+    title: "Verified sellers. Trackable orders.",
+    body: "Shop tech, beauty, and home essentials — request what you need and track every step.",
     ctaText: "Shop flash sale",
     ctaHref: "#flash-sale",
     image: "/banners/hero-flash-sale.jpg",
     tone: "dark",
+    features: [
+      { title: "Verified sellers", icon: "shield" },
+      { title: "Request products", icon: "check" },
+      { title: "Track every order", icon: "truck" },
+      { title: "Official stores", icon: "store" },
+    ],
   },
 ];
 
@@ -54,32 +87,34 @@ type HeroSliderProps = {
 };
 
 /**
- * Full-bleed / card Swiper hero — Photo Factory pattern for SuperTech.
+ * Adorama-inspired full-bleed hero carousel for SuperTech.
  */
-export function HeroSlider({ slides, layout = "card" }: HeroSliderProps) {
+export function HeroSlider({ slides, layout = "fullBleed" }: HeroSliderProps) {
   const activeSlides = slides.length > 0 ? slides : fallbackSlides;
   const multi = activeSlides.length > 1;
 
   const shell =
     layout === "fullBleed"
-      ? "hero-swiper hero-swiper--full relative isolate overflow-hidden border-b border-[var(--accent)] bg-[var(--background-strong)]"
-      : "hero-swiper hero-swiper--card relative isolate h-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--background-strong)] shadow-[var(--elevation-2)]";
+      ? "hero-swiper hero-swiper--adorama relative isolate overflow-hidden bg-[#0a0f1a]"
+      : "hero-swiper hero-swiper--card relative isolate h-full overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-[#0a0f1a] shadow-[var(--elevation-2)]";
 
   const heightClass =
     layout === "fullBleed"
-      ? "h-[280px] sm:h-[360px] lg:h-[376px]"
-      : "h-full min-h-[280px] sm:min-h-[360px] lg:min-h-[420px]";
+      ? "h-[320px] sm:h-[380px] lg:h-[420px]"
+      : "h-full min-h-[320px] sm:min-h-[380px] lg:min-h-[420px]";
 
   return (
     <section className={shell}>
+      {/* Gold accent line under nav like Adorama */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-px bg-gradient-to-r from-transparent via-[var(--gold)]/70 to-transparent" />
       <Swiper
         modules={[Autoplay, Navigation, Pagination, A11y]}
         loop={multi}
-        speed={650}
+        speed={700}
         autoplay={
           multi
             ? {
-                delay: 7000,
+                delay: 7500,
                 pauseOnMouseEnter: true,
                 disableOnInteraction: false,
               }
@@ -118,141 +153,154 @@ function SlideContent({
   priority: boolean;
 }) {
   const dark = slide.tone !== "light";
-  const center = slide.copyPosition === "center";
   const reduceMotion = useReducedMotion();
+  const features = slide.features?.slice(0, 4) ?? [];
 
   return (
     <div className="absolute inset-0">
+      {/* Background lifestyle / product image — right-weighted like Adorama */}
       <Image
         src={slide.image}
         alt=""
         fill
         priority={priority}
         sizes="100vw"
-        className="hidden object-cover object-center sm:block"
-      />
-      <Image
-        src={slide.mobileImage ?? slide.image}
-        alt=""
-        fill
-        priority={priority}
-        sizes="100vw"
-        className="object-cover object-center sm:hidden"
+        className="object-cover object-[70%_center] sm:object-right"
       />
 
-      {/* Mobile bottom wash — Photo Factory */}
+      {/* Dark cinematic overlay */}
       <div
         className={
           dark
-            ? "absolute inset-0 sm:hidden bg-[linear-gradient(180deg,rgba(0,0,0,0.06),rgba(0,0,0,0.78)_68%)]"
-            : "absolute inset-0 sm:hidden bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.9)_64%)]"
+            ? "absolute inset-0 bg-[linear-gradient(105deg,rgba(6,10,18,0.96)_0%,rgba(6,10,18,0.88)_34%,rgba(6,10,18,0.45)_62%,rgba(6,10,18,0.2)_100%)]"
+            : "absolute inset-0 bg-[linear-gradient(105deg,rgba(255,255,255,0.95)_0%,rgba(255,255,255,0.75)_40%,transparent_75%)]"
         }
       />
+      {/* Gold edge frame accents */}
+      <div className="pointer-events-none absolute inset-y-6 left-0 hidden w-px bg-gradient-to-b from-transparent via-[var(--gold)]/50 to-transparent lg:block" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--gold)]/40 to-transparent" />
 
-      {/* Desktop left copy panel — Photo Factory */}
-      <div
-        className={
-          center
-            ? "absolute inset-y-0 left-[28%] hidden w-[44%] bg-white/78 sm:block"
-            : dark
-              ? "absolute inset-y-0 left-0 hidden w-[48%] bg-[linear-gradient(90deg,rgba(0,0,0,0.78),rgba(0,0,0,0.38),transparent)] sm:block"
-              : "absolute inset-y-0 left-0 hidden w-[48%] bg-[linear-gradient(90deg,rgba(255,255,255,0.94),rgba(255,255,255,0.58),transparent)] sm:block"
-        }
-      />
-
-      <div
-        className={`absolute inset-0 z-10 flex items-end pb-12 sm:items-center sm:pb-0 ${
-          center ? "justify-center sm:pl-[12%]" : ""
-        }`}
-      >
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 22 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.55 }}
-          transition={{ duration: 0.55, delay: 0.08, ease: [0.21, 0.65, 0.36, 1] }}
-          className={`max-w-[20rem] sm:max-w-[27rem] ${
-            center
-              ? "flex flex-col items-center px-5 text-center"
-              : "px-5 sm:px-0 sm:pl-[8%] lg:pl-[9%]"
-          } ${dark ? "text-white" : "text-[var(--foreground)]"}`}
-        >
-          {slide.label ? (
-            <span className="inline-block w-fit bg-[var(--accent)] px-4 py-1 text-[11px] font-black uppercase tracking-wide text-white [clip-path:polygon(0_0,100%_0,86%_50%,100%_100%,0_100%)] sm:px-5 sm:py-1.5">
-              {slide.label}
-            </span>
-          ) : null}
-
-          <p className="mt-2 text-base font-black uppercase tracking-wide sm:mt-3.5 sm:text-2xl">
-            {slide.brand}
-          </p>
-
-          <h2 className="mt-1 text-[1.35rem] font-black leading-[1.05] tracking-[-0.02em] sm:mt-1.5 sm:text-[2.1rem] lg:text-[2.15rem]">
-            {slide.title}
-          </h2>
-
-          {slide.body ? (
-            <p
-              className={`mt-2 hidden text-sm leading-6 sm:block sm:text-base ${
-                dark ? "text-white/86" : "text-[var(--foreground)]/78"
-              }`}
-            >
-              {slide.body}
-            </p>
-          ) : null}
-
-          {slide.priceLine ? (
-            <p
-              className={`mt-1.5 text-[11px] font-bold sm:mt-2 sm:text-sm ${
-                dark ? "text-white/84" : "text-[var(--foreground)]/75"
-              }`}
-            >
-              {slide.priceLine}
-            </p>
-          ) : null}
-
-          {slide.chips && slide.chips.length > 0 ? (
-            <div className={`mt-3 flex flex-wrap gap-1.5 ${center ? "justify-center" : ""}`}>
-              {slide.chips.map((chip) => (
-                <span
-                  key={chip}
-                  className={`rounded-sm border px-2 py-0.5 text-[11px] font-semibold ${
-                    dark
-                      ? "border-white/25 bg-white/10 text-white/90"
-                      : "border-[var(--line)] bg-white/90 text-[var(--muted)]"
-                  }`}
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
-          <div
-            className={`mt-3 flex flex-wrap items-center gap-2.5 sm:mt-5 ${
-              center ? "justify-center" : ""
-            }`}
+      <div className="absolute inset-0 z-10 flex items-end px-5 pb-12 pt-6 sm:items-center sm:px-8 sm:pb-0 lg:px-12 xl:px-16">
+        <div className="grid w-full max-w-[1400px] items-center gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.95fr)_minmax(0,0.9fr)] lg:gap-8">
+          {/* Left copy */}
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.4 }}
+            transition={{ duration: 0.5, ease: [0.21, 0.65, 0.36, 1] }}
+            className={`max-w-md ${dark ? "text-white" : "text-[var(--foreground)]"}`}
           >
-            <Link
-              href={slide.ctaHref}
-              className="press inline-flex min-w-[7rem] items-center justify-center rounded-sm bg-[var(--accent)] px-5 py-2.5 text-[11px] font-black uppercase tracking-wide text-white shadow-[0_3px_0_rgba(0,0,0,0.18)] transition hover:bg-[var(--accent-hover)] sm:min-w-[13rem] sm:px-8 sm:py-3 sm:text-xs"
+            {slide.label ? (
+              <span className="inline-block rounded-sm border border-[var(--gold)]/50 bg-[var(--gold)]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--gold)]">
+                {slide.label}
+              </span>
+            ) : null}
+
+            <h2 className="mt-3 text-[1.75rem] font-black leading-[1.05] tracking-[-0.03em] sm:text-4xl lg:text-[2.75rem]">
+              <span className="block">{slide.brand}</span>
+              {slide.accentWord ? (
+                <span className="block text-[var(--gold)]">{slide.accentWord}</span>
+              ) : null}
+            </h2>
+
+            <p
+              className={`mt-2 text-base font-semibold leading-snug sm:mt-3 sm:text-xl ${
+                dark ? "text-white/95" : "text-[var(--foreground)]"
+              }`}
             >
-              {slide.ctaText}
-            </Link>
-            {slide.secondaryCtaText && slide.secondaryCtaHref ? (
-              <Link
-                href={slide.secondaryCtaHref}
-                className={`hidden rounded-sm border px-5 py-3 text-xs font-black uppercase tracking-wide sm:inline-flex ${
-                  dark
-                    ? "border-white/35 bg-white/10 text-white hover:bg-white/18"
-                    : "border-[var(--line)] bg-white text-[var(--foreground)]"
+              {slide.title}
+            </p>
+
+            {slide.body ? (
+              <p
+                className={`mt-2 max-w-sm text-sm leading-6 sm:mt-3 sm:text-[15px] ${
+                  dark ? "text-white/75" : "text-[var(--muted)]"
                 }`}
               >
-                {slide.secondaryCtaText}
-              </Link>
+                {slide.body}
+              </p>
             ) : null}
+
+            {slide.priceLine ? (
+              <p className="mt-2 text-xs font-bold text-[var(--gold)] sm:text-sm">
+                {slide.priceLine}
+              </p>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:mt-6">
+              <Link
+                href={slide.ctaHref}
+                className="inline-flex min-w-[8.5rem] items-center justify-center rounded-md bg-[var(--gold)] px-6 py-2.5 text-xs font-black uppercase tracking-wide text-[#15110a] shadow-[0_4px_0_rgba(0,0,0,0.25)] transition hover:brightness-105 sm:min-w-[11rem] sm:px-8 sm:py-3 sm:text-sm"
+              >
+                {slide.ctaText}
+              </Link>
+              {slide.secondaryCtaText && slide.secondaryCtaHref ? (
+                <Link
+                  href={slide.secondaryCtaHref}
+                  className={`hidden rounded-md border px-5 py-2.5 text-xs font-bold uppercase tracking-wide sm:inline-flex sm:py-3 ${
+                    dark
+                      ? "border-white/30 bg-white/5 text-white hover:bg-white/10"
+                      : "border-[var(--line)] bg-white text-[var(--foreground)]"
+                  }`}
+                >
+                  {slide.secondaryCtaText}
+                </Link>
+              ) : null}
+            </div>
+          </motion.div>
+
+          {/* Mid: Adorama-style 2×2 feature cards */}
+          {features.length > 0 ? (
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.35 }}
+              transition={{ duration: 0.5, delay: 0.08, ease: [0.21, 0.65, 0.36, 1] }}
+              className="hidden grid-cols-2 gap-2.5 lg:grid"
+            >
+              {features.map((feature) => {
+                const Icon = FEATURE_ICONS[feature.icon];
+                return (
+                  <div
+                    key={feature.title}
+                    className="flex min-h-[6.5rem] flex-col items-center justify-center gap-2 rounded-md border border-[var(--gold)]/55 bg-black/35 px-3 py-4 text-center backdrop-blur-[2px]"
+                  >
+                    <Icon className="h-7 w-7 text-[var(--gold)]" strokeWidth={1.6} />
+                    <p className="text-[13px] font-semibold leading-snug text-white">
+                      {feature.title}
+                    </p>
+                  </div>
+                );
+              })}
+            </motion.div>
+          ) : (
+            <div className="hidden lg:block" />
+          )}
+
+          {/* Right column keeps photo visible — decorative gold frame on xl */}
+          <div className="pointer-events-none relative hidden h-full min-h-[220px] lg:block">
+            <div className="absolute inset-y-8 right-0 w-[2px] bg-gradient-to-b from-transparent via-[var(--gold)]/40 to-transparent" />
           </div>
-        </motion.div>
+        </div>
       </div>
+
+      {/* Mobile feature chips under copy space */}
+      {features.length > 0 ? (
+        <div className="absolute inset-x-0 bottom-10 z-10 flex gap-1.5 overflow-x-auto px-5 pb-1 lg:hidden">
+          {features.map((feature) => {
+            const Icon = FEATURE_ICONS[feature.icon];
+            return (
+              <span
+                key={feature.title}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded border border-[var(--gold)]/40 bg-black/45 px-2.5 py-1.5 text-[11px] font-semibold text-white backdrop-blur-sm"
+              >
+                <Icon className="h-3.5 w-3.5 text-[var(--gold)]" />
+                {feature.title}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
