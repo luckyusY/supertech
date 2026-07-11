@@ -501,31 +501,88 @@ img {
   height: 100%;
 }
 
+.hero-swiper .swiper-pagination {
+  bottom: 10px !important;
+}
+
+.hero-swiper .swiper-pagination-bullet {
+  width: 10px !important;
+  height: 10px !important;
+  margin: 0 5px !important;
+  background: rgba(255, 255, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  opacity: 1 !important;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.hero-swiper .swiper-pagination-bullet-active {
+  background: #ffffff !important;
+  border-color: var(--accent);
+  transform: scale(1.2);
+}
+
 .hero-swiper .swiper-button-prev,
 .hero-swiper .swiper-button-next {
-  color: white !important;
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
+  width: 44px !important;
+  height: 56px !important;
+  margin-top: -28px !important;
+  color: #ffffff !important;
+  background: rgba(0, 0, 0, 0.28);
+  transition: background 0.2s ease;
+}
+
+.hero-swiper .swiper-button-prev {
+  left: 0 !important;
+  border-radius: 0 9999px 9999px 0;
+}
+
+.hero-swiper .swiper-button-next {
+  right: 0 !important;
+  border-radius: 9999px 0 0 9999px;
+}
+
+.hero-swiper .swiper-button-prev:hover,
+.hero-swiper .swiper-button-next:hover {
+  background: rgba(0, 0, 0, 0.48);
 }
 
 .hero-swiper .swiper-button-prev::after,
 .hero-swiper .swiper-button-next::after {
+  font-size: 18px !important;
+  font-weight: 900;
+}
+
+.hero-swiper--card .swiper-button-prev {
+  left: 4px !important;
+  border-radius: 9999px;
+  width: 36px !important;
+  height: 36px !important;
+  margin-top: -18px !important;
+}
+
+.hero-swiper--card .swiper-button-next {
+  right: 4px !important;
+  border-radius: 9999px;
+  width: 36px !important;
+  height: 36px !important;
+  margin-top: -18px !important;
+}
+
+.hero-swiper--card .swiper-button-prev::after,
+.hero-swiper--card .swiper-button-next::after {
   font-size: 14px !important;
-  font-weight: 700;
 }
 
-.hero-swiper .swiper-pagination-bullet {
-  background: rgba(255, 255, 255, 0.55) !important;
-  width: 7px !important;
-  height: 7px !important;
+@media (max-width: 640px) {
+  .hero-swiper .swiper-button-prev,
+  .hero-swiper .swiper-button-next {
+    display: none; /* swipe on touch — Photo Factory */
+  }
 }
 
-.hero-swiper .swiper-pagination-bullet-active {
-  background: var(--accent) !important;
-  width: 18px !important;
+.press:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
 }
 
 .no-scrollbar {

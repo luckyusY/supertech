@@ -352,57 +352,78 @@ export default async function Home() {
     },
   ];
 
-  // Campaign-led slides (max 4) — product photos only as last resort
+  // Photo Factory–style campaign slides (label · brand · title · body · priceLine · CTA)
   const heroSlides: HeroSlide[] = [
     {
-      title: "Flash deals from verified sellers.",
-      subtitle:
-        "Shop tech, beauty, wellness, and home essentials with clear prices and trackable orders.",
-      image: "/banners/flash-sale-campaign.png",
+      label: "Live now",
+      brand: "Flash deals",
+      title: "See what sellers are dropping today.",
+      body: "Tech, beauty, wellness, and home essentials from verified SuperTech sellers — clear prices, trackable orders.",
+      priceLine: "Request · Cart · MoMoPay",
       ctaText: "Shop flash sale",
       ctaHref: "#flash-sale",
-      badge: "Marketplace savings",
-      chips: ["Verified sellers", "Request order", "Track status"],
       secondaryCtaText: "Browse catalog",
       secondaryCtaHref: "/catalog",
+      image: "/banners/hero-flash-sale.jpg",
+      mobileImage: "/banners/hero-flash-sale.jpg",
+      tone: "dark",
     },
   ];
 
   if (beautyDeals.length > 0) {
     heroSlides.push({
-      title: "Beauty and personal care is live.",
-      subtitle: "Skincare, SPF, and daily routine essentials from approved sellers.",
-      image: "/banners/beauty-wellness-campaign.png",
+      label: "New",
+      brand: "Beauty & care",
+      title: "Glow routines, sourced locally.",
+      body: "Serums, SPF, and daily personal care from approved sellers across the marketplace.",
+      priceLine: "Beauty shelf is live",
       ctaText: "Shop beauty",
       ctaHref: "/catalog?category=Beauty+%26+Personal+Care",
-      badge: "Beauty shelf",
-      chips: ["Skincare", "SPF", "Routines"],
+      image: "/banners/hero-beauty.jpg",
+      tone: "light",
     });
   }
 
   if (phoneDeals.length > 0) {
     heroSlides.push({
-      title: "Phones, wearables, and accessories.",
-      subtitle: "Mobile essentials and daily tech from verified marketplace sellers.",
-      image: "/banners/gadgets-campaign.png",
+      label: "Tech lane",
+      brand: "Gadgets",
+      title: "Phones, wearables, everyday gear.",
+      body: "Mobile essentials and daily tech from verified marketplace sellers — ready to request or cart.",
+      priceLine: "From Mobile Essentials",
       ctaText: "Shop gadgets",
       ctaHref: "/catalog?category=Mobile+Essentials",
-      badge: "Tech lane",
-      chips: ["Phones", "Wearables", "Accessories"],
+      image: "/banners/hero-gadgets.jpg",
+      tone: "dark",
+    });
+  }
+
+  if (carDeals.length > 0 || propertyDeals.length > 0) {
+    heroSlides.push({
+      label: "Motors & property",
+      brand: "Big listings",
+      title: "Cars, rentals, apartments, land.",
+      body: "Browse bigger-ticket listings from dealers and agents — enquire first, SuperTech helps coordinate.",
+      priceLine: "Enquiry-led shopping",
+      ctaText: "Explore listings",
+      ctaHref: "/catalog?category=Cars+for+Sale",
+      image: "/banners/hero-motors-property.jpg",
+      tone: "dark",
     });
   }
 
   heroSlides.push({
-    title: "Request it. Track it. Get updates.",
-    subtitle:
-      "Can’t find a listing? Request the product. Already ordered? Track status without leaving SuperTech.",
-    image: "/banners/groceries-campaign.png",
+    label: "Shopper tools",
+    brand: "SuperTech help",
+    title: "Request it. Track it. Done.",
+    body: "Missing a listing? Send a product request. Already ordered? Follow status without leaving SuperTech.",
+    priceLine: "Assisted commerce for Africa",
     ctaText: "Request a product",
     ctaHref: "/request-product",
-    badge: "Shopper tools",
-    chips: ["Request", "Track", "Vendors"],
     secondaryCtaText: "Track order",
     secondaryCtaHref: "/track-order",
+    image: "/banners/hero-request-track.jpg",
+    tone: "dark",
   });
 
   // Photo Factory visual categories: first product image per category
@@ -424,22 +445,24 @@ export default async function Home() {
 
   return (
     <div className="marketplace-campaign-bg pb-20 sm:pb-0">
-      {/* Full-bleed hero + visual categories on mobile — Photo Factory pattern */}
+      {/* Full-bleed hero — Photo Factory pattern (all breakpoints) */}
+      <HeroSlider slides={heroSlides} layout="fullBleed" />
+
+      {/* Mobile visual categories */}
       <div className="lg:hidden">
-        <HeroSlider slides={heroSlides} layout="fullBleed" />
         <VisualCategoryGrid items={visualCategories} />
       </div>
 
-      {/* Tablet image category rail — Photo Factory CardSwiper density */}
-      <div className="hidden md:block lg:hidden">
+      {/* Desktop/tablet category image rail */}
+      <div className="hidden md:block">
         <VisualCategoryRail items={visualCategories} />
       </div>
 
       <section className="page-shell py-4 sm:py-6">
-        {/* ——— Desktop hero triad ——— */}
-        <div className="hidden gap-3 lg:grid lg:grid-cols-[210px_minmax(0,1fr)_250px] lg:items-stretch">
+        {/* Desktop tools row under hero */}
+        <div className="hidden gap-3 lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <aside>
-            <div className="flex h-full max-h-[440px] flex-col overflow-hidden rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
+            <div className="flex max-h-[280px] flex-col overflow-hidden rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--elevation-1)]">
               <div className="flex items-center justify-between border-b border-[var(--line)] px-3 py-2.5">
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                   Categories
@@ -471,62 +494,58 @@ export default async function Home() {
             </div>
           </aside>
 
-          <div className="min-h-[420px]">
-            <HeroSlider slides={heroSlides} />
-          </div>
+          {sidebarProduct ? (
+            <PromoProductCard
+              eyebrow="Deal of the day"
+              title={sidebarProduct.name}
+              price={formatPrice(sidebarProduct.price)}
+              compareAt={
+                sidebarProduct.compareAt ? formatPrice(sidebarProduct.compareAt) : null
+              }
+              href={`/products/${sidebarProduct.slug}`}
+              image={sidebarProduct.heroImage}
+            />
+          ) : (
+            <div className="rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] p-4" />
+          )}
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 lg:grid-rows-2">
-            {sidebarProduct ? (
-              <PromoProductCard
-                eyebrow="Deal of the day"
-                title={sidebarProduct.name}
-                price={formatPrice(sidebarProduct.price)}
-                compareAt={
-                  sidebarProduct.compareAt ? formatPrice(sidebarProduct.compareAt) : null
-                }
-                href={`/products/${sidebarProduct.slug}`}
-                image={sidebarProduct.heroImage}
-              />
-            ) : null}
-
-            <div className="flex flex-col justify-between rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Need help?
-                </p>
-                <h2 className="mt-1.5 text-base font-bold tracking-[-0.02em] text-[var(--foreground)]">
-                  Request or track in seconds
-                </h2>
-                <p className="mt-1.5 text-xs leading-5 text-[var(--muted)]">
-                  Missing product? Already ordered? We&apos;ve got both paths.
-                </p>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <Link
-                  href="/request-product"
-                  className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent)] px-2 py-2.5 text-center text-xs font-bold text-white hover:bg-[var(--accent-hover)]"
-                >
-                  Request
-                </Link>
-                <Link
-                  href="/track-order"
-                  className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-2 py-2.5 text-center text-xs font-bold text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                >
-                  Track
-                </Link>
-              </div>
+          <div className="flex flex-col justify-between rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] p-4 shadow-[var(--elevation-1)]">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+                Need help?
+              </p>
+              <h2 className="mt-1.5 text-base font-bold tracking-[-0.02em] text-[var(--foreground)]">
+                Request or track in seconds
+              </h2>
+              <p className="mt-1.5 text-xs leading-5 text-[var(--muted)]">
+                Missing product? Already ordered? We&apos;ve got both paths.
+              </p>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <Link
-                href="/vendors"
-                className="mt-2 inline-flex items-center justify-center gap-1 text-xs font-semibold text-[var(--accent)] hover:underline"
+                href="/request-product"
+                className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent)] px-2 py-2.5 text-center text-xs font-bold text-white hover:bg-[var(--accent-hover)]"
               >
-                Official stores
-                <ChevronRight className="h-3.5 w-3.5" />
+                Request
+              </Link>
+              <Link
+                href="/track-order"
+                className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-2 py-2.5 text-center text-xs font-bold text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                Track
               </Link>
             </div>
+            <Link
+              href="/vendors"
+              className="mt-2 inline-flex items-center justify-center gap-1 text-xs font-semibold text-[var(--accent)] hover:underline"
+            >
+              Official stores
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </div>
 
-        {/* Mobile right-rail tools under category grid */}
+        {/* Mobile deal card under category grid */}
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:hidden">
           {sidebarProduct ? (
             <PromoProductCard
