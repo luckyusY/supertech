@@ -126,7 +126,34 @@
 }
 
 html {
+  /* Lenis owns smooth scrolling — avoid double-smoothing with CSS */
+  scroll-behavior: auto;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+html.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+html.lenis-smooth [data-lenis-prevent],
+html.lenis-smooth .scroll-x,
+html.lenis-smooth .swiper {
+  overscroll-behavior: contain;
+}
+
+/* When reduced motion / Lenis disabled, keep native smooth anchors */
+html.lenis-stopped {
   scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* Safe area for phones with home bar (iPhone notch etc) */
@@ -385,7 +412,7 @@ img {
   loading: lazy;
 }
 
-/* Swiper custom styles */
+/* Swiper custom styles (campaign / full-bleed) */
 .swiper-pagination-bullet {
   background: rgba(255, 255, 255, 0.4) !important;
   opacity: 1 !important;
@@ -398,6 +425,46 @@ img {
 .swiper-pagination-bullet-active {
   background: var(--accent) !important;
   width: 32px !important;
+}
+
+/* Product card gallery Swiper */
+.product-card-gallery .swiper {
+  height: 100%;
+  width: 100%;
+}
+
+.product-card-gallery .swiper-slide {
+  height: 100%;
+}
+
+.product-card-gallery .swiper-pagination {
+  bottom: 6px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding-inline: 8px;
+}
+
+.product-card-gallery .swiper-pagination-bullet {
+  background: rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  width: 6px !important;
+  height: 6px !important;
+  margin: 0 !important;
+  opacity: 0.85 !important;
+}
+
+.product-card-gallery .swiper-pagination-bullet-active {
+  background: var(--accent) !important;
+  width: 14px !important;
+  border-radius: 9999px !important;
+}
+
+.product-card-gallery .swiper-pagination-bullet-active-main {
+  background: var(--accent) !important;
 }
 
 /* Button hover effects */

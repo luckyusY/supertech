@@ -1,11 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Heart, MessageCircle, ShoppingBag, Star } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { toast } from "sonner";
+import { ProductCardGallery } from "@/components/product-card-gallery";
 import { useCart } from "@/components/cart-provider";
 import { getVendorBySlug, type Product } from "@/lib/marketplace";
 import { buildBuyBoxPlan, getMarketplaceMode, isBigTicketMode } from "@/lib/product-rules";
@@ -34,7 +34,11 @@ function writeWishlist(slugs: string[]) {
   window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(slugs));
 }
 
+/**
+ * Retail-first product card with multi-image Swiper + Framer Motion.
+ */
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const reduceMotion = useReducedMotion();
   const vendor = getVendorBySlug(product.vendorSlug);
   const { addItem } = useCart();
   const [wishlisted, setWishlisted] = useState(false);
@@ -46,6 +50,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     stockLabel: product.stockLabel,
     vendorSlug: product.vendorSlug,
   });
+
+  const galleryImages = useMemo(() => {
+    const list = [product.heroImage, ...(product.gallery ?? [])];
+    return list;
+  }, [product.gallery, product.heroImage]);
 
   useEffect(() => {
     setWishlisted(readWishlist().includes(product.slug));
@@ -87,139 +96,179 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     });
   }
 
-  const discount = product.compareAt
-    ? Math.round((1 - product.price / product.compareAt) * 100)
-    : null;
+  const discount =
+    !bigTicket && product.compareAt && product.compareAt > product.price
+      ? Math.round((1 - product.price / product.compareAt) * 100)
+      : null;
   const vendorName = vendor?.name ?? product.vendorSlug;
   const whatsappHref = getWhatsAppHref(
     vendor?.whatsappNumber ?? product.vendorWhatsAppNumber,
     `Hello ${vendorName}, I am interested in ${product.name} on SuperTech.`,
   );
   const orderHref = plan.primary.href ?? `/order?product=${encodeURIComponent(product.slug)}`;
+  const primaryLabel = plan.showAddToCart
+    ? "Add to cart"
+    : bigTicket
+      ? "Enquire"
+      : "Request";
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-20px" }}
+      data-reveal-item
+      initial={reduceMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-10px", amount: 0.15 }}
       transition={{
         duration: 0.35,
-        delay: index * 0.03,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        delay: Math.min(index, 10) * 0.03,
+        ease: [0.22, 1, 0.36, 1],
       }}
-      className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-sm)] border border-[var(--line)] bg-white transition-shadow duration-200 hover:shadow-[var(--elevation-2)]"
+      whileHover={
+        reduceMotion
+          ? undefined
+          : {
+              y: -3,
+              transition: { type: "spring", stiffness: 420, damping: 28 },
+            }
+      }
+      className={cn(
+        "group flex h-full flex-col overflow-hidden rounded-[var(--radius-md)]",
+        "border border-[var(--line)] bg-[var(--surface)]",
+        "shadow-[var(--elevation-0)] transition-[box-shadow,border-color] duration-200",
+        "hover:border-[rgba(232,119,10,0.28)] hover:shadow-[var(--elevation-2)]",
+      )}
     >
-      <div className="relative aspect-square overflow-hidden bg-[var(--neutral-50)]">
-        <Link href={`/products/${product.slug}`} className="absolute inset-0 z-0" tabIndex={-1}>
-          <Image
-            src={product.heroImage}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(min-width: 1280px) 18vw, (min-width: 768px) 25vw, 45vw"
-          />
-        </Link>
+      {/* Media — Swiper when gallery has multiple images */}
+      <div className="relative">
+        <ProductCardGallery
+          images={galleryImages}
+          alt={product.name}
+          href={`/products/${product.slug}`}
+        />
 
-        <div className="pointer-events-none absolute left-1.5 right-10 top-1.5 z-10 flex flex-nowrap gap-1 overflow-hidden sm:left-2 sm:right-11 sm:top-2">
-          {discount && !bigTicket ? (
-            <span className="shrink-0 rounded bg-[var(--accent-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--accent)] sm:px-2 sm:py-1 sm:text-[11px]">
+        <div className="pointer-events-none absolute left-2 top-2 z-10 flex max-w-[70%] flex-col items-start gap-1">
+          {discount ? (
+            <motion.span
+              initial={reduceMotion ? false : { scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 400, damping: 20 }}
+              className="rounded-[var(--radius-sm)] bg-[var(--accent)] px-2 py-0.5 text-[11px] font-bold tabular-nums text-white shadow-sm"
+            >
               -{discount}%
-            </span>
+            </motion.span>
           ) : null}
           {bigTicket ? (
-            <span className="shrink-0 rounded bg-[var(--info-soft)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--info)] sm:px-2 sm:py-1 sm:text-[11px]">
+            <span className="rounded-[var(--radius-sm)] bg-[var(--info)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-white shadow-sm">
               {mode === "motors" ? "Motors" : "Property"}
             </span>
+          ) : product.badge ? (
+            <span className="max-w-full truncate rounded-[var(--radius-sm)] bg-white/95 px-2 py-0.5 text-[10px] font-semibold text-[var(--foreground)] shadow-sm">
+              {product.badge}
+            </span>
           ) : null}
-          <span className="min-w-0 truncate rounded bg-white/92 px-1.5 py-0.5 text-[9px] font-semibold text-[var(--foreground)] shadow-sm sm:px-2 sm:py-1 sm:text-[10px]">
-            {product.badge}
-          </span>
         </div>
 
-        <button
+        <motion.button
           type="button"
           onClick={handleWishlist}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          whileTap={reduceMotion ? undefined : { scale: 0.88 }}
           className={cn(
-            "absolute right-1.5 top-1.5 z-20 flex h-8 w-8 items-center justify-center rounded-full border bg-white/92 shadow-sm transition-colors sm:right-2 sm:top-2",
+            "absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full",
+            "border border-black/5 bg-white/95 shadow-sm backdrop-blur-sm transition-colors",
             wishlisted
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-white/80 text-[var(--muted)] hover:text-[var(--accent)]",
+              ? "text-[var(--accent)]"
+              : "text-[var(--muted)] hover:text-[var(--accent)]",
           )}
         >
-          <Heart className={cn("h-4 w-4", wishlisted && "fill-current")} />
-        </button>
+          <Heart className={cn("h-3.5 w-3.5", wishlisted && "fill-current")} />
+        </motion.button>
       </div>
 
-      <div className="relative flex flex-1 flex-col p-2.5 sm:p-3">
-        <p className="truncate text-[9px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)] sm:text-[10px] sm:tracking-[0.14em]">
-          {vendorName}
-        </p>
-        <Link href={`/products/${product.slug}`} className="mt-1">
-          <h3 className="min-h-[2.5rem] line-clamp-2 text-[13px] font-medium leading-5 text-[var(--foreground)] hover:text-[var(--accent)] sm:min-h-[2.75rem] sm:text-sm">
+      <div className="flex flex-1 flex-col px-2.5 pb-2.5 pt-2.5 sm:px-3 sm:pb-3 sm:pt-3">
+        <div className="flex min-w-0 items-center gap-1.5 text-[11px] text-[var(--muted)]">
+          <span className="min-w-0 truncate font-medium">{vendorName}</span>
+          <span className="shrink-0 text-[var(--line)]" aria-hidden>
+            ·
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-[var(--foreground)]">
+            <Star className="h-3 w-3 fill-[var(--gold)] text-[var(--gold)]" />
+            {product.reviewCount > 0 ? product.rating.toFixed(1) : "New"}
+          </span>
+        </div>
+
+        <Link href={`/products/${product.slug}`} className="mt-1.5 block min-h-[2.5rem]">
+          <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug tracking-[-0.01em] text-[var(--foreground)] transition-colors group-hover:text-[var(--accent)] sm:text-sm sm:leading-5">
             {product.name}
           </h3>
         </Link>
 
-        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:mt-2">
-          <span className="text-base font-bold tracking-[-0.02em] text-[var(--foreground)] sm:text-lg">
-            {formatPrice(product.price)}
+        <div className="mt-2">
+          <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+            <span className="text-[1.05rem] font-bold tabular-nums tracking-[-0.03em] text-[var(--foreground)] sm:text-lg">
+              {formatPrice(product.price)}
+            </span>
             {bigTicket ? (
-              <span className="ml-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
                 asking
               </span>
             ) : null}
-          </span>
-          {product.compareAt && !bigTicket ? (
-            <span className="text-[11px] text-[var(--muted)] line-through sm:text-xs">
-              {formatPrice(product.compareAt)}
-            </span>
-          ) : null}
+            {product.compareAt && product.compareAt > product.price && !bigTicket ? (
+              <span className="text-xs tabular-nums text-[var(--muted)] line-through">
+                {formatPrice(product.compareAt)}
+              </span>
+            ) : null}
+          </div>
+          {!bigTicket && discount ? (
+            <p className="mt-0.5 text-[11px] font-medium text-[var(--success)]">
+              Save {formatPrice((product.compareAt ?? 0) - product.price)}
+            </p>
+          ) : (
+            <p className="mt-0.5 truncate text-[11px] text-[var(--muted)]">{product.stockLabel}</p>
+          )}
         </div>
 
-        <p className="mt-0.5 truncate text-[10px] text-[var(--muted)] sm:text-[11px]">
-          {bigTicket
-            ? product.stockLabel
-            : product.compareAt
-              ? `You save ${formatPrice(product.compareAt - product.price)}`
-              : product.stockLabel}
-        </p>
-
-        <div className="mt-1.5 flex items-center gap-1 text-[11px] text-[var(--muted)] sm:mt-2 sm:text-xs">
-          <Star className="h-3.5 w-3.5 fill-[var(--gold)] text-[var(--gold)]" />
-          <span>{product.reviewCount > 0 ? product.rating.toFixed(1) : "New"}</span>
-          <span>({product.reviewCount})</span>
-        </div>
-
-        {/* Actions are real controls — not covered by a full-card link */}
-        <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:mt-3 sm:gap-2">
+        <div className="mt-auto flex gap-1.5 pt-3">
           {plan.showAddToCart ? (
-            <button
+            <motion.button
               type="button"
               onClick={handleQuickAdd}
-              className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-[var(--radius-sm)] bg-[var(--accent)] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[var(--accent-hover)] sm:text-xs"
+              whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+              className={cn(
+                "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-sm)]",
+                "bg-[var(--accent)] px-2 text-xs font-bold text-white",
+                "transition-colors hover:bg-[var(--accent-hover)]",
+              )}
             >
               <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Add</span>
-            </button>
+              <span className="truncate">{primaryLabel}</span>
+            </motion.button>
           ) : (
             <Link
               href={orderHref}
-              className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-[var(--radius-sm)] bg-[var(--accent)] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[var(--accent-hover)] sm:text-xs"
+              className={cn(
+                "inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-sm)]",
+                "bg-[var(--accent)] px-2 text-xs font-bold text-white",
+                "transition-colors hover:bg-[var(--accent-hover)] active:scale-[0.98]",
+              )}
             >
-              <span className="truncate">{bigTicket ? "Enquire" : "Request"}</span>
+              <span className="truncate">{primaryLabel}</span>
             </Link>
           )}
-          <a
+          <motion.a
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Chat with ${vendorName} on WhatsApp about ${product.name}`}
-            className="inline-flex h-9 min-w-0 items-center justify-center gap-1 rounded-[var(--radius-sm)] bg-[#1fae5b] px-2 text-[11px] font-bold text-white transition-colors hover:bg-[#178d49] sm:text-xs"
+            whileTap={reduceMotion ? undefined : { scale: 0.94 }}
+            className={cn(
+              "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)]",
+              "border border-[var(--line)] bg-[var(--surface)] text-[#128C7E]",
+              "transition-colors hover:border-[#128C7E]/40 hover:bg-[#e8f8f1]",
+            )}
           >
-            <MessageCircle className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Chat</span>
-          </a>
+            <MessageCircle className="h-4 w-4" />
+          </motion.a>
         </div>
       </div>
     </motion.article>
