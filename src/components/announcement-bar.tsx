@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
+/* Policy-backed claims only — see docs/PRODUCT_DESIGN_PLAN.md §10 */
 const messages = [
-  "🚀 Free delivery on orders over $100 — limited time offer",
-  "✅ All sellers verified before listing — shop with confidence",
-  "🌍 Shipping across East & West Africa — 12+ cities",
-  "⚡ Same-day dispatch on orders placed before 2 PM",
+  "✅ All sellers are reviewed by SuperTech before products go live",
+  "📦 Request an order and track status from one marketplace flow",
+  "💳 Pay the local way — MoMoPay and seller payment preferences",
+  "🔎 Can’t find it? Request a product and we’ll help source it",
 ];
 
 export function AnnouncementBar() {

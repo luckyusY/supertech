@@ -35,17 +35,17 @@ export function VendorProductWorkspace({
         onVendorChange={setVendorSlug}
         onSubmitted={() => setRefreshKey((current) => current + 1)}
       />
-      <div className="soft-card p-6 sm:p-8">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
-          Submission timeline
+      <div className="soft-card p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+          Your catalog
         </p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
-          All products for this vendor
+        <h2 className="mt-1 text-xl font-semibold tracking-[-0.03em]">
+          Submissions & live listings
         </h2>
-        <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
           {canSwitchVendor
-            ? "Switching the vendor selector updates both the submission form and this review list."
-            : "This review list stays locked to the signed-in vendor account."}
+            ? "Vendor switch updates both the form and this list."
+            : "Pending, approved, and rejected listings for your store."}
         </p>
         <div className="mt-6">
           <VendorProductSubmissions

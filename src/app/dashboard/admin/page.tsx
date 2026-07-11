@@ -3,31 +3,25 @@ import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
-  BarChart3,
-  CheckCircle2,
-  FileText,
-  KeyRound,
   LayoutDashboard,
   Package,
-  Shapes,
   ShoppingBag,
-  Sparkles,
   Store,
   TrendingUp,
-  UserRound,
-  Users,
+  AlertCircle,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { requirePageSession } from "@/lib/auth";
 import { hasMongoConfig } from "@/lib/integrations";
 import { getOrderRequestOperationsSnapshot } from "@/lib/order-requests";
+import { getProductSubmissions } from "@/lib/product-submissions";
 import { getPublicProducts, getPublicVendors } from "@/lib/public-marketplace";
 import { getVendorApplications } from "@/lib/vendor-applications";
 import { formatPrice } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
-  description: "Marketplace control room — orders, approvals, vendors, and performance.",
+  description: "Marketplace control room — attention queues, orders, and platform health.",
 };
 
 export const dynamic = "force-dynamic";
@@ -38,81 +32,98 @@ export default async function AdminDashboardPage() {
     nextPath: "/dashboard/admin",
   });
 
-  const [operationsSnapshot, vendorApplications, vendors, products] = await Promise.all([
-    hasMongoConfig() ? getOrderRequestOperationsSnapshot().catch(() => null) : Promise.resolve(null),
-    hasMongoConfig() ? getVendorApplications().catch(() => []) : Promise.resolve([]),
-    getPublicVendors().catch(() => []),
-    getPublicProducts().catch(() => []),
-  ]);
+  const mongo = hasMongoConfig();
+
+  const [operationsSnapshot, vendorApplications, productSubmissions, vendors, products] =
+    await Promise.all([
+      mongo ? getOrderRequestOperationsSnapshot().catch(() => null) : Promise.resolve(null),
+      mongo ? getVendorApplications().catch(() => []) : Promise.resolve([]),
+      mongo
+        ? getProductSubmissions({ status: "pending_review" }).catch(() => [])
+        : Promise.resolve([]),
+      getPublicVendors().catch(() => []),
+      getPublicProducts().catch(() => []),
+    ]);
+
   const pendingApplicationsCount = vendorApplications.filter((a) => a.status === "pending").length;
+  const pendingProductsCount = productSubmissions.length;
+  const pendingOrders = operationsSnapshot?.pendingConfirmation ?? 0;
+  const activeFulfillment = operationsSnapshot?.activeFulfillment ?? 0;
+
+  const attentionItems = [
+    {
+      href: "/dashboard/admin/orders",
+      label: "Orders awaiting confirmation",
+      count: pendingOrders,
+      tone: "warning" as const,
+      icon: ShoppingBag,
+      cta: "Review orders",
+    },
+    {
+      href: "/dashboard/admin/approvals",
+      label: "Vendor applications pending",
+      count: pendingApplicationsCount,
+      tone: "warning" as const,
+      icon: BadgeCheck,
+      cta: "Open approvals",
+    },
+    {
+      href: "/dashboard/admin/products",
+      label: "Product submissions to review",
+      count: pendingProductsCount,
+      tone: "info" as const,
+      icon: Package,
+      cta: "Review products",
+    },
+    {
+      href: "/dashboard/admin/orders",
+      label: "Active fulfillment",
+      count: activeFulfillment,
+      tone: "neutral" as const,
+      icon: TrendingUp,
+      cta: "View pipeline",
+    },
+  ].filter((item) => item.count > 0 || item.label === "Orders awaiting confirmation");
+
+  const needsActionCount = pendingOrders + pendingApplicationsCount + pendingProductsCount;
 
   const metricCards = [
     {
       label: "Gross marketplace value",
-      value: operationsSnapshot ? formatPrice(operationsSnapshot.estimatedRevenue) : "$42,800",
+      value: operationsSnapshot ? formatPrice(operationsSnapshot.estimatedRevenue) : "—",
       icon: TrendingUp,
-      color: "text-[var(--teal)]",
-      bg: "bg-[rgba(8,145,178,0.08)]",
+      color: "text-[var(--info)]",
+      bg: "bg-[var(--info-soft)]",
     },
     {
-      label: "Pending confirmations",
-      value: operationsSnapshot ? String(operationsSnapshot.pendingConfirmation) : "3",
-      icon: BadgeCheck,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
-    },
-    {
-      label: "Active fulfillment",
-      value: operationsSnapshot ? String(operationsSnapshot.activeFulfillment) : "6",
-      icon: ShoppingBag,
-      color: "text-[var(--accent)]",
-      bg: "bg-[rgba(37,99,235,0.08)]",
+      label: "Needs action today",
+      value: String(needsActionCount),
+      icon: AlertCircle,
+      color: "text-[var(--warning)]",
+      bg: "bg-[var(--warning-soft)]",
     },
     {
       label: "Live products",
       value: String(products.length),
       icon: Package,
-      color: "text-indigo-500",
-      bg: "bg-indigo-50",
-    },
-  ];
-
-  const shortcuts = [
-    {
-      href: "/dashboard/admin/orders",
-      label: "Order management",
-      desc: "Confirm, fulfill, and track customer orders",
-      icon: ShoppingBag,
+      color: "text-[var(--accent)]",
+      bg: "bg-[var(--accent-soft)]",
     },
     {
-      href: "/dashboard/admin/approvals",
-      label: "Approvals queue",
-      desc: `${pendingApplicationsCount} vendor application${pendingApplicationsCount === 1 ? "" : "s"} pending`,
-      icon: BadgeCheck,
+      label: "Active vendors",
+      value: String(vendors.length),
+      icon: Store,
+      color: "text-[var(--success)]",
+      bg: "bg-[var(--success-soft)]",
     },
-    {
-      href: "/dashboard/admin/products",
-      label: "Manage products",
-      desc: "Browse, disable, and write blogs for listings",
-      icon: Package,
-    },
-  ];
-
-  const allPages = [
-    { href: "/dashboard/admin/orders", label: "Orders", icon: ShoppingBag, color: "text-[var(--accent)]", bg: "bg-[rgba(37,99,235,0.08)]" },
-    { href: "/dashboard/admin/approvals", label: "Approvals", icon: BadgeCheck, color: "text-amber-600", bg: "bg-amber-50" },
-    { href: "/dashboard/admin/products", label: "Products", icon: Package, color: "text-indigo-500", bg: "bg-indigo-50" },
-    { href: "/dashboard/admin/vendors", label: "Vendors", icon: Store, color: "text-[var(--teal)]", bg: "bg-[rgba(8,145,178,0.08)]" },
-    { href: "/dashboard/admin/blogs", label: "Blogs", icon: FileText, color: "text-rose-500", bg: "bg-rose-50" },
-    { href: "/dashboard/admin/categories", label: "Categories", icon: Shapes, color: "text-purple-500", bg: "bg-purple-50" },
-    { href: "/dashboard/admin/analytics", label: "Analytics", icon: BarChart3, color: "text-green-600", bg: "bg-green-50" },
-    { href: "/dashboard/admin/ai", label: "AI Studio", icon: Sparkles, color: "text-fuchsia-500", bg: "bg-fuchsia-50" },
-    { href: "/dashboard/admin/recovery", label: "Recovery", icon: KeyRound, color: "text-orange-500", bg: "bg-orange-50" },
-    { href: "/dashboard/admin/profile", label: "Profile", icon: UserRound, color: "text-slate-500", bg: "bg-slate-100" },
   ];
 
   const now = new Date();
-  const dateLabel = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const dateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
@@ -120,14 +131,66 @@ export default async function AdminDashboardPage() {
         icon={LayoutDashboard}
         eyebrow={dateLabel}
         title={`Welcome back, ${session.name.split(" ")[0]}.`}
-        description="Here's what's happening across the marketplace today."
+        description="Clear what needs you first — then scan marketplace health."
       />
 
-      {/* Metrics */}
+      {/* Attention — primary ops surface */}
+      <section className="mt-6">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+              Attention
+            </p>
+            <h2 className="mt-1 text-lg font-semibold tracking-[-0.03em]">
+              {needsActionCount > 0
+                ? `${needsActionCount} item${needsActionCount === 1 ? "" : "s"} need action`
+                : "You’re caught up"}
+            </h2>
+          </div>
+          <Link
+            href="/dashboard/admin/orders"
+            className="text-sm font-semibold text-[var(--accent)] hover:underline"
+          >
+            Open orders
+          </Link>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {attentionItems.map((item) => (
+            <Link
+              key={`${item.href}-${item.label}`}
+              href={item.href}
+              className="soft-card group flex items-center gap-4 p-4 transition-shadow hover:shadow-md"
+            >
+              <span
+                className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] ${
+                  item.tone === "warning"
+                    ? "bg-[var(--warning-soft)] text-[var(--warning)]"
+                    : item.tone === "info"
+                      ? "bg-[var(--info-soft)] text-[var(--info)]"
+                      : "bg-[var(--neutral-100)] text-[var(--foreground)]"
+                }`}
+              >
+                <item.icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-[var(--muted)]">{item.label}</p>
+                <p className="mt-0.5 text-2xl font-semibold tracking-[-0.04em]">{item.count}</p>
+              </div>
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-[var(--accent)] opacity-80 group-hover:opacity-100">
+                {item.cta}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* KPIs */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metricCards.map((card) => (
           <div key={card.label} className="soft-card p-5">
-            <div className={`inline-flex rounded-[0.75rem] p-2 ${card.bg}`}>
+            <div className={`inline-flex rounded-[var(--radius-md)] p-2 ${card.bg}`}>
               <card.icon className={`h-5 w-5 ${card.color}`} />
             </div>
             <p className="mt-4 text-sm text-[var(--muted)]">{card.label}</p>
@@ -136,18 +199,26 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* All Pages — visible on mobile so every section is one tap away */}
+      {/* Mobile section grid */}
       <div className="mt-6 xl:hidden">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">All sections</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+          All sections
+        </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {allPages.map((page) => (
+          {[
+            { href: "/dashboard/admin/orders", label: "Orders", icon: ShoppingBag },
+            { href: "/dashboard/admin/approvals", label: "Approvals", icon: BadgeCheck },
+            { href: "/dashboard/admin/products", label: "Products", icon: Package },
+            { href: "/dashboard/admin/vendors", label: "Vendors", icon: Store },
+            { href: "/dashboard/admin/events", label: "Events", icon: TrendingUp },
+          ].map((page) => (
             <Link
               key={page.href}
               href={page.href}
               className="soft-card flex items-center gap-3 p-4 transition-shadow hover:shadow-md"
             >
-              <span className={`inline-flex rounded-[0.75rem] p-2 ${page.bg}`}>
-                <page.icon className={`h-5 w-5 ${page.color}`} />
+              <span className="inline-flex rounded-[var(--radius-md)] bg-[var(--accent-soft)] p-2 text-[var(--accent)]">
+                <page.icon className="h-5 w-5" />
               </span>
               <span className="text-sm font-semibold">{page.label}</span>
             </Link>
@@ -155,71 +226,21 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        {/* Quick shortcuts */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {shortcuts.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="soft-card group flex items-start gap-4 p-5 transition-shadow hover:shadow-md"
-            >
-              <span className="inline-flex rounded-[0.75rem] bg-[var(--accent-soft)] p-2.5 text-[var(--accent)]">
-                <item.icon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="flex items-center gap-1.5 font-semibold">
-                  {item.label}
-                  <ArrowRight className="h-3.5 w-3.5 -translate-x-1 text-[var(--muted)] opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-                </p>
-                <p className="mt-0.5 text-xs leading-5 text-[var(--muted)]">{item.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Platform overview */}
-        <div className="dark-card p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.55)]">
-            Platform overview
-          </p>
-          <div className="mt-5 space-y-3">
-            {[
-              { icon: Store, label: "Verified sellers", value: `${vendors.length} active` },
-              { icon: Package, label: "Listed products", value: `${products.length} live` },
-              { icon: Users, label: "Marketplace status", value: "Open to buyers" },
-              { icon: CheckCircle2, label: "Buyer protection", value: "Enabled" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between gap-4 rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3"
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon className="h-4 w-4 text-[rgba(255,255,255,0.55)]" />
-                  <p className="text-sm text-[rgba(255,255,255,0.76)]">{item.label}</p>
-                </div>
-                <p className="text-sm font-semibold text-white">{item.value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Vendor health */}
+      {/* Vendor health table */}
       <div className="mt-6 soft-card p-6 sm:p-8">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Store className="h-5 w-5 text-[var(--accent)]" />
             <h2 className="text-xl font-semibold tracking-[-0.04em]">Vendor health</h2>
           </div>
-          <span className="rounded-full bg-[rgba(8,145,178,0.1)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
+          <span className="rounded-full bg-[var(--info-soft)] px-3 py-1 text-xs font-semibold text-[var(--info)]">
             {vendors.length} sellers
           </span>
         </div>
-        <div className="mt-6 overflow-x-auto rounded-[1.25rem] border border-[var(--line)]">
+        <div className="mt-6 overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--line)]">
           <table className="w-full min-w-[34rem] text-sm">
             <thead>
-              <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
+              <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)]">
                 {["Vendor", "Location", "Products", "Fulfillment", "Rating"].map((h) => (
                   <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
                     {h}
@@ -228,25 +249,35 @@ export default async function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {vendors.map((vendor, i) => (
-                <tr
-                  key={vendor.id}
-                  className={`border-b border-[var(--line)] last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-[rgba(15,23,42,0.015)]"}`}
-                >
-                  <td className="px-5 py-4 font-semibold">{vendor.name}</td>
-                  <td className="px-5 py-4 text-[var(--muted)]">{vendor.location}</td>
-                  <td className="px-5 py-4">{vendor.activeProducts}</td>
-                  <td className="px-5 py-4">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[rgba(8,145,178,0.1)] px-2.5 py-0.5 text-xs font-semibold text-[var(--teal)]">
-                      {vendor.fulfillmentRate}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="font-semibold">{vendor.rating.toFixed(1)}</span>
-                    <span className="ml-1 text-[var(--muted)]">/ 5</span>
+              {vendors.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-8 text-center text-[var(--muted)]">
+                    No vendors yet.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                vendors.map((vendor, i) => (
+                  <tr
+                    key={vendor.id}
+                    className={`border-b border-[var(--line)] last:border-0 ${
+                      i % 2 === 0 ? "bg-white" : "bg-[var(--neutral-50)]"
+                    }`}
+                  >
+                    <td className="px-5 py-4 font-semibold">{vendor.name}</td>
+                    <td className="px-5 py-4 text-[var(--muted)]">{vendor.location}</td>
+                    <td className="px-5 py-4">{vendor.activeProducts}</td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--success-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--success)]">
+                        {vendor.fulfillmentRate}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="font-semibold">{vendor.rating.toFixed(1)}</span>
+                      <span className="ml-1 text-[var(--muted)]">/ 5</span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

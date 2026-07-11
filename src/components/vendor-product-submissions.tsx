@@ -46,15 +46,15 @@ const STATUS_STYLES: Record<
 > = {
   pending_review: {
     label: "Pending review",
-    pill: "bg-[rgba(245,158,11,0.18)] text-[#9c6b0b]",
+    pill: "bg-[var(--warning-soft)] text-[var(--warning)]",
   },
   approved: {
     label: "Approved",
-    pill: "bg-[rgba(8,145,178,0.12)] text-[var(--teal)]",
+    pill: "bg-[var(--success-soft)] text-[var(--success)]",
   },
   rejected: {
     label: "Rejected",
-    pill: "bg-[rgba(37,99,235,0.14)] text-[var(--accent)]",
+    pill: "bg-[var(--danger-soft)] text-[var(--danger)]",
   },
 };
 

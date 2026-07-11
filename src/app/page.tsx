@@ -4,7 +4,6 @@ import {
   Briefcase,
   Building2,
   Car,
-  Check,
   ChevronRight,
   Gamepad2,
   Headphones,
@@ -12,12 +11,10 @@ import {
   Home as HomeIcon,
   Landmark,
   Monitor,
-  ShieldCheck,
   Smartphone,
   Sparkles,
   Star,
   Store,
-  Truck,
   Watch,
   Zap,
   type LucideIcon,
@@ -25,6 +22,7 @@ import {
 import { CampaignBannerSlider, type CampaignSlide } from "@/components/campaign-banner-slider";
 import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { ProductCard } from "@/components/product-card";
+import { TrustStrip } from "@/components/trust-strip";
 import {
   getPublicCategorySummaries,
   getPublicFeaturedProducts,
@@ -262,11 +260,7 @@ const shortcutTiles = [
   { label: "Request", href: "/request-product", icon: Sparkles },
 ] as const;
 
-const promiseItems = [
-  "Verified vendors before products go live",
-  "Dense shelves that are easy to scan quickly",
-  "Live order help and request-product flow",
-] as const;
+
 
 export default async function Home() {
   const [featuredProducts, topVendors, publicProducts, publicVendors, categorySummaries] = await Promise.all([
@@ -330,15 +324,11 @@ export default async function Home() {
     )
     .slice(0, 10);
 
-  const heroProduct =
+  const sidebarProduct =
     flashSaleProducts[0] ??
     featuredProducts[0] ??
     topSellingProducts[0] ??
     publicProducts[0];
-  const sidebarProduct =
-    topSellingProducts.find((product) => product.slug !== heroProduct.slug) ?? heroProduct;
-  const promoProduct =
-    creatorDeals.find((product) => product.slug !== heroProduct.slug) ?? sidebarProduct;
 
   const fulfillmentRates = publicVendors
     .map((vendor) => Number.parseFloat(vendor.fulfillmentRate))
@@ -348,91 +338,96 @@ export default async function Home() {
     : null;
 
   const heroStats = [
-    { iconKey: "package", label: "Live products", value: formatCompactNumber(publicProducts.length) },
-    { iconKey: "shield", label: "Vendors", value: formatCompactNumber(publicVendors.length) },
+    { icon: "package" as const, label: "Live products", value: formatCompactNumber(publicProducts.length) },
+    { icon: "shield" as const, label: "Vendors", value: formatCompactNumber(publicVendors.length) },
     {
-      iconKey: "trending",
+      icon: "trending" as const,
       label: "Fulfillment",
       value: averageFulfillment === null ? "New" : `${averageFulfillment.toFixed(1)}%`,
     },
-  ] as const;
+  ];
 
+  // Campaign-led slides (max 4) — product photos only as last resort
   const heroSlides: HeroSlide[] = [
     {
       title: "Flash deals from verified sellers.",
       subtitle:
-        "Shop a dense marketplace of tech, beauty, wellness, and home essentials with clear markdowns and fast ordering.",
-      image: heroProduct.heroImage,
+        "Shop tech, beauty, wellness, and home essentials with clear prices and trackable orders.",
+      image: "/banners/flash-sale-campaign.png",
       ctaText: "Shop flash sale",
       ctaHref: "#flash-sale",
       badge: "Marketplace savings",
-      chips: ["Flash sale", "Official stores", "Fast dispatch"],
+      chips: ["Verified sellers", "Request order", "Track status"],
+      secondaryCtaText: "Browse catalog",
+      secondaryCtaHref: "/catalog",
     },
   ];
 
-  if (beautyDeals[0]) {
+  if (beautyDeals.length > 0) {
     heroSlides.push({
       title: "Beauty and personal care is live.",
-      subtitle: `${beautyDeals[0].name} leads a new shelf for skincare, SPF, and daily routine essentials.`,
-      image: beautyDeals[0].heroImage,
+      subtitle: "Skincare, SPF, and daily routine essentials from approved sellers.",
+      image: "/banners/beauty-wellness-campaign.png",
       ctaText: "Shop beauty",
       ctaHref: "/catalog?category=Beauty+%26+Personal+Care",
       badge: "Beauty shelf",
-      chips: ["Skincare", "SPF", "Daily routines"],
+      chips: ["Skincare", "SPF", "Routines"],
     });
   }
 
-  if (wellnessDeals[0]) {
+  if (phoneDeals.length > 0) {
     heroSlides.push({
-      title: "Wellness picks for rest and recovery.",
-      subtitle: `${wellnessDeals[0].name} anchors wellness products for recovery, sleep, and everyday balance.`,
-      image: wellnessDeals[0].heroImage,
-      ctaText: "Shop wellness",
-      ctaHref: "/catalog?category=Health+%26+Wellness",
-      badge: "Health & wellness",
-      chips: ["Recovery", "Sleep support", "Wellness"],
+      title: "Phones, wearables, and accessories.",
+      subtitle: "Mobile essentials and daily tech from verified marketplace sellers.",
+      image: "/banners/gadgets-campaign.png",
+      ctaText: "Shop gadgets",
+      ctaHref: "/catalog?category=Mobile+Essentials",
+      badge: "Tech lane",
+      chips: ["Phones", "Wearables", "Accessories"],
     });
   }
 
   heroSlides.push({
-    title: "Vendors, requests, and tracking in one place.",
+    title: "Request it. Track it. Get updates.",
     subtitle:
-      "Browse trusted storefronts, request hard-to-find products, and follow order updates without leaving SuperTech.",
-    image: sidebarProduct.heroImage,
-    ctaText: "Browse vendors",
-    ctaHref: "/vendors",
+      "Can’t find a listing? Request the product. Already ordered? Track status without leaving SuperTech.",
+    image: "/banners/groceries-campaign.png",
+    ctaText: "Request a product",
+    ctaHref: "/request-product",
     badge: "Shopper tools",
-    chips: ["Vendors", "Request product", "Track order"],
+    chips: ["Request", "Track", "Vendors"],
+    secondaryCtaText: "Track order",
+    secondaryCtaHref: "/track-order",
   });
+
+  const mobileCategoryChips = homepageCategories.slice(0, 10);
 
   return (
     <div className="marketplace-campaign-bg pb-20 sm:pb-0">
       <section className="page-shell py-4 sm:py-6">
-        <div className="grid gap-3 lg:auto-rows-[440px] lg:grid-cols-[220px_minmax(0,1fr)_250px]">
+        <div className="grid gap-3 lg:auto-rows-[minmax(400px,auto)] lg:grid-cols-[200px_minmax(0,1fr)_240px]">
           <aside className="hidden lg:block">
-            <div className="soft-card h-full overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="border-b border-[var(--line)] px-1 pb-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-                  Browse categories
+            <div className="soft-card h-full max-h-[440px] overflow-y-auto p-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex items-center justify-between border-b border-[var(--line)] px-2 pb-2.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  Categories
                 </p>
+                <Link href="/catalog" className="text-[11px] font-bold text-[var(--accent)]">
+                  All
+                </Link>
               </div>
-              <div className="mt-2 space-y-1">
+              <div className="mt-1.5 space-y-0.5">
                 {homepageCategories.map((category) => (
                   <Link
                     key={category.name}
                     href={category.href}
-                    className="group flex items-start gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-[var(--accent-soft)]"
+                    className="group flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2.5 py-2.5 transition-colors hover:bg-[var(--accent-soft)]"
                   >
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fff3e1] text-[var(--accent)]">
-                      <category.icon className="h-4 w-4" />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent-soft)] text-[var(--accent)]">
+                      <category.icon className="h-3.5 w-3.5" />
                     </span>
-                    <span className="min-w-0 transition-transform duration-150 group-hover:translate-x-1">
-                      <span className="block text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors">
-                        {category.name}
-                      </span>
-                      <span className="mt-0.5 block text-xs leading-5 text-[var(--muted)]">
-                        {category.blurb}
-                      </span>
+                    <span className="min-w-0 truncate text-sm font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">
+                      {category.name}
                     </span>
                   </Link>
                 ))}
@@ -440,84 +435,104 @@ export default async function Home() {
             </div>
           </aside>
 
-          <HeroSlider stats={heroStats} slides={heroSlides} />
+          <HeroSlider slides={heroSlides} />
 
-          <div className="grid gap-3 lg:h-full lg:overflow-y-auto lg:pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <PromoProductCard
-              eyebrow="Today&apos;s standout"
-              title={sidebarProduct.name}
-              price={formatPrice(sidebarProduct.price)}
-              compareAt={sidebarProduct.compareAt ? formatPrice(sidebarProduct.compareAt) : null}
-              href={`/products/${sidebarProduct.slug}`}
-              image={sidebarProduct.heroImage}
-            />
+          {/* Right rail: max 2 high-intent modules */}
+          <div className="grid gap-3 lg:grid-rows-2 lg:h-full">
+            {sidebarProduct ? (
+              <PromoProductCard
+                eyebrow="Deal of the day"
+                title={sidebarProduct.name}
+                price={formatPrice(sidebarProduct.price)}
+                compareAt={sidebarProduct.compareAt ? formatPrice(sidebarProduct.compareAt) : null}
+                href={`/products/${sidebarProduct.slug}`}
+                image={sidebarProduct.heroImage}
+              />
+            ) : null}
 
-            <div className="soft-card p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                Marketplace promise
-              </p>
-              <h2 className="mt-2 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
-                Verified commerce, not just visual polish.
-              </h2>
-              <ul className="mt-4 space-y-3">
-                {promiseItems.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-[var(--foreground)]">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                      <Check className="h-3 w-3" />
-                    </span>
-                    <span className="leading-6">{item}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="soft-card flex flex-col justify-between p-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                  Shopper tools
+                </p>
+                <h2 className="mt-2 text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
+                  Find it — or request it.
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  Track orders, message sellers, and source missing products in one place.
+                </p>
+              </div>
+              <div className="mt-4 grid gap-2">
+                <Link
+                  href="/request-product"
+                  className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent)] px-3 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
+                >
+                  Request product
+                </Link>
+                <Link
+                  href="/track-order"
+                  className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                >
+                  Track order
+                </Link>
+                <Link
+                  href="/vendors"
+                  className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-[var(--accent)] hover:underline"
+                >
+                  Official stores
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
             </div>
-
-            <PromoProductCard
-              eyebrow="Creator & gaming"
-              title={promoProduct.name}
-              price={formatPrice(promoProduct.price)}
-              compareAt={promoProduct.compareAt ? formatPrice(promoProduct.compareAt) : null}
-              href={`/products/${promoProduct.slug}`}
-              image={promoProduct.heroImage}
-            />
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
-          {homepageShortcutTiles.map((tile) => (
+        {/* Trust strip — evidence below hero, not competing with CTA */}
+        <TrustStrip stats={heroStats} className="mt-3" />
+
+        {/* Mobile category chips */}
+        <div className="mt-3 lg:hidden">
+          <div className="scroll-x gap-2 pb-1">
+            {mobileCategoryChips.map((category) => (
+              <Link
+                key={category.name}
+                href={category.href}
+                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-semibold text-[var(--foreground)] shadow-sm"
+              >
+                <category.icon className="h-3.5 w-3.5 text-[var(--accent)]" />
+                {category.name}
+              </Link>
+            ))}
+            <Link
+              href="/catalog"
+              className="inline-flex shrink-0 items-center rounded-full bg-[var(--accent)] px-3 py-2 text-xs font-bold text-white"
+            >
+              All
+            </Link>
+          </div>
+        </div>
+
+        {/* Quick entry tiles */}
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-5">
+          {homepageShortcutTiles.slice(0, 10).map((tile) => (
             <Link
               key={tile.label}
               href={tile.href}
-              className="soft-card flex items-center gap-3 px-3 py-3 transition-all duration-150 hover:bg-[var(--accent-soft)] hover:border-[var(--accent)/25] hover:-translate-y-0.5"
+              className="soft-card flex items-center gap-3 px-3 py-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(245,131,12,0.25)] hover:bg-[var(--accent-soft)]"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#fff3e1] text-[var(--accent)]">
+              <span className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent-soft)] text-[var(--accent)]">
                 <tile.icon className="h-4 w-4" />
               </span>
               <span className="text-sm font-semibold text-[var(--foreground)]">{tile.label}</span>
             </Link>
           ))}
         </div>
-
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <ServiceCard
-            icon={Truck}
-            title="Fast logistics"
-            description="Same-city delivery cues and dispatch-focused shelf copy."
-          />
-          <ServiceCard
-            icon={ShieldCheck}
-            title="Verified sellers"
-            description="Every store is approved before products become public."
-          />
-          <ServiceCard
-            icon={Sparkles}
-            title="Request products"
-            description="Shoppers can ask for specific tech not yet listed in the catalog."
-          />
-        </div>
       </section>
 
       <section className="page-shell space-y-4 pb-6 sm:space-y-5 sm:pb-10">
-        <CampaignBannerSlider slides={mainCampaignSlides} />
+        {flashSaleProducts.length > 0 || topSellingProducts.length > 0 ? (
+          <CampaignBannerSlider slides={mainCampaignSlides} />
+        ) : null}
 
         <ShelfSection
           id="flash-sale"
@@ -543,7 +558,7 @@ export default async function Home() {
 
         <VendorShelf vendors={topVendors} />
 
-        {visibleCategorySet.has("Home Control") ? (
+        {homeDeals.length > 0 ? (
           <ShelfSection
             kicker="Refresh & automate"
             title="Home control picks"
@@ -555,7 +570,7 @@ export default async function Home() {
           />
         ) : null}
 
-        {visibleCategorySet.has("Mobile Essentials") || visibleCategorySet.has("Wearables") ? (
+        {phoneDeals.length > 0 ? (
           <>
             <CampaignBannerSlider slides={gadgetsCampaignSlides} />
             <ShelfSection
@@ -570,7 +585,7 @@ export default async function Home() {
           </>
         ) : null}
 
-        {visibleCategorySet.has("Beauty & Personal Care") ? (
+        {beautyDeals.length > 0 ? (
           <>
             <CampaignBannerSlider slides={beautyCampaignSlides} />
             <ShelfSection
@@ -585,7 +600,7 @@ export default async function Home() {
           </>
         ) : null}
 
-        {visibleCategorySet.has("Health & Wellness") ? (
+        {wellnessDeals.length > 0 ? (
           <ShelfSection
             kicker="Rest and recovery"
             title="Health & wellness"
@@ -597,9 +612,7 @@ export default async function Home() {
           />
         ) : null}
 
-        {visibleCategorySet.has("Creator Gear") ||
-        visibleCategorySet.has("Gaming") ||
-        visibleCategorySet.has("Audio") ? (
+        {creatorDeals.length > 0 ? (
           <ShelfSection
             kicker="Desk, audio & play"
             title="Creator and gaming essentials"
@@ -611,13 +624,13 @@ export default async function Home() {
           />
         ) : null}
 
-        {visibleCategorySet.has("Cars for Sale") || visibleCategorySet.has("Cars for Rent") ? (
+        {carDeals.length > 0 ? (
           <>
             <CampaignBannerSlider slides={autoPropertyCampaignSlides} />
             <ShelfSection
               kicker="Wheels & mobility"
               title="Cars for sale & rent"
-              description="New and used vehicles plus daily rentals from verified dealers across East & West Africa."
+              description="New and used vehicles plus daily rentals from verified dealers."
               href="/catalog?category=Cars+for+Sale"
               headerClass="shelf-header-cars"
               theme="dark"
@@ -626,10 +639,7 @@ export default async function Home() {
           </>
         ) : null}
 
-        {visibleCategorySet.has("Apartments for Sale") ||
-        visibleCategorySet.has("Apartments for Rent") ||
-        visibleCategorySet.has("Land for Sale") ||
-        visibleCategorySet.has("Commercial Spaces") ? (
+        {propertyDeals.length > 0 ? (
           <ShelfSection
             kicker="Real estate"
             title="Property listings"
@@ -640,6 +650,28 @@ export default async function Home() {
             products={propertyDeals}
           />
         ) : null}
+
+        {/* Seller acquisition CTA */}
+        <div className="soft-card flex flex-col items-start justify-between gap-4 bg-[var(--background-strong)] p-6 text-white sm:flex-row sm:items-center sm:p-8">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/60">
+              Sell on SuperTech
+            </p>
+            <h2 className="mt-2 text-2xl font-bold tracking-[-0.03em]">
+              Reach shoppers who value verified sellers.
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">
+              Apply once, list products, fulfill orders, and get paid the local way.
+            </p>
+          </div>
+          <Link
+            href="/become-vendor"
+            className="inline-flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
+          >
+            Become a vendor
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
       </section>
     </div>
   );
@@ -680,26 +712,6 @@ function PromoProductCard({
         </div>
       </div>
     </Link>
-  );
-}
-
-type ServiceCardProps = {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-};
-
-function ServiceCard({ icon: Icon, title, description }: ServiceCardProps) {
-  return (
-    <div className="soft-card flex items-start gap-3 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)/25]">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#fff3e1] text-[var(--accent)]">
-        <Icon className="h-5 w-5" />
-      </span>
-      <div>
-        <p className="text-sm font-bold text-[var(--foreground)]">{title}</p>
-        <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{description}</p>
-      </div>
-    </div>
   );
 }
 

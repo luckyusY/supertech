@@ -1,33 +1,100 @@
 @import "tailwindcss";
 
 :root {
+  /* ——— Neutrals ——— */
+  --neutral-0: #ffffff;
+  --neutral-50: #f7f6f3;
+  --neutral-100: #f0efe9;
+  --neutral-200: #e3e1db;
+  --neutral-300: #c9c7c0;
+  --neutral-400: #9b9a96;
+  --neutral-500: #66666d;
+  --neutral-700: #3a3a3e;
+  --neutral-900: #18181a;
+
+  /* ——— Core surfaces ——— */
   --background: #f5f4f0;
   --background-strong: #1e1e20;
   --foreground: #18181a;
   --surface: #ffffff;
+  --surface-elevated: #ffffff;
   --surface-strong: #1e1e20;
   --muted: #66666d;
   --line: #e3e1db;
 
-  --accent: #f5830c;
+  /* ——— Brand ——— */
+  --accent: #e8770a;          /* slightly darker for WCAG text-on-orange */
   --accent-soft: #fff2db;
-  --accent-hover: #db750a;
+  --accent-hover: #cf6a09;
+  --on-accent: #ffffff;
 
-  --red: #f04438;
+  /* Legacy alias */
+  --red: #d92d20;
   --red-soft: #fde7ea;
-
   --teal: #1c5468;
   --gold: #f5a62a;
 
-  --shadow: 0 2px 14px rgba(24, 24, 26, 0.10);
+  /* ——— Semantic status ——— */
+  --success: #0c8c5a;
+  --success-soft: #e6f6ef;
+  --success-hover: #0a734a;
+  --warning: #9c6b0b;
+  --warning-soft: #fff6e5;
+  --danger: #d92d20;
+  --danger-soft: #fde7ea;
+  --danger-hover: #b42318;
+  --info: #1c5468;
+  --info-soft: #e8f1f4;
+
+  /* ——— Elevation ——— */
+  --elevation-0: none;
+  --elevation-1: 0 1px 3px rgba(24, 24, 26, 0.08);
+  --elevation-2: 0 2px 14px rgba(24, 24, 26, 0.10);
+  --elevation-3: 0 8px 28px rgba(24, 24, 26, 0.14);
+  --shadow: var(--elevation-2);
   --grid: rgba(24, 24, 26, 0.05);
 
-  /* Semantic surface tokens */
-  --header-bg: var(--accent);       /* Main orange header strip */
-  --footer-bg: #1e1e20;             /* Footer */
-  --announcement-bg: #1e1e20;       /* Announcement bar */
+  /* ——— Motion ——— */
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 350ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
 
-  /* Per-shelf gradient tokens */
+  /* ——— Z-index scale ——— */
+  --z-base: 0;
+  --z-sticky: 40;
+  --z-header: 50;
+  --z-drawer: 60;
+  --z-modal: 70;
+  --z-toast: 80;
+
+  /* ——— Type scale (reference) ——— */
+  --text-display: 2.25rem;
+  --text-title: 1.5rem;
+  --text-subtitle: 1.125rem;
+  --text-body: 0.875rem;
+  --text-caption: 0.75rem;
+  --text-overline: 0.6875rem;
+
+  /* ——— Spacing scale (4px base) ——— */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Semantic surface tokens */
+  --header-bg: var(--accent);
+  --footer-bg: #1e1e20;
+  --announcement-bg: #1e1e20;
+
+  /* Per-shelf gradient tokens (slightly softened) */
   --shelf-flash:    linear-gradient(90deg, #d93a24 0%, #ef6419 48%, #f57b10 100%);
   --shelf-topsell:  #1e1e20;
   --shelf-home:     linear-gradient(90deg, #157060 0%, #3ea48a 100%);
@@ -43,6 +110,7 @@
   --radius-md:  0.75rem;    /* 12px — cards, inputs */
   --radius-lg:  1rem;       /* 16px — modals, drawers */
   --radius-xl:  1.5rem;     /* 24px — mega-menu, hero */
+  --radius-full: 9999px;
 }
 
 @theme inline {
@@ -113,16 +181,40 @@ a {
   background: rgba(246, 139, 30, 0.18);
 }
 
+/* Homepage band: restrained brand energy (hero zone only preferred).
+   Full-page wash reduced so product content stays primary. */
 .marketplace-campaign-bg {
   background:
-    radial-gradient(circle at 8% 20%, rgba(245, 131, 12, 0.28), transparent 20rem),
-    radial-gradient(circle at 92% 6%,  rgba(255, 210, 130, 0.16), transparent 18rem),
-    linear-gradient(180deg, #f5830c 0%, #f5830c 52%, #e87008 100%);
+    radial-gradient(circle at 12% 0%, rgba(245, 131, 12, 0.16), transparent 22rem),
+    radial-gradient(circle at 88% 8%, rgba(255, 210, 130, 0.10), transparent 18rem),
+    linear-gradient(180deg, #f7f0e6 0%, var(--background) 28rem, var(--background) 100%);
 }
 
 .marketplace-campaign-bg .soft-card,
 .marketplace-campaign-bg .market-shelf {
-  box-shadow: 0 2px 10px rgba(49, 49, 51, 0.14);
+  box-shadow: var(--elevation-1);
+}
+
+/* Hero-only brand band when needed */
+.marketplace-hero-band {
+  background:
+    radial-gradient(circle at 8% 20%, rgba(245, 131, 12, 0.22), transparent 18rem),
+    linear-gradient(180deg, #f5830c 0%, #e87008 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .float-card {
+    animation: none !important;
+  }
 }
 
 .page-shell {
@@ -360,6 +452,30 @@ a {
 .shelf-header-creator  { background: var(--shelf-creator);  color: white; }
 .shelf-header-cars     { background: var(--shelf-cars);     color: white; }
 .shelf-header-property { background: var(--shelf-property); color: white; }
+
+/* Screen-reader only (Tailwind may provide .sr-only; keep fallback) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus\:not-sr-only:focus {
+  position: fixed;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
 
 /* Consistent vertical page rhythm */
 .page-section {

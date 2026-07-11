@@ -12,6 +12,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteHeaderFallback } from "@/components/site-header-fallback";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { NativeAppBridge } from "@/components/native-app-bridge";
+import { SearchHotkey } from "@/components/search-hotkey";
+import { SkipToContent } from "@/components/skip-to-content";
 import { getAppUrl, getAbsoluteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -68,7 +70,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f68b1e",
+  themeColor: "#e8770a",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -85,9 +87,11 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${inter.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full transition-colors duration-300">
+        <SkipToContent />
         <CartProvider>
           <PwaRegister />
           <SmoothScroll />
+          <SearchHotkey />
           <NativeAppBridge />
           {/* Canvas layer 1 — warm grain texture */}
           <div className="fixed inset-0 -z-10 opacity-[0.028]"

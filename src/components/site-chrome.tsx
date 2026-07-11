@@ -25,13 +25,19 @@ export function SiteChrome({
     pathname.startsWith("/dashboard/");
 
   if (isAppShell) {
-    return <main className="min-h-screen flex-1">{children}</main>;
+    return (
+      <main id="main-content" className="min-h-screen flex-1">
+        {children}
+      </main>
+    );
   }
 
   return (
     <>
       {header}
-      <main className="flex-1 pb-20 sm:pb-0">{children}</main>
+      <main id="main-content" className="flex-1 pb-20 sm:pb-0" tabIndex={-1}>
+        {children}
+      </main>
       {footer}
       {mobileNav}
       {support}

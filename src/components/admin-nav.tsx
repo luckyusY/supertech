@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   BadgeCheck,
   BarChart3,
   FileText,
@@ -18,19 +19,32 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import type { AdminNavBadges } from "@/lib/dashboard-attention";
+import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/admin/orders", label: "Orders", icon: ShoppingBag },
-  { href: "/dashboard/admin/approvals", label: "Approvals", icon: BadgeCheck },
-  { href: "/dashboard/admin/products", label: "Products", icon: Package },
-  { href: "/dashboard/admin/vendors", label: "Vendors", icon: Store },
-  { href: "/dashboard/admin/blogs", label: "Blogs", icon: FileText },
-  { href: "/dashboard/admin/categories", label: "Categories", icon: Shapes },
-  { href: "/dashboard/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/dashboard/admin/ai", label: "AI Studio", icon: Sparkles },
-  { href: "/dashboard/admin/recovery", label: "Recovery", icon: KeyRound },
-  { href: "/dashboard/admin/profile", label: "Profile", icon: UserRound },
+  { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard, badgeKey: null },
+  { href: "/dashboard/admin/orders", label: "Orders", icon: ShoppingBag, badgeKey: "orders" as const },
+  {
+    href: "/dashboard/admin/approvals",
+    label: "Approvals",
+    icon: BadgeCheck,
+    badgeKey: "approvals" as const,
+  },
+  {
+    href: "/dashboard/admin/products",
+    label: "Products",
+    icon: Package,
+    badgeKey: "products" as const,
+  },
+  { href: "/dashboard/admin/vendors", label: "Vendors", icon: Store, badgeKey: null },
+  { href: "/dashboard/admin/blogs", label: "Blogs", icon: FileText, badgeKey: null },
+  { href: "/dashboard/admin/categories", label: "Categories", icon: Shapes, badgeKey: null },
+  { href: "/dashboard/admin/analytics", label: "Analytics", icon: BarChart3, badgeKey: null },
+  { href: "/dashboard/admin/events", label: "Product events", icon: Activity, badgeKey: null },
+  { href: "/dashboard/admin/ai", label: "AI Studio", icon: Sparkles, badgeKey: null },
+  { href: "/dashboard/admin/recovery", label: "Recovery", icon: KeyRound, badgeKey: null },
+  { href: "/dashboard/admin/profile", label: "Profile", icon: UserRound, badgeKey: null },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -38,29 +52,58 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+function formatBadge(count: number) {
+  if (count <= 0) return null;
+  return count > 99 ? "99+" : String(count);
+}
+
+function NavLinks({
+  pathname,
+  badges,
+  onNavigate,
+}: {
+  pathname: string;
+  badges: AdminNavBadges;
+  onNavigate?: () => void;
+}) {
   return (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-1" aria-label="Admin">
       {NAV_ITEMS.map((item) => {
         const active = isActive(pathname, item.href);
+        const count = item.badgeKey ? badges[item.badgeKey] : 0;
+        const badge = formatBadge(count);
+
         return (
           <Link
             key={item.href}
             href={item.href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`group flex items-center gap-3 rounded-[0.85rem] px-3.5 py-2.5 text-sm font-semibold transition-colors ${
+            className={cn(
+              "group flex items-center gap-3 rounded-[0.85rem] px-3.5 py-2.5 text-sm font-semibold transition-colors",
               active
                 ? "bg-[var(--accent)] text-white shadow-[0_6px_16px_rgba(246,139,30,0.32)]"
-                : "text-[rgba(255,255,255,0.66)] hover:bg-white/8 hover:text-white"
-            }`}
+                : "text-[rgba(255,255,255,0.66)] hover:bg-white/8 hover:text-white",
+            )}
           >
             <item.icon
-              className={`h-[1.05rem] w-[1.05rem] shrink-0 ${
-                active ? "text-white" : "text-[rgba(255,255,255,0.5)] group-hover:text-white"
-              }`}
+              className={cn(
+                "h-[1.05rem] w-[1.05rem] shrink-0",
+                active ? "text-white" : "text-[rgba(255,255,255,0.5)] group-hover:text-white",
+              )}
             />
-            {item.label}
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {badge ? (
+              <span
+                className={cn(
+                  "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-bold",
+                  active ? "bg-white text-[var(--accent)]" : "bg-[var(--accent)] text-white",
+                )}
+                aria-label={`${count} pending`}
+              >
+                {badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}
@@ -68,18 +111,29 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   );
 }
 
-export function AdminNav({ name, email }: { name: string; email: string }) {
+export function AdminNav({
+  name,
+  email,
+  badges = { orders: 0, approvals: 0, products: 0 },
+}: {
+  name: string;
+  email: string;
+  badges?: AdminNavBadges;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const current = NAV_ITEMS.find((item) => isActive(pathname, item.href));
+  const totalAttention = badges.orders + badges.approvals + badges.products;
 
   return (
     <>
-      {/* Mobile top bar */}
       <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] bg-white px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-[0.7rem] bg-[var(--foreground)] text-xs font-bold tracking-[0.12em] text-white">
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-[0.7rem] bg-[var(--foreground)] text-xs font-bold tracking-[0.12em] text-white">
             ST
+            {totalAttention > 0 ? (
+              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[var(--accent)] ring-2 ring-white" />
+            ) : null}
           </span>
           <div className="leading-tight">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
@@ -91,22 +145,31 @@ export function AdminNav({ name, email }: { name: string; email: string }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-[0.8rem] border border-[var(--line)] text-[var(--foreground)]"
+          className="relative inline-flex h-10 w-10 items-center justify-center rounded-[0.8rem] border border-[var(--line)] text-[var(--foreground)]"
           aria-label="Open admin menu"
         >
           <Menu className="h-5 w-5" />
+          {totalAttention > 0 ? (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[9px] font-bold text-white">
+              {totalAttention > 9 ? "9+" : totalAttention}
+            </span>
+          ) : null}
         </button>
       </div>
 
-      {/* Mobile drawer */}
       {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[var(--z-drawer)] lg:hidden">
           <div
             className="absolute inset-0 bg-black/45"
             onClick={() => setOpen(false)}
             aria-hidden
           />
-          <div className="absolute inset-y-0 left-0 flex w-[17rem] max-w-[85vw] flex-col bg-[#1f1f21] p-4 text-white">
+          <div
+            className="absolute inset-y-0 left-0 flex w-[17rem] max-w-[85vw] flex-col bg-[#1f1f21] p-4 text-white"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Admin menu"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-[0.7rem] bg-white/10 text-xs font-bold tracking-[0.12em]">
@@ -124,7 +187,11 @@ export function AdminNav({ name, email }: { name: string; email: string }) {
               </button>
             </div>
             <div className="mt-5">
-              <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+              <NavLinks
+                pathname={pathname}
+                badges={badges}
+                onNavigate={() => setOpen(false)}
+              />
             </div>
             <div className="mt-auto rounded-[0.85rem] border border-white/10 bg-white/5 px-3.5 py-3">
               <p className="truncate text-sm font-semibold">{name}</p>
@@ -140,7 +207,6 @@ export function AdminNav({ name, email }: { name: string; email: string }) {
         </div>
       ) : null}
 
-      {/* Desktop sidebar */}
       <aside className="hidden min-h-screen w-[16.5rem] shrink-0 flex-col self-stretch bg-[#1f1f21] p-5 text-white lg:flex">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-[0.7rem] bg-white/10 text-xs font-bold tracking-[0.12em]">
@@ -155,7 +221,7 @@ export function AdminNav({ name, email }: { name: string; email: string }) {
         </Link>
 
         <div className="mt-7 flex-1 overflow-y-auto">
-          <NavLinks pathname={pathname} />
+          <NavLinks pathname={pathname} badges={badges} />
         </div>
 
         <div className="mt-4 rounded-[0.85rem] border border-white/10 bg-white/5 px-3.5 py-3">

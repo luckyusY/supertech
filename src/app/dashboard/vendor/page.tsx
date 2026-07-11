@@ -2,22 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
   CheckCircle2,
+  Circle,
   CreditCard,
-  FileText,
-  ImagePlus,
   LayoutDashboard,
   Package,
+  ShoppingBag,
   Sparkles,
   Star,
-  ShoppingBag,
   Store,
-  UserRound,
   Wallet,
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
-import { getIntegrationStatus } from "@/lib/integrations";
+import { getIntegrationStatus, hasMongoConfig } from "@/lib/integrations";
+import { getOrderRequests } from "@/lib/order-requests";
+import { getProductSubmissions } from "@/lib/product-submissions";
 import { getPublicVendorProducts } from "@/lib/public-marketplace";
 import { loadVendorContext } from "@/lib/vendor-dashboard";
 
@@ -31,50 +30,114 @@ export const dynamic = "force-dynamic";
 export default async function VendorDashboardPage() {
   const { session, currentVendor } = await loadVendorContext("/dashboard/vendor");
   const integrationStatus = getIntegrationStatus();
-  const highlightIcons = [ShoppingBag, Package, Star];
-  const vendorProducts = await getPublicVendorProducts(currentVendor.slug).catch(() => []);
-  const highlights = [
-    { label: "Active products", value: String(vendorProducts.length) },
-    { label: "Store categories", value: String(currentVendor.categories.length) },
-    { label: "Rating", value: currentVendor.rating > 0 ? currentVendor.rating.toFixed(1) : "New" },
-  ];
+  const mongo = hasMongoConfig();
 
-  const shortcuts = [
+  const [vendorProducts, submissions, openOrders] = await Promise.all([
+    getPublicVendorProducts(currentVendor.slug).catch(() => []),
+    mongo
+      ? getProductSubmissions({ vendorSlug: currentVendor.slug, limit: 50 }).catch(() => [])
+      : Promise.resolve([]),
+    mongo
+      ? getOrderRequests({ vendorSlug: currentVendor.slug, limit: 50 }).catch(() => [])
+      : Promise.resolve([]),
+  ]);
+
+  const pendingSubmissions = submissions.filter((s) => s.status === "pending_review").length;
+  const liveProducts = vendorProducts.length;
+  const openOrderCount = openOrders.filter(
+    (o) => o.status !== "completed" && o.status !== "cancelled",
+  ).length;
+  const needsConfirm = openOrders.filter((o) => o.status === "pending_confirmation").length;
+
+  const hasPaymentMethod = Boolean(
+    currentVendor.momoMerchantCode?.trim() || currentVendor.momoBusinessName?.trim(),
+  );
+  const hasStorefrontCopy = Boolean(currentVendor.headline?.trim());
+  const hasProducts = liveProducts > 0 || submissions.length > 0;
+  const cloudinaryReady = integrationStatus.cloudinaryServer.configured;
+
+  const checklist = [
     {
-      href: "/dashboard/vendor/products",
-      label: "Add & manage products",
-      desc: "Submit listings and edit your catalog",
-      icon: Package,
+      id: "profile",
+      label: "Complete store profile",
+      done: hasStorefrontCopy,
+      href: "/dashboard/vendor/storefront",
+      hint: "Name, headline, and storefront details",
     },
     {
-      href: "/dashboard/vendor/ai",
-      label: "Write an SEO blog",
-      desc: "Generate a Google-ready article for a product",
-      icon: Sparkles,
-    },
-    {
-      href: "/dashboard/vendor/orders",
-      label: "Fulfill orders",
-      desc: "Work your incoming order queue",
-      icon: ShoppingBag,
-    },
-    {
+      id: "payment",
+      label: "Set MoMoPay payment method",
+      done: hasPaymentMethod,
       href: "/dashboard/vendor/payments",
-      label: "Payment method",
-      desc: "Confirm your MoMoPay merchant details",
-      icon: CreditCard,
+      hint: "Required so buyers can pay you locally",
+    },
+    {
+      id: "product",
+      label: "Submit your first product",
+      done: hasProducts,
+      href: "/dashboard/vendor/products",
+      hint: "Listings go live after SuperTech review",
+    },
+    {
+      id: "images",
+      label: "Image uploads ready",
+      done: cloudinaryReady,
+      href: "/dashboard/vendor/products",
+      hint: cloudinaryReady ? "Cloudinary is configured" : "Ask admin if uploads fail",
     },
   ];
 
-  const allPages = [
-    { href: "/dashboard/vendor/products", label: "Products", icon: Package, color: "text-indigo-500", bg: "bg-indigo-50" },
-    { href: "/dashboard/vendor/orders", label: "Orders", icon: ShoppingBag, color: "text-[var(--accent)]", bg: "bg-[rgba(37,99,235,0.08)]" },
-    { href: "/dashboard/vendor/ai", label: "AI Studio", icon: Sparkles, color: "text-fuchsia-500", bg: "bg-fuchsia-50" },
-    { href: "/dashboard/vendor/blogs", label: "Blogs", icon: FileText, color: "text-rose-500", bg: "bg-rose-50" },
-    { href: "/dashboard/vendor/storefront", label: "Storefront", icon: Store, color: "text-[var(--teal)]", bg: "bg-[rgba(8,145,178,0.08)]" },
-    { href: "/dashboard/vendor/payments", label: "Payments", icon: CreditCard, color: "text-amber-600", bg: "bg-amber-50" },
-    { href: "/dashboard/vendor/payouts", label: "Payouts", icon: Wallet, color: "text-green-600", bg: "bg-green-50" },
-    { href: "/dashboard/vendor/profile", label: "Profile", icon: UserRound, color: "text-slate-500", bg: "bg-slate-100" },
+  const checklistDone = checklist.filter((item) => item.done).length;
+  const nextStep = checklist.find((item) => !item.done);
+
+  const attentionItems = [
+    needsConfirm > 0
+      ? {
+          href: "/dashboard/vendor/orders",
+          label: "Orders to confirm",
+          count: needsConfirm,
+          cta: "Open queue",
+        }
+      : null,
+    openOrderCount > 0
+      ? {
+          href: "/dashboard/vendor/orders",
+          label: "Open orders",
+          count: openOrderCount,
+          cta: "Fulfill",
+        }
+      : null,
+    pendingSubmissions > 0
+      ? {
+          href: "/dashboard/vendor/products",
+          label: "Products pending review",
+          count: pendingSubmissions,
+          cta: "View products",
+        }
+      : null,
+    !hasPaymentMethod
+      ? {
+          href: "/dashboard/vendor/payments",
+          label: "Payment method missing",
+          count: 1,
+          cta: "Set up MoMo",
+        }
+      : null,
+  ].filter(Boolean) as Array<{
+    href: string;
+    label: string;
+    count: number;
+    cta: string;
+  }>;
+
+  const highlights = [
+    { label: "Live products", value: String(liveProducts), icon: Package },
+    { label: "Open orders", value: String(openOrderCount), icon: ShoppingBag },
+    {
+      label: "Rating",
+      value: currentVendor.rating > 0 ? currentVendor.rating.toFixed(1) : "New",
+      icon: Star,
+    },
   ];
 
   return (
@@ -85,121 +148,209 @@ export default async function VendorDashboardPage() {
         title={currentVendor.name}
         description={
           session.role === "admin"
-            ? "You have admin access to all vendor workspaces."
-            : "Manage your products, fulfill orders, and grow with AI-written SEO blogs."
+            ? "You have admin access to this vendor workspace."
+            : nextStep
+              ? `Next step: ${nextStep.label.toLowerCase()}.`
+              : "You’re set up — fulfill orders and grow your catalog."
         }
       />
 
+      {/* Onboarding progress */}
+      {checklistDone < checklist.length ? (
+        <div className="mt-6 soft-card border-[var(--accent)]/20 p-5 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
+                Getting started
+              </p>
+              <h2 className="mt-1 text-lg font-semibold tracking-[-0.03em]">
+                {checklistDone} of {checklist.length} setup steps complete
+              </h2>
+            </div>
+            {nextStep ? (
+              <Link
+                href={nextStep.href}
+                className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
+              >
+                {nextStep.label}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : null}
+          </div>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--neutral-100)]">
+            <div
+              className="h-full rounded-full bg-[var(--accent)] transition-all"
+              style={{ width: `${(checklistDone / checklist.length) * 100}%` }}
+            />
+          </div>
+          <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+            {checklist.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={item.href}
+                  className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--line)] bg-white px-3.5 py-3 transition-colors hover:border-[var(--accent)]"
+                >
+                  {item.done ? (
+                    <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[var(--success)]" />
+                  ) : (
+                    <Circle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--muted)]" />
+                  )}
+                  <span className="min-w-0">
+                    <span
+                      className={`block text-sm font-semibold ${
+                        item.done ? "text-[var(--muted)] line-through" : "text-[var(--foreground)]"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-[var(--muted)]">{item.hint}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* Attention */}
+      {attentionItems.length > 0 ? (
+        <section className="mt-6">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+            Needs attention
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {attentionItems.map((item) => (
+              <Link
+                key={`${item.href}-${item.label}`}
+                href={item.href}
+                className="soft-card group flex items-center justify-between gap-3 p-4 transition-shadow hover:shadow-md"
+              >
+                <div>
+                  <p className="text-sm text-[var(--muted)]">{item.label}</p>
+                  <p className="mt-0.5 text-2xl font-semibold tracking-[-0.04em]">{item.count}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-[var(--accent)]">
+                  {item.cta}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {/* Highlights */}
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {highlights.map((item, i) => {
-          const Icon = highlightIcons[i] ?? Package;
-          return (
-            <div key={item.label} className="soft-card p-5">
-              <Icon className="h-5 w-5 text-[var(--accent)]" />
-              <p className="mt-4 text-sm text-[var(--muted)]">{item.label}</p>
-              <p className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{item.value}</p>
-            </div>
-          );
-        })}
+        {highlights.map((item) => (
+          <div key={item.label} className="soft-card p-5">
+            <item.icon className="h-5 w-5 text-[var(--accent)]" />
+            <p className="mt-4 text-sm text-[var(--muted)]">{item.label}</p>
+            <p className="mt-1 text-3xl font-semibold tracking-[-0.05em]">{item.value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* All Pages — visible on mobile so every section is one tap away */}
-      <div className="mt-6 xl:hidden">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">All sections</p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {allPages.map((page) => (
-            <Link
-              key={page.href}
-              href={page.href}
-              className="soft-card flex items-center gap-3 p-4 transition-shadow hover:shadow-md"
-            >
-              <span className={`inline-flex rounded-[0.75rem] p-2 ${page.bg}`}>
-                <page.icon className={`h-5 w-5 ${page.color}`} />
-              </span>
-              <span className="text-sm font-semibold">{page.label}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        {/* Shortcuts */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {shortcuts.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="soft-card group flex items-start gap-4 p-5 transition-shadow hover:shadow-md"
-            >
-              <span className="inline-flex rounded-[0.75rem] bg-[var(--accent-soft)] p-2.5 text-[var(--accent)]">
-                <item.icon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="flex items-center gap-1.5 font-semibold">
-                  {item.label}
-                  <ArrowRight className="h-3.5 w-3.5 -translate-x-1 text-[var(--muted)] opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
-                </p>
-                <p className="mt-0.5 text-xs leading-5 text-[var(--muted)]">{item.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Account panel */}
-        <div className="dark-card p-6">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.55)]">
-            Account
-          </p>
-          <div className="mt-4 space-y-3">
-            <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
-              <p className="text-xs text-[rgba(255,255,255,0.5)]">Signed in as</p>
-              <p className="mt-0.5 font-semibold text-white">{session.name}</p>
-            </div>
-            <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
-              <p className="text-xs text-[rgba(255,255,255,0.5)]">Store</p>
-              <p className="mt-0.5 font-semibold text-white">{currentVendor.name}</p>
-            </div>
-            <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
-              <p className="text-xs text-[rgba(255,255,255,0.5)]">Location</p>
-              <p className="mt-0.5 font-semibold text-white">{currentVendor.location}</p>
-            </div>
-            <div className="rounded-[1.1rem] border border-white/8 bg-white/6 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <ImagePlus className="h-4 w-4 text-[rgba(255,255,255,0.55)]" />
-                <p className="text-xs text-[rgba(255,255,255,0.5)]">Image uploads</p>
-              </div>
-              <p className="mt-1 text-sm font-semibold text-white">
-                {integrationStatus.cloudinaryServer.configured ? "Ready" : "Not configured"}
+      {/* Quick actions */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            href: "/dashboard/vendor/products",
+            label: "Products",
+            desc: "Add & manage listings",
+            icon: Package,
+          },
+          {
+            href: "/dashboard/vendor/orders",
+            label: "Orders",
+            desc: "Confirm and fulfill",
+            icon: ShoppingBag,
+          },
+          {
+            href: "/dashboard/vendor/payments",
+            label: "Payments",
+            desc: "MoMoPay merchant details",
+            icon: CreditCard,
+          },
+          {
+            href: "/dashboard/vendor/ai",
+            label: "AI SEO Studio",
+            desc: "Product blogs & copy",
+            icon: Sparkles,
+          },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="soft-card group flex items-start gap-3 p-4 transition-shadow hover:shadow-md"
+          >
+            <span className="inline-flex rounded-[var(--radius-md)] bg-[var(--accent-soft)] p-2.5 text-[var(--accent)]">
+              <item.icon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="flex items-center gap-1 font-semibold">
+                {item.label}
+                <ArrowRight className="h-3.5 w-3.5 text-[var(--muted)] opacity-0 transition-all group-hover:opacity-100" />
               </p>
+              <p className="mt-0.5 text-xs text-[var(--muted)]">{item.desc}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Account snapshot */}
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <div className="dark-card p-6">
+          <p className="font-mono text-xs uppercase tracking-[0.22em] text-white/55">Store</p>
+          <p className="mt-3 text-xl font-semibold text-white">{currentVendor.name}</p>
+          <p className="mt-1 text-sm text-white/65">{currentVendor.location}</p>
+          <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+            <div className="rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-3">
+              <p className="text-white/50">Categories</p>
+              <p className="mt-1 font-semibold text-white">{currentVendor.categories.length}</p>
+            </div>
+            <div className="rounded-[var(--radius-md)] border border-white/10 bg-white/5 px-3 py-3">
+              <p className="text-white/50">Signed in</p>
+              <p className="mt-1 truncate font-semibold text-white">{session.name}</p>
             </div>
           </div>
+          <Link
+            href={`/vendors/${currentVendor.slug}`}
+            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)] hover:underline"
+          >
+            <Store className="h-4 w-4" />
+            View public storefront
+          </Link>
         </div>
-      </div>
 
-      {/* Seller checklist */}
-      <div className="mt-6 soft-card p-6 sm:p-8">
-        <div className="flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-[var(--accent)]" />
-          <h2 className="text-xl font-semibold tracking-[-0.04em]">Seller checklist</h2>
-        </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          {[
-            "Products reviewed and brand-checked",
-            "Product images uploaded via gallery",
-            "Orders routed with fulfillment expectations set",
-            "Payout method confirmed with marketplace",
-          ].map((item, i) => (
-            <div
-              key={item}
-              className="flex items-start gap-3 rounded-[1.2rem] border border-[var(--line)] bg-white/72 px-4 py-3 text-sm"
-            >
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[rgba(8,145,178,0.12)] text-xs font-bold text-[var(--teal)]">
-                {i + 1}
+        <div className="soft-card p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+            Money
+          </p>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--line)] px-4 py-3">
+              <span className="inline-flex items-center gap-2 text-sm font-medium">
+                <CreditCard className="h-4 w-4 text-[var(--accent)]" />
+                MoMoPay method
               </span>
-              <span>{item}</span>
+              <span
+                className={`text-sm font-semibold ${
+                  hasPaymentMethod ? "text-[var(--success)]" : "text-[var(--warning)]"
+                }`}
+              >
+                {hasPaymentMethod ? "Configured" : "Missing"}
+              </span>
             </div>
-          ))}
+            <Link
+              href="/dashboard/vendor/payouts"
+              className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--line)] px-4 py-3 transition-colors hover:border-[var(--accent)]"
+            >
+              <span className="inline-flex items-center gap-2 text-sm font-medium">
+                <Wallet className="h-4 w-4 text-[var(--accent)]" />
+                Payouts
+              </span>
+              <ArrowRight className="h-4 w-4 text-[var(--muted)]" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

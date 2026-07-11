@@ -1,114 +1,108 @@
-import { Check, Clock3, PackageCheck, ShieldCheck, Truck } from "lucide-react";
+import { Check, Clock3, PackageCheck, ShieldCheck, Truck, XCircle } from "lucide-react";
+import {
+  ORDER_STATUS_FLOW,
+  ORDER_STATUS_META,
+  type OrderRequestStatus,
+} from "@/lib/product-rules";
 import { cn } from "@/lib/utils";
 
-type OrderStatus =
-  | "pending_confirmation"
-  | "confirmed"
-  | "preparing"
-  | "ready_for_delivery"
-  | "out_for_delivery"
-  | "completed"
-  | "cancelled";
-
 type OrderStatusTimelineProps = {
-  status: OrderStatus;
+  status: OrderRequestStatus;
 };
 
-const timelineSteps = [
-  {
-    id: "pending_confirmation",
-    label: "Request received",
-    description: "Your order request reached the marketplace team.",
-    icon: Clock3,
-  },
-  {
-    id: "confirmed",
-    label: "Confirmed",
-    description: "Stock, delivery, and manual payment details are approved.",
-    icon: ShieldCheck,
-  },
-  {
-    id: "preparing",
-    label: "Preparing order",
-    description: "The seller is packing and preparing your items.",
-    icon: PackageCheck,
-  },
-  {
-    id: "ready_for_delivery",
-    label: "Ready for delivery",
-    description: "Your order is packed and queued for final dispatch.",
-    icon: Check,
-  },
-  {
-    id: "out_for_delivery",
-    label: "Out for delivery",
-    description: "The marketplace is coordinating the final handoff.",
-    icon: Truck,
-  },
-  {
-    id: "completed",
-    label: "Completed",
-    description: "Your order has been marked as completed.",
-    icon: Check,
-  },
-] as const;
+type FlowStatus = (typeof ORDER_STATUS_FLOW)[number];
 
-const statusRank: Record<OrderStatus, number> = {
+const stepIcons: Record<FlowStatus, typeof Clock3> = {
+  pending_confirmation: Clock3,
+  confirmed: ShieldCheck,
+  preparing: PackageCheck,
+  ready_for_delivery: Check,
+  out_for_delivery: Truck,
+  completed: Check,
+};
+
+const statusRank: Record<OrderRequestStatus, number> = {
   pending_confirmation: 0,
   confirmed: 1,
   preparing: 2,
   ready_for_delivery: 3,
   out_for_delivery: 4,
   completed: 5,
-  cancelled: 0,
+  cancelled: -1,
 };
 
 export function OrderStatusTimeline({ status }: OrderStatusTimelineProps) {
+  if (status === "cancelled") {
+    return (
+      <div
+        className="rounded-[var(--radius-lg)] border border-[var(--danger)]/20 bg-[var(--danger-soft)] px-4 py-4"
+        role="status"
+      >
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--danger)]">
+            <XCircle className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="font-semibold text-[var(--danger)]">
+              {ORDER_STATUS_META.cancelled.label}
+            </p>
+            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
+              {ORDER_STATUS_META.cancelled.description}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const activeIndex = statusRank[status];
 
   return (
-    <div className="space-y-3">
-      {timelineSteps.map((step, index) => {
-        const isCompleted = status !== "cancelled" && index < activeIndex;
-        const isCurrent = status !== "cancelled" && index === activeIndex;
-        const isPending = status === "cancelled" || index > activeIndex;
+    <ol className="space-y-3" aria-label="Order status timeline">
+      {ORDER_STATUS_FLOW.map((stepId, index) => {
+        const meta = ORDER_STATUS_META[stepId];
+        const Icon = stepIcons[stepId];
+        const isCompleted = index < activeIndex;
+        const isCurrent = index === activeIndex;
+        const isPending = index > activeIndex;
 
         return (
-          <div
-            key={step.id}
+          <li
+            key={stepId}
+            aria-current={isCurrent ? "step" : undefined}
             className={cn(
-              "rounded-[1.25rem] border px-4 py-4",
-              isCompleted && "border-[rgba(8,145,178,0.2)] bg-[rgba(8,145,178,0.08)]",
-              isCurrent && "border-[rgba(37,99,235,0.22)] bg-[rgba(37,99,235,0.08)]",
-              isPending && "border-[var(--line)] bg-white",
+              "rounded-[var(--radius-lg)] border px-4 py-4",
+              isCurrent && "border-[var(--accent)] bg-[var(--accent-soft)]",
+              isCompleted && "border-[var(--success)]/20 bg-[var(--success-soft)]",
+              isPending && "border-[var(--line)] bg-[var(--surface)]",
             )}
           >
-            <div className="flex items-start gap-4">
-              <div
+            <div className="flex items-start gap-3">
+              <span
                 className={cn(
                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-                  isCompleted && "bg-[var(--teal)] text-white",
                   isCurrent && "bg-[var(--accent)] text-white",
-                  isPending && "bg-[rgba(15,23,42,0.06)] text-[var(--muted)]",
+                  isCompleted && "bg-[var(--success)] text-white",
+                  isPending && "bg-[var(--neutral-100)] text-[var(--muted)]",
                 )}
               >
-                <step.icon className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                  Step {index + 1}
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p
+                  className={cn(
+                    "font-semibold",
+                    isPending ? "text-[var(--muted)]" : "text-[var(--foreground)]",
+                  )}
+                >
+                  {meta.label}
                 </p>
-                <h3 className="mt-1 text-lg font-semibold tracking-[-0.03em]">
-                  {step.label}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                  {step.description}
-                </p>
+                <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{meta.description}</p>
               </div>
             </div>
-          </div>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }

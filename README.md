@@ -2,6 +2,14 @@
 
 A multivendor ecommerce starter for `Next.js 16`, `React 19`, `MongoDB`, `Cloudinary`, and `Vercel`.
 
+## Product design
+
+Active UX/product plan and execution roadmap:
+
+- [`docs/PRODUCT_DESIGN_PLAN.md`](./docs/PRODUCT_DESIGN_PLAN.md) — strategy, journeys, CTA rules, phases  
+- `src/lib/product-rules.ts` — marketplace modes, PDP buy-box plan, order status meta  
+- `src/components/ui/*` — shared design primitives  
+
 ## What is included
 
 - Premium storefront homepage with category and vendor sections

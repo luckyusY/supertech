@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/components/cart-provider";
+import { trackEvent } from "@/lib/client-analytics";
 import { formatPrice } from "@/lib/utils";
 
 type AddToCartButtonProps = {
@@ -34,6 +35,11 @@ export function AddToCartButton({ item, className = "" }: AddToCartButtonProps) 
   function handleAddToCart() {
     addItem(item);
     setDidAdd(true);
+    trackEvent("pdp_add_to_cart", {
+      product: item.slug,
+      vendor: item.vendorSlug,
+      price: item.price,
+    });
     toast.success(`${item.name} added to cart`, {
       description: `${formatPrice(item.price)} · from ${item.vendorName}`,
       duration: 2500,
