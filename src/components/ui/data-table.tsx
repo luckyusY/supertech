@@ -1,21 +1,44 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type DataTableProps = {
   children: ReactNode;
   className?: string;
   minWidth?: string;
+  /**
+   * Cap body height so rows scroll inside the table instead of growing the page.
+   * Pass false to disable (short tables). Default: viewport-aware cap.
+   */
+  maxHeight?: string | false;
 };
 
-export function DataTable({ children, className, minWidth = "44rem" }: DataTableProps) {
+const DEFAULT_MAX_HEIGHT = "min(32rem, calc(100dvh - 14rem))";
+
+export function DataTable({
+  children,
+  className,
+  minWidth = "44rem",
+  maxHeight = DEFAULT_MAX_HEIGHT,
+}: DataTableProps) {
+  const scrollStyle: CSSProperties | undefined =
+    maxHeight === false
+      ? undefined
+      : { maxHeight };
+
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--elevation-1)]",
+        "flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--elevation-1)]",
         className,
       )}
     >
-      <div className="overflow-x-auto">
+      <div
+        className={cn(
+          "dashboard-table-scroll min-h-0",
+          maxHeight === false ? "overflow-x-auto" : "overflow-auto",
+        )}
+        style={scrollStyle}
+      >
         <table className="w-full text-left text-sm" style={{ minWidth }}>
           {children}
         </table>
@@ -26,8 +49,10 @@ export function DataTable({ children, className, minWidth = "44rem" }: DataTable
 
 export function DataTableHead({ children }: { children: ReactNode }) {
   return (
-    <thead>
-      <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)]">{children}</tr>
+    <thead className="sticky top-0 z-[1]">
+      <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)] shadow-[0_1px_0_var(--line)]">
+        {children}
+      </tr>
     </thead>
   );
 }
@@ -44,7 +69,7 @@ export function DataTableTh({
   return (
     <th
       className={cn(
-        "px-3 py-3 text-label font-semibold uppercase tracking-[0.08em] text-[var(--muted)] sm:px-4",
+        "bg-[var(--neutral-50)] px-3 py-3 text-label font-semibold uppercase tracking-[0.08em] text-[var(--muted)] sm:px-4",
         numeric && "text-right font-numeric",
         className,
       )}

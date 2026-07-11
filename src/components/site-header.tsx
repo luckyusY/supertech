@@ -1,13 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import {
-  CircleHelp,
-  PackageSearch,
-  ShieldCheck,
-  Store,
-  Truck,
-  User,
-} from "lucide-react";
+import { CircleHelp, ShieldCheck, User } from "lucide-react";
 import { CartStatusLink } from "@/components/cart-status-link";
 import { HeaderScrollShell } from "@/components/header-scroll-shell";
 import { HeaderSearch } from "@/components/header-search";
@@ -16,13 +9,6 @@ import { MobileNav } from "@/components/mobile-nav";
 import { UserMenu } from "@/components/user-menu";
 import { getAuthSession } from "@/lib/auth";
 import { getPublicCategories, getPublicProducts } from "@/lib/public-marketplace";
-
-const shopperLinks = [
-  { label: "Vendors", href: "/vendors", icon: Store },
-  { label: "Request Product", href: "/request-product", icon: PackageSearch },
-  { label: "Track Order", href: "/track-order", icon: Truck },
-  { label: "Sell on SuperTech", href: "/become-vendor", icon: ShieldCheck },
-] as const;
 
 const helpLinks = [
   { label: "Track order", href: "/track-order" },
@@ -185,7 +171,7 @@ export async function SiteHeader() {
         </div>
 
         {/* Desktop category nav — Photo Factory mega-menu pattern */}
-        <DesktopCategoryNav categories={headerCategories} shopperLinks={shopperLinks} />
+        <DesktopCategoryNav categories={headerCategories} />
       </header>
     </HeaderScrollShell>
   );

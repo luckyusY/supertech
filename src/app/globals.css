@@ -537,6 +537,39 @@ img {
   display: none;
 }
 
+/* Dashboard sidebars + table body scrolls */
+.dashboard-sidebar-scroll,
+.dashboard-table-scroll {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.55) transparent;
+}
+
+.dashboard-sidebar-scroll::-webkit-scrollbar,
+.dashboard-table-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dashboard-sidebar-scroll::-webkit-scrollbar-thumb,
+.dashboard-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.dashboard-sidebar-scroll::-webkit-scrollbar-thumb:hover,
+.dashboard-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+  background-clip: content-box;
+}
+
+.dashboard-sidebar-scroll::-webkit-scrollbar-track,
+.dashboard-table-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 /* Product card gallery Swiper */
 .product-card-gallery .swiper {
   height: 100%;

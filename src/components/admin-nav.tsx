@@ -67,7 +67,10 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="flex flex-col gap-1" aria-label="Admin">
+    <nav className="flex flex-col gap-0.5" aria-label="Admin">
+      <p className="mb-1.5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
+        Manage
+      </p>
       {NAV_ITEMS.map((item) => {
         const active = isActive(pathname, item.href);
         const count = item.badgeKey ? badges[item.badgeKey] : 0;
@@ -80,16 +83,16 @@ function NavLinks({
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "group flex items-center gap-3 rounded-[0.85rem] px-3.5 py-2.5 text-sm font-semibold transition-colors",
+              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
               active
                 ? "bg-[var(--accent)] text-white shadow-[0_6px_16px_rgba(246,139,30,0.32)]"
-                : "text-[rgba(255,255,255,0.66)] hover:bg-white/8 hover:text-white",
+                : "text-white/65 hover:bg-white/8 hover:text-white",
             )}
           >
             <item.icon
               className={cn(
                 "h-[1.05rem] w-[1.05rem] shrink-0",
-                active ? "text-white" : "text-[rgba(255,255,255,0.5)] group-hover:text-white",
+                active ? "text-white" : "text-white/45 group-hover:text-white",
               )}
             />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -111,6 +114,21 @@ function NavLinks({
   );
 }
 
+function UserCard({ name, email }: { name: string; email: string }) {
+  return (
+    <div className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3.5 py-3">
+      <p className="truncate text-sm font-semibold">{name}</p>
+      <p className="truncate text-xs text-white/55">{email}</p>
+      <Link
+        href="/"
+        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gold)] hover:underline"
+      >
+        ← Back to store
+      </Link>
+    </div>
+  );
+}
+
 export function AdminNav({
   name,
   email,
@@ -127,25 +145,26 @@ export function AdminNav({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] bg-white px-4 py-3 lg:hidden">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-[0.7rem] bg-[var(--foreground)] text-xs font-bold tracking-[0.12em] text-white">
+      {/* Mobile top bar */}
+      <div className="sticky top-0 z-30 flex shrink-0 items-center justify-between gap-3 border-b border-[var(--line)] bg-white/95 px-4 py-3 backdrop-blur-md lg:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--foreground)] text-xs font-bold tracking-[0.12em] text-white">
             ST
             {totalAttention > 0 ? (
               <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[var(--accent)] ring-2 ring-white" />
             ) : null}
           </span>
-          <div className="leading-tight">
+          <div className="min-w-0 leading-tight">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
               Admin
             </p>
-            <p className="text-sm font-semibold">{current?.label ?? "Dashboard"}</p>
+            <p className="truncate text-sm font-semibold">{current?.label ?? "Dashboard"}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-[0.8rem] border border-[var(--line)] text-[var(--foreground)]"
+          className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] text-[var(--foreground)]"
           aria-label="Open admin menu"
         >
           <Menu className="h-5 w-5" />
@@ -157,6 +176,7 @@ export function AdminNav({
         </button>
       </div>
 
+      {/* Mobile drawer */}
       {open ? (
         <div className="fixed inset-0 z-[var(--z-drawer)] lg:hidden">
           <div
@@ -165,14 +185,14 @@ export function AdminNav({
             aria-hidden
           />
           <div
-            className="absolute inset-y-0 left-0 flex w-[17rem] max-w-[85vw] flex-col bg-[#1f1f21] p-4 text-white"
+            className="absolute inset-y-0 left-0 flex w-[17.5rem] max-w-[88vw] flex-col bg-[#171719] text-white shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Admin menu"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-4">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-[0.7rem] bg-white/10 text-xs font-bold tracking-[0.12em]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-xs font-bold tracking-[0.12em]">
                   ST
                 </span>
                 <p className="text-sm font-semibold">SuperTech Admin</p>
@@ -186,53 +206,42 @@ export function AdminNav({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="mt-5">
+            <div className="dashboard-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4">
               <NavLinks
                 pathname={pathname}
                 badges={badges}
                 onNavigate={() => setOpen(false)}
               />
             </div>
-            <div className="mt-auto rounded-[0.85rem] border border-white/10 bg-white/5 px-3.5 py-3">
-              <p className="truncate text-sm font-semibold">{name}</p>
-              <p className="truncate text-xs text-white/55">{email}</p>
-              <Link
-                href="/"
-                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gold)] hover:underline"
-              >
-                ← Back to store
-              </Link>
+            <div className="shrink-0 border-t border-white/10 p-3">
+              <UserCard name={name} email={email} />
             </div>
           </div>
         </div>
       ) : null}
 
-      <aside className="hidden min-h-screen w-[16.5rem] shrink-0 flex-col self-stretch bg-[#1f1f21] p-5 text-white lg:flex">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-[0.7rem] bg-white/10 text-xs font-bold tracking-[0.12em]">
-            ST
-          </span>
-          <div className="leading-tight">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55">
-              SuperTech
-            </p>
-            <p className="text-sm font-semibold">Admin Console</p>
-          </div>
-        </Link>
+      {/* Desktop sticky sidebar */}
+      <aside className="dashboard-sidebar sticky top-0 hidden h-dvh w-[15.75rem] shrink-0 flex-col self-start border-r border-white/8 bg-[#171719] text-white lg:flex">
+        <div className="shrink-0 border-b border-white/10 px-4 py-4">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-xs font-bold tracking-[0.12em]">
+              ST
+            </span>
+            <div className="min-w-0 leading-tight">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/50">
+                SuperTech
+              </p>
+              <p className="text-sm font-semibold">Admin Console</p>
+            </div>
+          </Link>
+        </div>
 
-        <div className="mt-7 flex-1 overflow-y-auto">
+        <div className="dashboard-sidebar-scroll min-h-0 flex-1 overflow-y-auto px-3 py-4">
           <NavLinks pathname={pathname} badges={badges} />
         </div>
 
-        <div className="mt-4 rounded-[0.85rem] border border-white/10 bg-white/5 px-3.5 py-3">
-          <p className="truncate text-sm font-semibold">{name}</p>
-          <p className="truncate text-xs text-white/55">{email}</p>
-          <Link
-            href="/"
-            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gold)] hover:underline"
-          >
-            ← Back to store
-          </Link>
+        <div className="shrink-0 border-t border-white/10 p-3">
+          <UserCard name={name} email={email} />
         </div>
       </aside>
     </>

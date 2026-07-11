@@ -13,9 +13,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const badges = await getAdminNavBadges();
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--background)] lg:flex-row">
+    <div className="flex min-h-dvh flex-col bg-[var(--background)] lg:flex-row">
       <AdminNav name={session.name} email={session.email} badges={badges} />
-      <div className="min-w-0 flex-1" id="main-content">
+      <div className="min-h-0 min-w-0 flex-1 lg:min-h-dvh" id="main-content">
         {children}
       </div>
     </div>

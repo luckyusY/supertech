@@ -35,15 +35,18 @@ export default async function AdminRecoveryPage() {
       />
 
       <div className="mt-6 soft-card overflow-hidden p-2 sm:p-2">
-        <div className="overflow-x-auto rounded-[1rem]">
+        <div
+          className="dashboard-table-scroll overflow-auto rounded-[1rem]"
+          style={{ maxHeight: "min(28rem, calc(100dvh - 14rem))" }}
+        >
           {passwordRecoveryRequests.length > 0 ? (
             <table className="w-full min-w-[36rem] text-sm">
-              <thead>
-                <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
+              <thead className="sticky top-0 z-[1]">
+                <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)] shadow-[0_1px_0_var(--line)]">
                   {["Request", "Email", "Contact", "Notes"].map((heading) => (
                     <th
                       key={heading}
-                      className="px-5 py-3 text-left font-semibold text-[var(--muted)]"
+                      className="bg-[rgba(248,250,252,0.98)] px-5 py-3 text-left font-semibold text-[var(--muted)]"
                     >
                       {heading}
                     </th>

@@ -237,12 +237,18 @@ export default async function AdminDashboardPage() {
             {vendors.length} sellers
           </span>
         </div>
-        <div className="mt-6 overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--line)]">
+        <div
+          className="dashboard-table-scroll mt-6 overflow-auto rounded-[var(--radius-lg)] border border-[var(--line)]"
+          style={{ maxHeight: "min(28rem, calc(100dvh - 16rem))" }}
+        >
           <table className="w-full min-w-[34rem] text-sm">
-            <thead>
-              <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)]">
+            <thead className="sticky top-0 z-[1]">
+              <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)] shadow-[0_1px_0_var(--line)]">
                 {["Vendor", "Location", "Products", "Fulfillment", "Rating"].map((h) => (
-                  <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
+                  <th
+                    key={h}
+                    className="bg-[var(--neutral-50)] px-5 py-3 text-left font-semibold text-[var(--muted)]"
+                  >
                     {h}
                   </th>
                 ))}

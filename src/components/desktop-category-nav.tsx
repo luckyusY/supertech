@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ComponentType } from "react";
+import { useState } from "react";
 import {
   Briefcase,
   Building2,
@@ -15,9 +15,12 @@ import {
   LayoutGrid,
   Menu,
   Monitor,
+  PackageSearch,
+  ShieldCheck,
   Smartphone,
   Sparkles,
   Store,
+  Truck,
   Watch,
   type LucideIcon,
 } from "lucide-react";
@@ -40,22 +43,23 @@ const iconMap: Record<string, LucideIcon> = {
   "Commercial Spaces": Briefcase,
 };
 
-type ShopperLink = {
-  label: string;
-  href: string;
-  icon: ComponentType<{ className?: string }>;
-};
+/** Kept inside this client module so icons are never serialized across the RSC boundary. */
+const shopperLinks = [
+  { label: "Vendors", href: "/vendors", icon: Store },
+  { label: "Request Product", href: "/request-product", icon: PackageSearch },
+  { label: "Track Order", href: "/track-order", icon: Truck },
+  { label: "Sell on SuperTech", href: "/become-vendor", icon: ShieldCheck },
+] as const;
 
 type DesktopCategoryNavProps = {
   categories: string[];
-  shopperLinks: readonly ShopperLink[];
 };
 
 /**
  * Photo Factory–inspired desktop nav:
  * Departments mega panel + quick links + promo card.
  */
-export function DesktopCategoryNav({ categories, shopperLinks }: DesktopCategoryNavProps) {
+export function DesktopCategoryNav({ categories }: DesktopCategoryNavProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(categories[0] ?? "");
 

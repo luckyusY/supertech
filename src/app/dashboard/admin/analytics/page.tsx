@@ -166,12 +166,18 @@ export default async function AdminAnalyticsPage() {
               </span>
             )}
           </div>
-          <div className="mt-5 overflow-x-auto rounded-[1.5rem] border border-[var(--line)] bg-white">
+          <div
+            className="dashboard-table-scroll mt-5 overflow-auto rounded-[1.5rem] border border-[var(--line)] bg-white"
+            style={{ maxHeight: "min(28rem, calc(100dvh - 16rem))" }}
+          >
             <table className="w-full min-w-[44rem] text-sm">
-              <thead>
-                <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)]">
+              <thead className="sticky top-0 z-[1]">
+                <tr className="border-b border-[var(--line)] bg-[rgba(15,23,42,0.03)] shadow-[0_1px_0_var(--line)]">
                   {["Vendor", "Gross sales", "Net payout", "Commission", "Products", "Fulfillment"].map((h) => (
-                    <th key={h} className="px-5 py-3 text-left font-semibold text-[var(--muted)]">
+                    <th
+                      key={h}
+                      className="bg-[rgba(248,250,252,0.98)] px-5 py-3 text-left font-semibold text-[var(--muted)]"
+                    >
                       {h}
                     </th>
                   ))}

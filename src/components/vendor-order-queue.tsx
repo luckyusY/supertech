@@ -308,18 +308,21 @@ export function VendorOrderQueue({
 
       {state.status === "ready" && filteredOrders.length > 0 ? (
         <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)]">
-          <div className="overflow-x-auto">
+          <div
+            className="dashboard-table-scroll overflow-auto"
+            style={{ maxHeight: "min(32rem, calc(100dvh - 14rem))" }}
+          >
             <table className="w-full min-w-[48rem] text-left text-sm">
-              <thead>
-                <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)] text-xs uppercase tracking-[0.1em] text-[var(--muted)]">
-                  <th className="w-12 px-3 py-3 font-semibold">#</th>
-                  <th className="px-3 py-3 font-semibold">Request</th>
-                  <th className="px-3 py-3 font-semibold">Customer</th>
-                  <th className="px-3 py-3 font-semibold">Your items</th>
-                  <th className="px-3 py-3 font-semibold">Status</th>
-                  <th className="px-3 py-3 font-semibold">Your total</th>
-                  <th className="px-3 py-3 font-semibold">Updated</th>
-                  <th className="px-3 py-3 font-semibold">
+              <thead className="sticky top-0 z-[1]">
+                <tr className="border-b border-[var(--line)] bg-[var(--neutral-50)] text-xs uppercase tracking-[0.1em] text-[var(--muted)] shadow-[0_1px_0_var(--line)]">
+                  <th className="w-12 bg-[var(--neutral-50)] px-3 py-3 font-semibold">#</th>
+                  <th className="bg-[var(--neutral-50)] px-3 py-3 font-semibold">Request</th>
+                  <th className="bg-[var(--neutral-50)] px-3 py-3 font-semibold">Customer</th>
+                  <th className="bg-[var(--neutral-50)] px-3 py-3 font-semibold">Your items</th>
+                  <th className="bg-[var(--neutral-50)] px-3 py-3 font-semibold">Status</th>
+                  <th className="bg-[var(--neutral-50)] px-3 py-3 font-semibold">Your total</th>
+                  <th className="bg-[var(--neutral-50)] px-3 py-3 font-semibold">Updated</th>
+                  <th className="bg-[var(--neutral-50)] px-3 py-3 font-semibold">
                     <span className="sr-only">Expand</span>
                   </th>
                 </tr>
