@@ -33,15 +33,20 @@ import org.json.JSONObject
  */
 abstract class BaseActivity : AppCompatActivity() {
 
+    // Website-aligned design tokens (see docs/ANDROID_UI_DESIGN_PLAN.md)
     protected val ink = Color.rgb(49, 49, 51)
     protected val muted = Color.rgb(117, 117, 122)
     protected val line = Color.rgb(220, 221, 225)
     protected val page = Color.rgb(241, 241, 242)
-    protected val brand = Color.rgb(246, 139, 30)
-    protected val brandDark = Color.rgb(224, 126, 23)
-    protected val softGreen = Color.rgb(255, 244, 229)
+    protected val brand = Color.rgb(232, 119, 10)       // --accent #E8770A
+    protected val brandDark = Color.rgb(208, 106, 8)
+    protected val softGreen = Color.rgb(255, 244, 229)  // accent-soft
     protected val danger = Color.rgb(240, 68, 56)
-    protected val amber = Color.rgb(249, 181, 76)
+    protected val amber = Color.rgb(245, 166, 42)       // --gold #F5A62A
+    protected val gold = Color.rgb(245, 166, 42)
+    protected val backgroundStrong = Color.rgb(10, 15, 26)
+    protected val blueStart = Color.rgb(11, 61, 145)
+    protected val blueMid = Color.rgb(21, 101, 192)
 
     private val imageExecutor = java.util.concurrent.Executors.newFixedThreadPool(2)
 
@@ -100,7 +105,7 @@ abstract class BaseActivity : AppCompatActivity() {
     /** Builds the standard screen (top bar + scrollable content + AI fab) and
      *  returns the content column to add views to. */
     protected fun scaffold(title: String, withBack: Boolean = true, withFab: Boolean = true): LinearLayout {
-        window.statusBarColor = brand
+        window.statusBarColor = backgroundStrong
         window.navigationBarColor = Color.WHITE
 
         val rootFrame = FrameLayout(this).apply { setBackgroundColor(page) }
@@ -136,7 +141,7 @@ abstract class BaseActivity : AppCompatActivity() {
         val bar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = gradient(brand, brandDark, 0f)
+            setBackgroundColor(backgroundStrong)
             setPadding(dp(8), 0, dp(14), 0)
         }
         if (withBack) {

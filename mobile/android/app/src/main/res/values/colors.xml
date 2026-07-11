@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#F68B1E</color>
-    <color name="colorPrimaryDark">#E07E17</color>
-    <color name="colorAccent">#F68B1E</color>
+    <!-- SuperTech website-aligned tokens -->
+    <color name="colorPrimary">#E8770A</color>
+    <color name="colorPrimaryDark">#D06A08</color>
+    <color name="colorAccent">#E8770A</color>
+
     <color name="supertechBackground">#F1F1F2</color>
     <color name="supertechForeground">#313133</color>
     <color name="supertechMuted">#75757A</color>
     <color name="supertechLine">#DCDDE1</color>
     <color name="supertechTeal">#276076</color>
-    <color name="supertechGold">#F9B54C</color>
+    <color name="supertechGold">#F5A62A</color>
+    <color name="supertechBackgroundStrong">#0A0F1A</color>
+    <color name="supertechAccentSoft">#FFF4E5</color>
+    <color name="supertechBlueStart">#0B3D91</color>
+    <color name="supertechBlueMid">#1565C0</color>
+    <color name="supertechBlueEnd">#0D47A1</color>
+    <color name="supertechDanger">#F04438</color>
+    <color name="supertechSuccess">#1FAE5B</color>
 </resources>
