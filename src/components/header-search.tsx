@@ -177,11 +177,108 @@ export function HeaderSearch({ variant = "desktop" }: HeaderSearchProps) {
       (data?.categories.length ?? 0) >
     0;
 
+  // Photo Factory mobile: compact pill search in the primary header row
+  if (isMobile) {
+    return (
+      <form
+        ref={rootRef}
+        onSubmit={submit}
+        className="relative min-w-0 sm:hidden"
+        role="search"
+      >
+        <input
+          type="search"
+          name="query"
+          value={query}
+          autoComplete="off"
+          aria-autocomplete="list"
+          aria-controls={listboxId}
+          aria-expanded={showPanel}
+          role="combobox"
+          onFocus={() => setOpen(true)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setOpen(true);
+            setActiveIndex(-1);
+          }}
+          onKeyDown={onKeyDown}
+          placeholder="Search"
+          aria-label="Search products"
+          className="h-8 w-full rounded-full border-0 bg-white px-4 pr-9 text-sm font-medium text-[var(--foreground)] outline-none ring-2 ring-transparent transition placeholder:text-[var(--muted)] focus:ring-[var(--accent)]"
+        />
+        <button
+          type="submit"
+          aria-label="Search"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--accent)] sm:right-3"
+        >
+          <Search aria-hidden className="h-5 w-5" strokeWidth={2} />
+        </button>
+
+        {showPanel ? (
+          <div
+            id={listboxId}
+            role="listbox"
+            className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-[var(--z-drawer)] max-h-[min(70vh,28rem)] overflow-y-auto rounded-[var(--radius-md)] border border-[var(--line)] bg-white shadow-[var(--elevation-3)]"
+          >
+            {loading && !data ? (
+              <p className="px-4 py-6 text-center text-sm text-[var(--muted)]">Searching…</p>
+            ) : null}
+            {!loading && data && !hasResults && query.trim() ? (
+              <div className="px-4 py-5 text-center">
+                <p className="text-sm font-semibold">No matches</p>
+                <Link
+                  href={`/request-product?hint=${encodeURIComponent(query.trim())}`}
+                  onClick={() => setOpen(false)}
+                  className="mt-3 inline-flex rounded-[var(--radius-sm)] bg-[var(--accent)] px-3 py-2 text-xs font-semibold text-white"
+                >
+                  Request product
+                </Link>
+              </div>
+            ) : null}
+            {data && hasResults ? (
+              <div className="py-2">
+                {data.products.slice(0, 6).map((product, index) => (
+                  <Link
+                    key={product.slug}
+                    href={product.href}
+                    role="option"
+                    aria-selected={activeIndex === index}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--accent-soft)]"
+                  >
+                    <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-[var(--neutral-50)]">
+                      <Image src={product.heroImage} alt="" fill sizes="40px" className="object-cover" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{product.name}</span>
+                      <span className="text-xs text-[var(--muted)]">{formatPrice(product.price)}</span>
+                    </span>
+                  </Link>
+                ))}
+                {data.categories.slice(0, 4).map((category) => (
+                  <Link
+                    key={category.name}
+                    href={category.href}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium hover:bg-[var(--accent-soft)]"
+                  >
+                    <Tag className="h-4 w-4 text-[var(--accent)]" />
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </form>
+    );
+  }
+
   return (
     <form
       ref={rootRef}
       onSubmit={submit}
-      className={isMobile ? "relative mt-2.5 md:hidden" : "relative hidden min-w-0 flex-1 md:block"}
+      className="relative hidden min-w-0 flex-1 sm:block"
       role="search"
     >
       <div className="flex w-full items-center gap-2">
@@ -210,9 +307,7 @@ export function HeaderSearch({ variant = "desktop" }: HeaderSearchProps) {
             placeholder={
               aiMode
                 ? "Describe what you need — AI will find it"
-                : isMobile
-                  ? "Search products, stores…"
-                  : "Search products, stores and categories"
+                : "Search products, stores and categories"
             }
             className="h-11 w-full rounded-[var(--radius-sm)] border border-white/55 bg-white pl-10 pr-16 text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted)]"
             aria-label={aiMode ? "AI product search" : "Product search"}
