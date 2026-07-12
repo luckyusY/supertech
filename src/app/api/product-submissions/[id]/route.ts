@@ -6,6 +6,7 @@ import {
   updateProductSubmissionDetails,
   updateProductSubmissionStatus,
 } from "@/lib/product-submissions";
+import { notifyProductModeration } from "@/lib/notifications";
 
 type ProductSubmissionDetailRouteProps = {
   params: Promise<{
@@ -47,6 +48,15 @@ export async function PATCH(
     }
 
     const submission = await updateProductSubmissionStatus(id, body.status);
+
+    if (body.status === "approved" || body.status === "rejected") {
+      await notifyProductModeration({
+        vendorSlug: submission.vendorSlug,
+        productName: submission.name,
+        approved: body.status === "approved",
+        refId: submission.slug,
+      });
+    }
 
     revalidatePath("/");
     revalidatePath("/catalog");

@@ -371,9 +371,19 @@ export async function createOrderRequest(input: CreateOrderRequestInput) {
     requestId: record.requestId,
     productName: record.productName,
     vendorName: record.vendorName,
+    vendorSlug: record.vendorSlug,
     estimatedTotal: record.estimatedTotal,
     itemCount: record.itemCount,
     status: record.status,
+    customerEmail: record.customerEmail,
+    customerName: record.customerName,
+    lineItems: record.lineItems.map((line) => ({
+      productSlug: line.productSlug,
+      productName: line.productName,
+      vendorSlug: line.vendorSlug,
+      vendorName: line.vendorName,
+      quantity: line.quantity,
+    })),
   };
 }
 

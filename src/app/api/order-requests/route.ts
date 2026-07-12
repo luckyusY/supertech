@@ -7,6 +7,7 @@ import {
   getOrderRequests,
   isOrderRequestStatus,
 } from "@/lib/order-requests";
+import { notifyOrderCreated } from "@/lib/notifications";
 
 export async function GET(request: Request) {
   const authorization = authorizeRequest(request, ["admin", "vendor"]);
@@ -99,6 +100,30 @@ export async function POST(request: Request) {
     };
 
     const orderRequest = await createOrderRequest(body);
+
+    // Role-targeted alerts: admin inbox, each line-item vendor, and the customer
+    const vendorSlugs = Array.from(
+      new Set(
+        (orderRequest.lineItems ?? [])
+          .map((line) => line.vendorSlug)
+          .filter((slug): slug is string => Boolean(slug)),
+      ),
+    );
+    if (
+      vendorSlugs.length === 0 &&
+      orderRequest.vendorSlug &&
+      orderRequest.vendorSlug !== "multiple-vendors"
+    ) {
+      vendorSlugs.push(orderRequest.vendorSlug);
+    }
+    await notifyOrderCreated({
+      requestId: orderRequest.requestId,
+      productName: orderRequest.productName,
+      customerName: body.customerName,
+      customerEmail: body.customerEmail,
+      vendorSlugs,
+      itemCount: orderRequest.itemCount ?? 1,
+    });
 
     revalidatePath("/dashboard/admin");
     revalidatePath("/dashboard/vendor");

@@ -6,6 +6,7 @@ import {
   isOrderRequestStatus,
   updateOrderRequest,
 } from "@/lib/order-requests";
+import { notifyOrderStatusForCustomer } from "@/lib/notifications";
 
 type OrderRequestDetailRouteProps = {
   params: Promise<{
@@ -49,6 +50,15 @@ export async function PATCH(
       status: nextStatus,
       internalNote: body.internalNote,
     });
+
+    if (nextStatus && order.customerEmail) {
+      await notifyOrderStatusForCustomer({
+        customerEmail: order.customerEmail,
+        requestId: order.requestId,
+        status: nextStatus,
+        productName: order.productName,
+      });
+    }
 
     revalidatePath("/dashboard/admin");
     revalidatePath("/dashboard/vendor");
