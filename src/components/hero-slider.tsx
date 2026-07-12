@@ -28,7 +28,19 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   if (slides.length === 0) return null;
 
   return (
-    <section className="hero-swiper relative isolate overflow-hidden border-b border-[var(--line)] bg-white h-[280px] sm:h-[360px] lg:h-[376px] w-full">
+    <section className="hero-swiper relative isolate overflow-hidden border-b border-[var(--line)] bg-zinc-950 h-[280px] sm:h-[360px] lg:h-[376px] w-full">
+      {/* Global Brand Background */}
+      <div className="absolute inset-0 opacity-80">
+        <Image
+          src="/banners/hero-brand-bg.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-zinc-950/40 to-transparent" />
       <Swiper
         modules={[Autoplay, Navigation, Pagination, A11y]}
         loop={slides.length > 1}
@@ -63,22 +75,10 @@ function SlideContent({
   slide: HeroSlide;
   priority: boolean;
 }) {
-  const dark = slide.tone !== "light";
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className={`relative flex h-full w-full overflow-hidden ${dark ? "bg-zinc-950" : "bg-zinc-50"}`}>
-      {/* Dynamic Ambient Background (Desktop) */}
-      <div className="absolute inset-0 hidden sm:block opacity-40 mix-blend-screen">
-        <Image
-          src={slide.image}
-          alt=""
-          fill
-          sizes="100vw"
-          priority={priority}
-          className="object-cover blur-[80px] scale-125 transform-gpu"
-        />
-      </div>
+    <div className="relative flex h-full w-full overflow-hidden bg-transparent">
 
       {/* Mobile Image Layer */}
       <div className="absolute inset-x-0 top-0 h-[65%] sm:hidden">
