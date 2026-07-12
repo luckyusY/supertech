@@ -352,67 +352,19 @@ export default async function Home() {
     },
   ];
 
-  // Adorama-style campaign slides: brand + gold accent word + feature grid + lifestyle image
-  const heroSlides: HeroSlide[] = [
-    {
-      label: "Live now",
-      brand: "VIP Rewards",
-      title: "Earn more when you shop SuperTech.",
-      body: "Verified sellers, exclusive marketplace deals, and trackable orders — built for shoppers across Africa.",
-      priceLine: "Request · Cart · MoMoPay",
-      ctaText: "Shop flash sale",
-      ctaHref: "#flash-sale",
-      image: "/banners/hero-shopping-desktop.jpg",
-      mobileImage: "/banners/hero-shopping-mobile.jpg",
-      tone: "dark",
-      copyPosition: "left",
-    },
-  ];
-
-  if (beautyDeals.length > 0) {
-    heroSlides.push({
-      label: "Beauty shelf",
-      brand: "Glow Essentials",
-      title: "Routines from approved sellers.",
-      body: "Serums, SPF, and daily personal care — clear prices and assisted checkout.",
-      ctaText: "Shop beauty",
-      ctaHref: "/catalog?category=Beauty+%26+Personal+Care",
-      image: "/banners/hero-beauty-desktop.jpg",
-      mobileImage: "/banners/hero-beauty-mobile.jpg",
-      tone: "dark",
-      copyPosition: "center",
-    });
-  }
-
-  if (phoneDeals.length > 0) {
-    heroSlides.push({
-      label: "Tech lane",
-      brand: "Smart Gadgets",
-      title: "Phones, wearables, everyday gear.",
-      body: "Mobile essentials from verified marketplace sellers — request or cart in one flow.",
-      ctaText: "Shop gadgets",
-      ctaHref: "/catalog?category=Mobile+Essentials",
-      image: "/banners/hero-tech-desktop.jpg",
-      mobileImage: "/banners/hero-tech-mobile.jpg",
-      tone: "dark",
-      copyPosition: "left",
-    });
-  }
-
-  if (carDeals.length > 0 || propertyDeals.length > 0) {
-    heroSlides.push({
-      label: "Motors & property",
-      brand: "Big Listings",
-      title: "Cars, rentals, apartments, land.",
-      body: "Enquiry-led listings from dealers and agents — SuperTech helps coordinate next steps.",
-      ctaText: "Explore listings",
-      ctaHref: "/catalog?category=Cars+for+Sale",
-      image: "/banners/hero-motors-desktop.jpg",
-      mobileImage: "/banners/hero-motors-mobile.jpg",
-      tone: "dark",
-      copyPosition: "left",
-    });
-  }
+  const heroSlides: HeroSlide[] = featuredProducts.slice(0, 4).map((product, idx) => ({
+    label: idx === 0 ? "Live now" : "Featured Deal",
+    brand: product.vendorSlug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+    title: product.name,
+    body: product.description,
+    priceLine: `${formatPrice(product.price)} · Cart · MoMoPay`,
+    ctaText: "Shop now",
+    ctaHref: `/products/${product.slug}`,
+    image: product.heroImage,
+    mobileImage: product.heroImage,
+    tone: "dark",
+    copyPosition: "left",
+  }));
 
   // Photo Factory visual categories: first product image per category
   const categoryImageMap = new Map<string, string>();

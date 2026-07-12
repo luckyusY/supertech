@@ -67,7 +67,7 @@ export function VisualCategoryRail({ items }: { items: VisualCategoryItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(90deg,#0b3d91_0%,#1565c0_45%,#0d47a1_100%)] py-3 sm:py-4">
+    <section className="relative overflow-hidden bg-[linear-gradient(90deg,#cc6600_0%,#e8770a_45%,#b35900_100%)] py-3 sm:py-4">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.12),transparent_42%)]" />
       <div className="relative">
         <div className="no-scrollbar flex gap-0 overflow-x-auto px-1 sm:px-2">
