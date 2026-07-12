@@ -28,9 +28,9 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   if (slides.length === 0) return null;
 
   return (
-    <section className="hero-swiper relative isolate overflow-hidden border-b border-[var(--line)] bg-zinc-950 h-[280px] sm:h-[360px] lg:h-[376px] w-full">
-      {/* Global Brand Background */}
-      <div className="absolute inset-0 opacity-80">
+    <section className="hero-swiper relative isolate overflow-hidden border-b border-[var(--line)] bg-zinc-950 h-[440px] sm:h-[360px] lg:h-[376px] w-full">
+      {/* Global Brand Background (Desktop) */}
+      <div className="absolute inset-0 hidden sm:block opacity-80">
         <Image
           src="/banners/hero-brand-bg.jpg"
           alt=""
@@ -38,6 +38,17 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           priority
           sizes="100vw"
           className="object-cover"
+        />
+      </div>
+      {/* Global Brand Background (Mobile) */}
+      <div className="absolute inset-0 sm:hidden opacity-80">
+        <Image
+          src="/banners/hero-brand-bg-mobile.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
         />
       </div>
       <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-zinc-950/40 to-transparent" />
@@ -81,16 +92,17 @@ function SlideContent({
     <div className="relative flex h-full w-full overflow-hidden bg-transparent">
 
       {/* Mobile Image Layer */}
-      <div className="absolute inset-x-0 top-0 h-[65%] sm:hidden">
-        <Image
-          src={slide.mobileImage}
-          alt=""
-          fill
-          priority={priority}
-          sizes="100vw"
-          className="object-cover object-top"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
+      <div className="absolute inset-x-0 top-5 h-[40%] flex justify-center sm:hidden z-0 px-4">
+        <div className="relative h-full aspect-square max-h-[200px] rounded-[1.5rem] overflow-hidden shadow-2xl border border-white/10">
+          <Image
+            src={slide.mobileImage}
+            alt=""
+            fill
+            priority={priority}
+            sizes="(max-width: 640px) 250px, 100vw"
+            className="object-cover"
+          />
+        </div>
       </div>
 
       {/* Content Layout */}
@@ -102,7 +114,7 @@ function SlideContent({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.6 }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.21, 0.65, 0.36, 1] }}
-          className="w-full sm:w-[55%] lg:w-[50%] flex flex-col justify-end pb-8 sm:pb-0 sm:justify-center h-full pt-10 sm:pt-0"
+          className="w-full sm:w-[55%] lg:w-[50%] flex flex-col justify-end pb-8 sm:pb-0 sm:justify-center h-full pt-[40%] sm:pt-0"
         >
           {slide.label && (
             <div className="mb-4 flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md border border-white/20 shadow-xl sm:px-4 sm:py-2 sm:text-xs">
