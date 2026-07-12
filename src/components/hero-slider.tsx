@@ -62,14 +62,31 @@ function SlideContent({
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="absolute inset-0">
+    <div className={`absolute inset-0 ${dark ? "bg-black" : "bg-white"}`}>
+      {/* Blurred background layer */}
+      <Image
+        src={slide.image}
+        alt=""
+        fill
+        sizes="100vw"
+        className="hidden object-cover object-center opacity-30 blur-2xl scale-110 sm:block"
+      />
+      <Image
+        src={slide.mobileImage}
+        alt=""
+        fill
+        sizes="100vw"
+        className="object-cover object-center opacity-30 blur-2xl scale-110 sm:hidden"
+      />
+
+      {/* Crisp contained foreground layer */}
       <Image
         src={slide.image}
         alt=""
         fill
         priority={priority}
-        sizes="100vw"
-        className="hidden object-cover object-center sm:block"
+        sizes="50vw"
+        className="hidden object-contain object-[85%_center] sm:block"
       />
       <Image
         src={slide.mobileImage}
@@ -77,7 +94,7 @@ function SlideContent({
         fill
         priority={priority}
         sizes="100vw"
-        className="object-cover object-center sm:hidden"
+        className="object-contain object-top pb-24 sm:hidden"
       />
       <div
         className={`absolute inset-0 sm:hidden ${
