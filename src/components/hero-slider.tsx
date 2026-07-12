@@ -52,6 +52,10 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   );
 }
 
+import { Outfit } from "next/font/google";
+
+const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "700", "900"] });
+
 function SlideContent({
   slide,
   priority,
@@ -63,106 +67,101 @@ function SlideContent({
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className={`absolute inset-0 ${dark ? "bg-black" : "bg-white"}`}>
-      {/* Blurred background layer */}
-      <Image
-        src={slide.image}
-        alt=""
-        fill
-        sizes="100vw"
-        className="hidden object-cover object-center opacity-30 blur-2xl scale-110 sm:block"
-      />
-      <Image
-        src={slide.mobileImage}
-        alt=""
-        fill
-        sizes="100vw"
-        className="object-cover object-center opacity-30 blur-2xl scale-110 sm:hidden"
-      />
+    <div className={`relative flex h-full w-full overflow-hidden ${dark ? "bg-zinc-950" : "bg-zinc-50"}`}>
+      {/* Dynamic Ambient Background (Desktop) */}
+      <div className="absolute inset-0 hidden sm:block opacity-40 mix-blend-screen">
+        <Image
+          src={slide.image}
+          alt=""
+          fill
+          sizes="100vw"
+          priority={priority}
+          className="object-cover blur-[80px] scale-125 transform-gpu"
+        />
+      </div>
 
-      {/* Crisp contained foreground layer */}
-      <Image
-        src={slide.image}
-        alt=""
-        fill
-        priority={priority}
-        sizes="50vw"
-        className="hidden object-contain object-[85%_center] sm:block"
-      />
-      <Image
-        src={slide.mobileImage}
-        alt=""
-        fill
-        priority={priority}
-        sizes="100vw"
-        className="object-contain object-top pb-24 sm:hidden"
-      />
-      <div
-        className={`absolute inset-0 sm:hidden ${
-          dark
-            ? "bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.74)_66%)]"
-            : "bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.88)_62%)]"
-        }`}
-      />
-      <div
-        className={`absolute inset-y-0 hidden w-[48%] sm:block ${
-          slide.copyPosition === "center"
-            ? "left-[32%] bg-white/72"
-            : dark
-              ? "left-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.74),rgba(0,0,0,0.34),transparent)]"
-              : "left-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.92),rgba(255,255,255,0.58),transparent)]"
-        }`}
-      />
+      {/* Mobile Image Layer */}
+      <div className="absolute inset-x-0 top-0 h-[65%] sm:hidden">
+        <Image
+          src={slide.mobileImage}
+          alt=""
+          fill
+          priority={priority}
+          sizes="100vw"
+          className="object-cover object-top"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
+      </div>
 
-      <div
-        className={`absolute inset-0 z-10 flex items-end pb-12 sm:items-center sm:pb-0 ${
-          slide.copyPosition === "center" ? "justify-center sm:pl-[14%]" : ""
-        }`}
-      >
+      {/* Content Layout */}
+      <div className="relative z-10 flex h-full w-full max-w-7xl mx-auto items-center px-5 sm:px-10 lg:px-16">
+        
+        {/* Left: Typography */}
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 22 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.6 }}
-          transition={{ duration: 0.55, delay: 0.1, ease: [0.21, 0.65, 0.36, 1] }}
-          className={`max-w-[340px] sm:max-w-[480px] ${
-            slide.copyPosition === "center"
-              ? "flex flex-col items-center px-5 text-center"
-              : "px-5 sm:px-0 sm:pl-[10.5%]"
-          } ${dark ? "text-white" : "text-black"}`}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.21, 0.65, 0.36, 1] }}
+          className="w-full sm:w-[55%] lg:w-[50%] flex flex-col justify-end pb-8 sm:pb-0 sm:justify-center h-full pt-10 sm:pt-0"
         >
           {slide.label && (
-            <span className={`mb-3 flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md sm:mb-4 sm:px-4 sm:py-1.5 sm:text-xs ${dark ? "border-white/20 bg-white/10 text-white" : "border-black/10 bg-black/5 text-black"}`}>
-              <Sparkles className="h-3 w-3 text-[var(--accent)] sm:h-3.5 sm:w-3.5" />
+            <div className="mb-4 flex w-fit items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md border border-white/20 shadow-xl sm:px-4 sm:py-2 sm:text-xs">
+              <Sparkles className="h-3 w-3 text-[var(--accent)] sm:h-4 sm:w-4" />
               {slide.label}
-            </span>
+            </div>
           )}
-          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)] sm:mb-2 sm:text-sm">
+
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--accent)] sm:mb-3 sm:text-sm">
             {slide.brand}
           </p>
-          <h2 className="text-[26px] font-extrabold leading-[1.1] tracking-tight drop-shadow-sm sm:text-[42px] lg:text-[48px]">
+
+          <h2 className={`${outfit.className} text-[32px] sm:text-[42px] lg:text-[52px] font-black tracking-tight text-white drop-shadow-md leading-[1.05] mb-3 sm:mb-4`}>
             {slide.title}
           </h2>
-          <p className={`mt-3 line-clamp-2 text-xs font-medium leading-relaxed drop-shadow-sm sm:mt-4 sm:line-clamp-none sm:text-base ${dark ? "text-white/80 sm:text-white/90" : "text-black/70 sm:text-black/80"}`}>
+
+          <p className="line-clamp-2 sm:line-clamp-3 text-xs sm:text-sm lg:text-base font-medium text-white/70 max-w-md leading-relaxed mb-5 sm:mb-6">
             {slide.body}
           </p>
+
           {slide.priceLine && (
-            <div className="mt-3 flex items-center gap-2 sm:mt-4">
-              <span className={`rounded-md px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm sm:px-3 sm:text-sm ${dark ? "bg-black/30 text-white/90" : "bg-white/50 text-black/90 shadow-sm"}`}>
+            <div className="flex items-center gap-2.5 sm:gap-3 mb-5 sm:mb-7">
+              <span className="rounded-lg bg-white/10 px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base font-bold text-white backdrop-blur-md border border-white/10 shadow-lg">
                 {slide.priceLine.split(' · ')[0]}
               </span>
-              <span className={`text-[10px] font-medium tracking-wide sm:text-xs ${dark ? "text-white/60" : "text-black/50"}`}>
+              <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-white/50 uppercase">
                 {slide.priceLine.split(' · ').slice(1).join(' · ')}
               </span>
             </div>
           )}
+
           <Link
             href={slide.ctaHref}
-            className="group press mt-5 inline-flex w-fit items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-2.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-lg transition-all hover:bg-[var(--accent-hover)] hover:shadow-xl sm:mt-7 sm:px-8 sm:py-3.5 sm:text-xs"
+            className="group relative inline-flex w-fit items-center justify-center gap-3 rounded-full bg-[var(--accent)] px-7 py-3 sm:px-9 sm:py-4 text-xs sm:text-sm font-bold uppercase tracking-widest text-white overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_-10px_var(--accent)]"
           >
-            {slide.ctaText}
-            <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 sm:h-4 sm:w-4" />
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+            <span className="relative z-10">{slide.ctaText}</span>
+            <ArrowRight className="relative z-10 h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </motion.div>
+
+        {/* Right: Floating Product Image (Desktop only) */}
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: false, amount: 0.6 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.21, 0.65, 0.36, 1] }}
+          className="hidden sm:flex w-[45%] lg:w-[50%] h-full items-center justify-end pl-8 lg:pl-16"
+        >
+          <div className="relative h-[80%] aspect-square max-h-[300px] lg:max-h-[340px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 transform transition-transform duration-700 hover:scale-[1.02]">
+            <Image
+              src={slide.image}
+              alt={slide.title}
+              fill
+              className="object-cover"
+            />
+          </div>
+        </motion.div>
+        
       </div>
     </div>
   );
