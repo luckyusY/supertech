@@ -502,74 +502,55 @@ img {
 }
 
 .hero-swiper .swiper-pagination {
-  bottom: 14px !important;
+  bottom: 10px !important;
 }
 
 .hero-swiper .swiper-pagination-bullet {
-  width: 9px !important;
-  height: 9px !important;
+  width: 10px !important;
+  height: 10px !important;
   margin: 0 5px !important;
-  background: rgba(255, 255, 255, 0.35) !important;
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7);
   opacity: 1 !important;
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .hero-swiper .swiper-pagination-bullet-active {
   background: #ffffff !important;
-  border-color: var(--gold);
-  transform: scale(1.25);
+  border-color: var(--accent);
+  transform: scale(1.2);
 }
 
 .hero-swiper .swiper-button-prev,
 .hero-swiper .swiper-button-next {
-  width: 48px !important;
-  height: 48px !important;
-  margin-top: -24px !important;
+  width: 44px !important;
+  height: 56px !important;
+  margin-top: -28px !important;
   color: #ffffff !important;
-  background: rgba(0, 0, 0, 0.32);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 9999px;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  background: rgba(0, 0, 0, 0.25);
+  border: none;
+  transition: background 0.2s ease;
 }
 
 .hero-swiper .swiper-button-prev {
-  left: 12px !important;
+  left: 0 !important;
+  border-radius: 0 9999px 9999px 0;
 }
 
 .hero-swiper .swiper-button-next {
-  right: 12px !important;
+  right: 0 !important;
+  border-radius: 9999px 0 0 9999px;
 }
 
 .hero-swiper .swiper-button-prev:hover,
 .hero-swiper .swiper-button-next:hover {
-  background: rgba(0, 0, 0, 0.55);
-  border-color: var(--gold);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .hero-swiper .swiper-button-prev::after,
 .hero-swiper .swiper-button-next::after {
-  font-size: 16px !important;
+  font-size: 20px !important;
   font-weight: 900;
-}
-
-.hero-swiper--card .swiper-button-prev {
-  left: 8px !important;
-  width: 36px !important;
-  height: 36px !important;
-  margin-top: -18px !important;
-}
-
-.hero-swiper--card .swiper-button-next {
-  right: 8px !important;
-  width: 36px !important;
-  height: 36px !important;
-  margin-top: -18px !important;
-}
-
-.hero-swiper--card .swiper-button-prev::after,
-.hero-swiper--card .swiper-button-next::after {
-  font-size: 14px !important;
 }
 
 @media (max-width: 640px) {

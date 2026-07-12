@@ -1074,17 +1074,60 @@ class MainActivity : AppCompatActivity() {
         slug.takeIf { it.isNotBlank() }?.let { s -> vendors.firstOrNull { it.slug == s }?.name }
 
     private fun renderVendors() {
+        // Hero strip
+        content.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(18), dp(18), dp(16))
+            background = gradient(backgroundStrong, Color.rgb(20, 32, 52), dp(0).toFloat())
+            addView(text("OFFICIAL STORES", 11f, gold, Typeface.BOLD).apply {
+                letterSpacing = 0.12f
+            })
+            addView(text("Shop verified sellers", 24f, Color.WHITE, Typeface.BOLD).apply {
+                setPadding(0, dp(6), 0, dp(4))
+            })
+            addView(text(
+                if (isLoading) "Loading trusted vendors…"
+                else "${vendors.size} verified stores · fast response · SuperTech approved",
+                13f,
+                Color.argb(200, 255, 255, 255),
+                Typeface.NORMAL
+            ))
+        })
+
         content.addView(paddedSection {
-            addView(sectionHeader("Official stores", "Verified sellers on SuperTech", null) {})
             if (isLoading) {
+                addView(sectionHeader("Stores", "Pulling live vendor list…", null) {})
                 repeat(3) { addView(skeletonCard()) }
                 return@paddedSection
             }
             stateBlock()?.let { addView(it) }
             if (loadError == null && vendors.isEmpty()) {
                 addView(emptyCard("No vendors yet", "Approved vendors will appear here."))
+                return@paddedSection
             }
+
+            // Featured strip for top-rated
+            val featured = vendors.sortedByDescending { it.rating }.take(6)
+            if (featured.isNotEmpty()) {
+                addView(sectionHeader("Featured sellers", "Top-rated on SuperTech", null) {})
+                addView(vendorStrip(featured))
+            }
+
+            addView(sectionHeader("All stores", "Tap a card to open the shop", null) {})
             vendors.forEachIndexed { i, v -> addView(vendorCard(v).animateIn(i)) }
+
+            addView(LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(18), dp(16), dp(16))
+                background = rounded(line, softGreen, dp(16).toFloat())
+                addView(text("Sell on SuperTech", 16f, ink, Typeface.BOLD))
+                addView(text("Open your official store and reach shoppers across Rwanda.", 13f, muted, Typeface.NORMAL).apply {
+                    setPadding(0, dp(4), 0, dp(12))
+                })
+                addView(primaryButton("Become a vendor") {
+                    startActivity(Intent(this@MainActivity, BecomeVendorActivity::class.java))
+                })
+            }.withMargins(top = 8, bottom = 12))
         })
     }
 
@@ -2621,89 +2664,137 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun vendorCard(vendor: Vendor): View {
-        val card = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = rounded(line, Color.WHITE, dp(16).toFloat())
-            elevation = dp(3).toFloat()
-            clipToOutline = true
+        val openStore = {
+            startActivity(
+                Intent(this@MainActivity, VendorProfileActivity::class.java)
+                    .putExtra("slug", vendor.slug)
+            )
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
-        // Cover image
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = rounded(line, Color.WHITE, dp(18).toFloat())
+            elevation = dp(4).toFloat()
+            pressable()
+            setOnClickListener { openStore() }
+        }
+
+        val coverH = dp(112)
         val cover = FrameLayout(this)
         val coverBg = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            setBackgroundColor(try {
-                Color.parseColor(vendor.accent.ifBlank { "#102019" })
-            } catch (_: Exception) {
-                backgroundStrong
-            })
+            setBackgroundColor(
+                try {
+                    Color.parseColor(vendor.accent.ifBlank { "#0A0F1A" })
+                } catch (_: Exception) {
+                    backgroundStrong
+                }
+            )
         }
-        cover.addView(coverBg, FrameLayout.LayoutParams(match(), dp(96)))
+        cover.addView(coverBg, FrameLayout.LayoutParams(match(), coverH))
         if (vendor.coverImage.isNotBlank()) loadImage(coverBg, vendor.coverImage)
 
-        // Logo circle overlapping bottom of cover
+        cover.addView(View(this).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(Color.TRANSPARENT, Color.argb(130, 0, 0, 0))
+            )
+        }, FrameLayout.LayoutParams(match(), dp(52), Gravity.BOTTOM))
+
+        cover.addView(TextView(this).apply {
+            text = "✓ Verified"
+            textSize = 10f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+            background = rounded(Color.TRANSPARENT, Color.argb(170, 14, 159, 110), dp(10).toFloat())
+            setPadding(dp(9), dp(4), dp(9), dp(4))
+        }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END).apply {
+            topMargin = dp(10); rightMargin = dp(10)
+        })
+
+        // Logo + name overlay on cover bottom
+        val overlay = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(10), dp(12), dp(12))
+        }
         val logoWrap = FrameLayout(this).apply {
-            background = rounded(Color.WHITE, Color.WHITE, dp(24).toFloat())
+            background = rounded(Color.WHITE, Color.WHITE, dp(14).toFloat())
             elevation = dp(4).toFloat()
+            setPadding(dp(2), dp(2), dp(2), dp(2))
         }
         if (vendor.coverImage.isNotBlank()) {
-            val logoImg = ImageView(this).apply {
+            logoWrap.addView(ImageView(this).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
-            }
-            logoWrap.addView(logoImg, FrameLayout.LayoutParams(dp(48), dp(48)))
-            // Use cover as logo crop fallback
-            loadImage(logoImg, vendor.coverImage)
+                loadImage(this, vendor.coverImage)
+            }, FrameLayout.LayoutParams(dp(44), dp(44)))
         } else {
             logoWrap.addView(TextView(this).apply {
                 text = vendor.logoMark.ifBlank { vendor.name.trim().take(2).uppercase(Locale.US) }
-                textSize = 14f
+                textSize = 15f
                 gravity = Gravity.CENTER
                 setTextColor(Color.WHITE)
                 typeface = Typeface.DEFAULT_BOLD
-                background = gradient(brand, brandDark, dp(24).toFloat())
-            }, FrameLayout.LayoutParams(dp(48), dp(48)))
+                background = gradient(brand, brandDark, dp(12).toFloat())
+            }, FrameLayout.LayoutParams(dp(44), dp(44)))
         }
-        cover.addView(
-            logoWrap,
-            FrameLayout.LayoutParams(dp(48), dp(48), Gravity.BOTTOM or Gravity.START).apply {
-                leftMargin = dp(14); bottomMargin = dp(-24)
-            }
-        )
-        card.addView(cover, LinearLayout.LayoutParams(match(), dp(96)))
+        overlay.addView(logoWrap, LinearLayout.LayoutParams(dp(48), dp(48)))
+        overlay.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(10), 0, 0, 0)
+            addView(text(vendor.name, 16f, Color.WHITE, Typeface.BOLD).apply {
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+                setShadowLayer(4f, 0f, 1f, Color.BLACK)
+            })
+            val sub = if (vendor.rating > 0) {
+                "★ ${String.format(Locale.US, "%.1f", vendor.rating)} · ${vendor.location}"
+            } else vendor.location
+            addView(text(sub, 12f, Color.argb(230, 255, 255, 255), Typeface.NORMAL).apply {
+                maxLines = 1
+                setShadowLayer(3f, 0f, 1f, Color.BLACK)
+            })
+        }, LinearLayout.LayoutParams(0, wrap(), 1f))
+        cover.addView(overlay, FrameLayout.LayoutParams(match(), wrap(), Gravity.BOTTOM))
+        card.addView(cover, LinearLayout.LayoutParams(match(), coverH))
 
         val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(32), dp(14), dp(14))
+            setPadding(dp(14), dp(12), dp(14), dp(14))
         }
-        val top = LinearLayout(this).apply {
+        body.addView(text(vendor.headline.ifBlank { "Trusted SuperTech seller" }, 13f, muted, Typeface.NORMAL).apply {
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setPadding(0, 0, 0, dp(10))
+        })
+
+        val chips = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        top.addView(text(vendor.name, 17f, ink, Typeface.BOLD), LinearLayout.LayoutParams(0, wrap(), 1f))
-        if (vendor.rating > 0) {
-            top.addView(TextView(this).apply {
-                text = "★ ${String.format(Locale.US, "%.1f", vendor.rating)}"
-                textSize = 12f
-                setTextColor(amber)
-                typeface = Typeface.DEFAULT_BOLD
-                background = rounded(Color.TRANSPARENT, Color.rgb(252, 246, 230), dp(12).toFloat())
-                setPadding(dp(10), dp(5), dp(10), dp(5))
-            })
+        fun statChip(label: String) = TextView(this).apply {
+            text = label
+            textSize = 11f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(brandDark)
+            background = rounded(Color.TRANSPARENT, softGreen, dp(10).toFloat())
+            setPadding(dp(10), dp(5), dp(10), dp(5))
         }
-        body.addView(top)
-        body.addView(text("${vendor.location} · ${vendor.headline}", 13f, muted, Typeface.NORMAL).apply {
-            setPadding(0, dp(6), 0, 0)
-            maxLines = 2
+        chips.addView(statChip("${vendor.activeProducts} products"))
+        chips.addView(statChip(vendor.responseTime.ifBlank { "Fast reply" }), LinearLayout.LayoutParams(wrap(), wrap()).apply {
+            leftMargin = dp(6)
         })
-        body.addView(text("${vendor.activeProducts} products · ${vendor.responseTime}", 12f, brand, Typeface.BOLD).apply {
-            setPadding(0, dp(6), 0, dp(10))
+        body.addView(chips)
+
+        body.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(12), 0, 0)
+            addView(primaryButton("Visit store") { openStore() }.apply { minimumHeight = dp(46) })
         })
-        body.addView(secondaryButton("Visit store") {
-            startActivity(Intent(this, VendorProfileActivity::class.java).putExtra("slug", vendor.slug))
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-        })
+
         card.addView(body)
-        return card.withMargins(bottom = 12)
+        return card.withMargins(bottom = 14)
     }
 
     private fun aiSupportBanner(): View {
