@@ -385,10 +385,16 @@ abstract class BaseActivity : AppCompatActivity() {
         }
         bar.addView(titleCol, LinearLayout.LayoutParams(0, wc(), 1f))
         // Notification control (trailing — same slot as call/WA on home)
-        bar.addView(notificationBellButton(), LinearLayout.LayoutParams(dp(48), dp(44)))
+        bar.addView(notificationBellButton(), LinearLayout.LayoutParams(dp(44), dp(44)).apply {
+            leftMargin = dp(4)
+        })
         return bar
     }
 
+    /**
+     * Header notification control — sits in the trailing slot (where call/WhatsApp
+     * icons used to live). Circular hit target, badge on bell only (never on logo).
+     */
     protected fun notificationBellButton(): View {
         NotificationsStore.init(this)
         val wrap = FrameLayout(this).apply {
@@ -399,11 +405,21 @@ abstract class BaseActivity : AppCompatActivity() {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
         }
-        wrap.addView(ImageView(this).apply {
+        // Soft circular chip so the bell is clearly placed and tappable
+        val iconPad = FrameLayout(this).apply {
+            background = rounded(
+                Color.argb(40, 255, 255, 255),
+                Color.argb(28, 255, 255, 255),
+                dp(22).toFloat()
+            )
+        }
+        iconPad.addView(ImageView(this).apply {
             setImageResource(R.drawable.ic_bell)
             setColorFilter(Color.WHITE)
-            setPadding(dp(10), dp(10), dp(10), dp(10))
-        }, FrameLayout.LayoutParams(dp(44), dp(44)))
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(9), dp(9), dp(9), dp(9))
+        }, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
+        wrap.addView(iconPad, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
         // Badge on bell only (not logo) while user is inside the app
         val unread = NotificationsStore.unreadCount()
         if (unread > 0) {
@@ -417,7 +433,7 @@ abstract class BaseActivity : AppCompatActivity() {
                 minWidth = dp(18)
                 setPadding(dp(5), dp(1), dp(5), dp(1))
             }, FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.END).apply {
-                topMargin = dp(2); rightMargin = dp(2)
+                topMargin = 0; rightMargin = 0
             })
         }
         return wrap
@@ -945,7 +961,13 @@ abstract class BaseActivity : AppCompatActivity() {
                 )
             } else {
                 Cart.add(product.slug, product.name, product.price, heroImage = product.heroImage)
-                NotificationsStore.pushEvent(this, "Added to cart", product.name)
+                NotificationsStore.pushEvent(
+                    this,
+                    "Added to cart",
+                    product.name,
+                    kind = "cart",
+                    imageUrl = product.heroImage
+                )
                 toast("${product.name} added to cart")
             }
         }

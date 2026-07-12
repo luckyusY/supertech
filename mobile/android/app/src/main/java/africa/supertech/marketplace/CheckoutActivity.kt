@@ -415,11 +415,14 @@ class CheckoutActivity : BaseActivity() {
                 setLoading(false)
                 when {
                     result.ok -> {
+                        val orderThumb = Cart.lines.values.firstOrNull()?.heroImage.orEmpty()
                         Cart.clear()
                         NotificationsStore.pushEvent(
                             this,
                             "Order request sent",
-                            "Vendors will contact you to confirm delivery."
+                            "Vendors will contact you to confirm delivery.",
+                            kind = "order",
+                            imageUrl = orderThumb
                         )
                         showSuccess()
                     }

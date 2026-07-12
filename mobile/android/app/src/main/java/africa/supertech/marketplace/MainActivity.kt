@@ -1274,14 +1274,14 @@ class MainActivity : AppCompatActivity() {
         aiFabView.layoutParams = lp
     }
 
-    /** Photo Factory–style dark shopper header: logo | search | phone | WhatsApp */
+    /** Dark shopper header: logo | search | notifications (call/WA live in promo strip). */
     private fun darkShopperHeader(): View {
         val wrap = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(backgroundStrong)
         }
 
-        // Promo strip — tappable shortcuts
+        // Promo strip — tappable shortcuts (Call + WhatsApp moved here from header icons)
         val promo = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
@@ -1382,7 +1382,7 @@ class MainActivity : AppCompatActivity() {
         }, FrameLayout.LayoutParams(dp(42), dp(42), Gravity.END or Gravity.CENTER_VERTICAL))
         row.addView(searchWrap, LinearLayout.LayoutParams(0, dp(42), 1f))
 
-        // Notifications sit here (where call/WhatsApp used to be) — clear trailing control
+        // Notifications replace former call/WhatsApp header icons — trailing, aligned to search
         val notifBtn = FrameLayout(this).apply {
             contentDescription = "Notifications"
             pressable()
@@ -1391,12 +1391,21 @@ class MainActivity : AppCompatActivity() {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
         }
-        notifBtn.addView(ImageView(this).apply {
+        val iconChip = FrameLayout(this).apply {
+            background = rounded(
+                Color.argb(40, 255, 255, 255),
+                Color.argb(28, 255, 255, 255),
+                dp(22).toFloat()
+            )
+        }
+        iconChip.addView(ImageView(this).apply {
             setImageResource(R.drawable.ic_bell)
             setColorFilter(Color.WHITE)
-            setPadding(dp(10), dp(10), dp(10), dp(10))
-        }, FrameLayout.LayoutParams(dp(44), dp(44)))
-        // In-app: badge only on bell (not on logo). While app is open, still show count on bell.
+            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            setPadding(dp(9), dp(9), dp(9), dp(9))
+        }, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
+        notifBtn.addView(iconChip, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
+        // In-app: badge only on bell (never on logo)
         val unread = NotificationsStore.unreadCount()
         if (unread > 0) {
             notifBtn.addView(TextView(this).apply {
@@ -1408,11 +1417,9 @@ class MainActivity : AppCompatActivity() {
                 background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
                 minWidth = dp(18)
                 setPadding(dp(5), dp(1), dp(5), dp(1))
-            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END).apply {
-                topMargin = dp(2); rightMargin = dp(2)
-            })
+            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END))
         }
-        row.addView(notifBtn, LinearLayout.LayoutParams(dp(48), dp(44)).apply { leftMargin = dp(4) })
+        row.addView(notifBtn, LinearLayout.LayoutParams(dp(44), dp(42)).apply { leftMargin = dp(8) })
 
         wrap.addView(row, LinearLayout.LayoutParams(match(), wrap()))
         return wrap

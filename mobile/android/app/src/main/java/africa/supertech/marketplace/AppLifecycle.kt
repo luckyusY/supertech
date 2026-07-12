@@ -7,8 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Tracks whether SuperTech is in the foreground so we can:
- * - skip in-app logo badges while the user is already looking at the app
- * - still post system-tray notifications with sound when needed
+ * - keep the in-app logo clean (no notification badge on logo while open)
+ * - clear launcher badge-holder when user returns to the app
+ * - still post system-tray notifications with SuperTech chime
  */
 object AppLifecycle : Application.ActivityLifecycleCallbacks {
     private val started = AtomicInteger(0)
@@ -22,11 +23,20 @@ object AppLifecycle : Application.ActivityLifecycleCallbacks {
     }
 
     override fun onActivityStarted(activity: Activity) {
+        val wasBackground = started.get() == 0
         if (started.incrementAndGet() == 1) isForeground = true
+        if (wasBackground) {
+            // App opened: remove silent badge-holder so logo / launcher stay clean
+            SystemNotifier.clearLauncherBadge(activity.applicationContext)
+        }
     }
 
     override fun onActivityStopped(activity: Activity) {
-        if (started.decrementAndGet() == 0) isForeground = false
+        if (started.decrementAndGet() == 0) {
+            isForeground = false
+            // Going background: restore launcher badge if there are unread items
+            SystemNotifier.updateBadgeOnly(activity.applicationContext)
+        }
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}

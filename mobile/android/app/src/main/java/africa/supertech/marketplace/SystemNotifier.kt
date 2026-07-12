@@ -12,18 +12,25 @@ import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import java.util.concurrent.Executors
 
 /**
  * System tray notifications with SuperTech logo, optional product image,
- * unique chime, vibration, and launcher badge count.
+ * unique chime, vibration, and launcher badge count (background only).
  */
 object SystemNotifier {
     /** Bump channel id when sound/settings change (Android freezes channel after create). */
     const val CHANNEL_ID = "supertech_alerts_v2"
     private const val CHANNEL_NAME = "SuperTech alerts"
+    private const val BADGE_NOTIFY_ID = 999001
+
+    private val io = Executors.newSingleThreadExecutor()
+    private val main = Handler(Looper.getMainLooper())
 
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -68,6 +75,10 @@ object SystemNotifier {
         return NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 
+    /**
+     * Post a tray notification. Loads product image off the main thread when [imageUrl] is set.
+     * Large icon = SuperTech logo (always); BigPicture = product/store image when available.
+     */
     fun show(
         context: Context,
         title: String,
@@ -76,9 +87,32 @@ object SystemNotifier {
         playSound: Boolean = true,
         imageUrl: String? = null
     ) {
-        ensureChannel(context)
-        if (!canPost(context)) return
+        val app = context.applicationContext
+        ensureChannel(app)
+        if (!canPost(app)) return
 
+        if (imageUrl.isNullOrBlank()) {
+            postNow(app, title, body, itemId, playSound, logo = logoBitmap(app), product = null)
+            return
+        }
+        io.execute {
+            val product = loadRemoteBitmap(imageUrl)
+            val logo = logoBitmap(app)
+            main.post {
+                postNow(app, title, body, itemId, playSound, logo = logo, product = product)
+            }
+        }
+    }
+
+    private fun postNow(
+        context: Context,
+        title: String,
+        body: String,
+        itemId: String,
+        playSound: Boolean,
+        logo: Bitmap?,
+        product: Bitmap?
+    ) {
         val open = Intent(context, NotificationsActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -89,12 +123,10 @@ object SystemNotifier {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val unread = NotificationsStore.unreadCount().coerceAtLeast(1)
-        val logo = logoBitmap(context)
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_bell)
             .setContentTitle(title)
             .setContentText(body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
             .setContentIntent(pi)
@@ -102,20 +134,27 @@ object SystemNotifier {
             .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setColor(0xFFE8770A.toInt())
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+        // Always show SuperTech logo as large icon when no product art
         if (logo != null) {
             builder.setLargeIcon(logo)
         }
-        // Optional product/store image as big picture
-        val big = loadRemoteBitmap(imageUrl)
-        if (big != null) {
+
+        if (product != null) {
+            // Expanded tray: product photo + brand logo collapsed large icon
             builder.setStyle(
                 NotificationCompat.BigPictureStyle()
-                    .bigPicture(big)
+                    .bigPicture(product)
                     .bigLargeIcon(null as Bitmap?)
                     .setSummaryText(body)
+                    .setBigContentTitle(title)
             )
-            builder.setLargeIcon(big)
+            builder.setLargeIcon(product)
+        } else {
+            builder.setStyle(NotificationCompat.BigTextStyle().bigText(body))
         }
+
         if (playSound) {
             builder.setSound(chimeUri(context))
             builder.setVibrate(longArrayOf(0, 80, 60, 80))
@@ -129,22 +168,24 @@ object SystemNotifier {
         }
     }
 
+    /**
+     * Silent launcher badge-holder — only while app is in the background.
+     * In-app, the logo stays clean; unread count lives on the header bell.
+     */
     fun updateBadgeOnly(context: Context) {
         ensureChannel(context)
         if (!canPost(context)) return
         val unread = NotificationsStore.unreadCount()
-        if (unread <= 0) {
-            NotificationManagerCompat.from(context).cancel(999001)
+        if (unread <= 0 || AppLifecycle.isForeground) {
+            clearLauncherBadge(context)
             return
         }
-        // Silent badge-holder for launcher when app is backgrounded
-        if (AppLifecycle.isForeground) return
         val open = Intent(context, NotificationsActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val pi = PendingIntent.getActivity(
             context,
-            999001,
+            BADGE_NOTIFY_ID,
             open,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -161,8 +202,16 @@ object SystemNotifier {
             .setColor(0xFFE8770A.toInt())
         if (logo != null) n.setLargeIcon(logo)
         try {
-            NotificationManagerCompat.from(context).notify(999001, n.build())
+            NotificationManagerCompat.from(context).notify(BADGE_NOTIFY_ID, n.build())
         } catch (_: SecurityException) {
+        }
+    }
+
+    /** Drop silent badge-holder when user opens the app (logo / launcher stays clean). */
+    fun clearLauncherBadge(context: Context) {
+        try {
+            NotificationManagerCompat.from(context).cancel(BADGE_NOTIFY_ID)
+        } catch (_: Exception) {
         }
     }
 
@@ -186,7 +235,18 @@ object SystemNotifier {
             conn.connectTimeout = 4000
             conn.readTimeout = 4000
             conn.instanceFollowRedirects = true
-            conn.inputStream.use { BitmapFactory.decodeStream(it) }
+            conn.inputStream.use { stream ->
+                val raw = BitmapFactory.decodeStream(stream) ?: return null
+                // Keep notification bitmaps modest for tray memory
+                val max = 1024
+                if (raw.width <= max && raw.height <= max) return raw
+                val scale = max.toFloat() / maxOf(raw.width, raw.height)
+                val w = (raw.width * scale).toInt().coerceAtLeast(1)
+                val h = (raw.height * scale).toInt().coerceAtLeast(1)
+                Bitmap.createScaledBitmap(raw, w, h, true).also {
+                    if (it !== raw) raw.recycle()
+                }
+            }
         } catch (_: Exception) {
             null
         }
