@@ -14,12 +14,18 @@ import android.widget.TextView
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.lifecycleScope
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 import java.util.concurrent.Executors
 
@@ -27,6 +33,7 @@ class WelcomeActivity : BaseActivity() {
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var googleButton: Button
     private lateinit var errorText: TextView
+    private lateinit var statusText: TextView
 
     override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.AUTH
 
@@ -77,8 +84,14 @@ class WelcomeActivity : BaseActivity() {
         errorText = text("", 13f, danger).apply {
             visibility = View.GONE
             gravity = Gravity.CENTER
+            setLineSpacing(0f, 1.2f)
         }
-        content.block(errorText, 8)
+        content.block(errorText, 6)
+        statusText = text("", 12f, muted).apply {
+            visibility = View.GONE
+            gravity = Gravity.CENTER
+        }
+        content.block(statusText, 8)
 
         googleButton = secondaryButton("Continue with Google") { beginGoogleSignIn() }
         googleButton.minimumHeight = dp(52)
@@ -118,21 +131,24 @@ class WelcomeActivity : BaseActivity() {
 
     private fun beginGoogleSignIn() {
         hideError()
-        setGoogleLoading(true)
-        // BuildConfig is set at compile time; if blank, pull live client ID from supertech.africa
-        // (same GOOGLE_WEB_CLIENT_ID used on Vercel). Vercel env never ships inside the APK by itself.
-        executor.execute {
-            val clientId = resolveGoogleWebClientId()
-            runOnUiThread {
+        setGoogleLoading(true, "Preparing Google sign-in…")
+        lifecycleScope.launch {
+            try {
+                // Web client ID (same as Vercel GOOGLE_WEB_CLIENT_ID) — NOT the Android client ID.
+                val clientId = withContext(Dispatchers.IO) { resolveGoogleWebClientId() }
                 if (clientId.isBlank()) {
                     setGoogleLoading(false)
                     showError(
-                        "Google client ID is missing. Rebuild the app with SUPERTECH_GOOGLE_WEB_CLIENT_ID, " +
-                            "or ensure https://supertech.africa/api/auth/google/config is online."
+                        "Web client ID missing. Keep GOOGLE_WEB_CLIENT_ID on Vercel (Web type), " +
+                            "rebuild the app, or check /api/auth/google/config."
                     )
-                    return@runOnUiThread
+                    return@launch
                 }
+                setGoogleLoading(true, "Choose a Google account…")
                 launchGoogleCredential(clientId)
+            } catch (error: Exception) {
+                setGoogleLoading(false)
+                showError(error.message ?: "Could not start Google sign-in.")
             }
         }
     }
@@ -149,7 +165,10 @@ class WelcomeActivity : BaseActivity() {
         }
     }
 
-    private fun launchGoogleCredential(clientId: String) {
+    private suspend fun launchGoogleCredential(clientId: String) {
+        // serverClientId must be the OAuth "Web application" client ID.
+        // Separately in Google Cloud you must also create an "Android" OAuth client
+        // with package africa.supertech.marketplace + this APK's SHA-1 fingerprint.
         val googleOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
             .setServerClientId(clientId)
@@ -159,42 +178,74 @@ class WelcomeActivity : BaseActivity() {
             .addCredentialOption(googleOption)
             .build()
 
-        lifecycleScope.launch {
-            try {
-                val result = CredentialManager.create(this@WelcomeActivity)
+        try {
+            val result = withTimeout(90_000L) {
+                CredentialManager.create(this@WelcomeActivity)
                     .getCredential(this@WelcomeActivity, request)
-                val credential = result.credential
-                if (credential is CustomCredential &&
-                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-                ) {
-                    val google = GoogleIdTokenCredential.createFrom(credential.data)
-                    exchangeGoogleToken(google.idToken)
-                } else {
-                    setGoogleLoading(false)
-                    showError("Google returned an unsupported credential. Try another account.")
-                }
-            } catch (_: GoogleIdTokenParsingException) {
-                setGoogleLoading(false)
-                showError("Google account information could not be read. Try again.")
-            } catch (error: GetCredentialException) {
-                setGoogleLoading(false)
-                val msg = error.message.orEmpty()
-                showError(
-                    when {
-                        msg.contains("16:", ignoreCase = true) ||
-                            msg.contains("canceled", ignoreCase = true) ||
-                            msg.contains("cancelled", ignoreCase = true) ->
-                            "Google sign-in was cancelled."
-                        msg.contains("no credentials", ignoreCase = true) ||
-                            msg.contains("Cannot find a matching credential", ignoreCase = true) ->
-                            "No Google account available on this phone. Add a Google account in Settings, then try again."
-                        msg.contains("developer console", ignoreCase = true) ||
-                            msg.contains("API_NOT_CONNECTED", ignoreCase = true) ->
-                            "Google project setup: add this app’s package (africa.supertech.marketplace) and SHA-1 in Google Cloud."
-                        else -> msg.ifBlank { "Google sign-in failed. Try again." }
-                    }
-                )
             }
+            val credential = result.credential
+            if (credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                setGoogleLoading(true, "Signing you in…")
+                val google = GoogleIdTokenCredential.createFrom(credential.data)
+                exchangeGoogleToken(google.idToken)
+            } else {
+                setGoogleLoading(false)
+                showError("Google returned an unsupported credential. Try another account.")
+            }
+        } catch (_: TimeoutCancellationException) {
+            setGoogleLoading(false)
+            showError(
+                "Google took too long. Check internet, then try again. " +
+                    "If it keeps hanging, add an Android OAuth client in Google Cloud " +
+                    "(package africa.supertech.marketplace + debug SHA-1)."
+            )
+        } catch (_: GoogleIdTokenParsingException) {
+            setGoogleLoading(false)
+            showError("Google account information could not be read. Try again.")
+        } catch (_: GetCredentialCancellationException) {
+            setGoogleLoading(false)
+            showError("Google sign-in was cancelled.")
+        } catch (_: NoCredentialException) {
+            setGoogleLoading(false)
+            showError(
+                "No Google account found on this phone, or Google blocked this app. " +
+                    "Add a Google account in Settings, and create an Android OAuth client " +
+                    "in Google Cloud with package africa.supertech.marketplace + SHA-1."
+            )
+        } catch (error: GetCredentialException) {
+            setGoogleLoading(false)
+            showError(friendlyGoogleError(error))
+        } catch (error: Exception) {
+            setGoogleLoading(false)
+            showError(error.message?.ifBlank { null } ?: "Google sign-in failed. Try again.")
+        }
+    }
+
+    private fun friendlyGoogleError(error: GetCredentialException): String {
+        val msg = buildString {
+            append(error.message.orEmpty())
+            append(' ')
+            append(error.javaClass.simpleName)
+        }
+        return when {
+            msg.contains("canceled", ignoreCase = true) ||
+                msg.contains("cancelled", ignoreCase = true) ||
+                msg.contains("16:", ignoreCase = true) ->
+                "Google sign-in was cancelled."
+            msg.contains("no credentials", ignoreCase = true) ||
+                msg.contains("NoCredential", ignoreCase = true) ||
+                msg.contains("Cannot find a matching credential", ignoreCase = true) ->
+                "No matching Google account. Add one in phone Settings, or create an Android OAuth client in Google Cloud (package + SHA-1)."
+            msg.contains("developer console", ignoreCase = true) ||
+                msg.contains("API_NOT_CONNECTED", ignoreCase = true) ||
+                msg.contains("DEVELOPER_ERROR", ignoreCase = true) ||
+                msg.contains("10:", ignoreCase = true) ->
+                "Google Cloud setup: create OAuth client type Android, package africa.supertech.marketplace, add your SHA-1. Keep the Web client ID in the app (do not replace it with the Android client ID)."
+            else ->
+                msg.trim().ifBlank { "Google sign-in failed. Try again." } +
+                    "\n\nTip: Web client ID stays in Vercel/app. Android needs a separate Android OAuth client with SHA-1."
         }
     }
 
@@ -210,16 +261,28 @@ class WelcomeActivity : BaseActivity() {
                         .edit().putBoolean("welcome_complete", true).apply()
                     openMarketplace()
                 } else {
-                    showError(result.errorMessage("Google sign-in could not be completed."))
+                    showError(
+                        result.errorMessage(
+                            "Server rejected Google sign-in. Check GOOGLE_WEB_CLIENT_ID on Vercel matches the Web client ID used by the app."
+                        )
+                    )
                 }
             }
         }
     }
 
-    private fun setGoogleLoading(loading: Boolean) {
+    private fun setGoogleLoading(loading: Boolean, status: String = "") {
         googleButton.isEnabled = !loading
         googleButton.alpha = if (loading) 0.6f else 1f
-        googleButton.text = if (loading) "Connecting to Google..." else "Continue with Google"
+        googleButton.text = if (loading) "Connecting to Google…" else "Continue with Google"
+        if (::statusText.isInitialized) {
+            if (loading && status.isNotBlank()) {
+                statusText.text = status
+                statusText.visibility = View.VISIBLE
+            } else {
+                statusText.visibility = View.GONE
+            }
+        }
     }
 
     private fun showError(message: String) {
