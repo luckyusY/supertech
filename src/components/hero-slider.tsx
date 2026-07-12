@@ -27,7 +27,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   if (slides.length === 0) return null;
 
   return (
-    <section className="hero-swiper relative isolate overflow-hidden border-b border-[var(--line)] bg-white">
+    <section className="hero-swiper relative isolate overflow-hidden border-b border-[var(--line)] bg-white h-[280px] sm:h-[360px] lg:h-[376px] w-full">
       <Swiper
         modules={[Autoplay, Navigation, Pagination, A11y]}
         loop={slides.length > 1}
@@ -39,7 +39,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         }}
         navigation
         pagination={{ clickable: true }}
-        className="h-[280px] sm:h-[360px] lg:h-[376px] w-full"
+        className="w-full h-full"
       >
         {slides.map((slide, index) => (
           <SwiperSlide key={`${slide.title}-${index}`}>
