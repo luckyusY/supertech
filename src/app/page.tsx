@@ -366,22 +366,24 @@ export default async function Home() {
     copyPosition: "left",
   }));
 
-  // Photo Factory visual categories: first product image per category
-  const categoryImageMap = new Map<string, string>();
-  for (const product of publicProducts) {
-    if (!categoryImageMap.has(product.category) && product.heroImage) {
-      categoryImageMap.set(product.category, product.heroImage);
-    }
-  }
+  // Visual categories mapped to generated banner images
   const visualCategories = homepageCategories
     .filter((category) => category.category)
-    .slice(0, 12)
-    .map((category) => ({
-      name: category.name,
-      href: category.href,
-      image: category.category ? categoryImageMap.get(category.category) : undefined,
-      icon: category.icon,
-    }));
+    .slice(0, 14)
+    .map((category) => {
+      const imageName = category.category
+        ?.toLowerCase()
+        .replace(/&/g, "")
+        .replace(/\s+/g, "_")
+        .replace(/_+/g, "_");
+
+      return {
+        name: category.name,
+        href: category.href,
+        image: category.category ? `/categories/${imageName}.jpg` : undefined,
+        icon: category.icon,
+      };
+    });
 
   return (
     <div className="marketplace-campaign-bg pb-20 sm:pb-0">

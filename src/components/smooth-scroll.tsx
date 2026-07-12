@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -19,6 +20,9 @@ function ensureScrollTrigger() {
  * Disabled when the user prefers reduced motion.
  */
 export function SmoothScroll() {
+  const pathname = usePathname();
+  const lenisRef = useRef<Lenis | null>(null);
+
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduceMotion) {
@@ -49,6 +53,8 @@ export function SmoothScroll() {
           ),
         ),
     });
+
+    lenisRef.current = lenis;
 
     document.documentElement.classList.add("lenis", "lenis-smooth");
     document.documentElement.classList.remove("lenis-stopped");
@@ -81,8 +87,18 @@ export function SmoothScroll() {
       delete (window as Window & { __lenis?: Lenis }).__lenis;
       document.documentElement.classList.remove("lenis", "lenis-smooth");
       ScrollTrigger.refresh();
+      lenisRef.current = null;
     };
   }, []);
+
+  // Handle scroll to top on navigation
+  useEffect(() => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname]);
 
   return null;
 }
