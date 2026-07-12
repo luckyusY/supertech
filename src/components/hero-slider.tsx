@@ -64,9 +64,9 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   );
 }
 
-import { Outfit } from "next/font/google";
+import { Caveat } from "next/font/google";
 
-const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "700", "900"] });
+const caveat = Caveat({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 function SlideContent({
   slide,
@@ -115,7 +115,7 @@ function SlideContent({
             {slide.brand}
           </p>
 
-          <h2 className={`${outfit.className} text-[32px] sm:text-[42px] lg:text-[52px] font-black tracking-tight text-white drop-shadow-md leading-[1.05] mb-3 sm:mb-4`}>
+          <h2 className={`${caveat.className} text-[44px] sm:text-[64px] lg:text-[76px] font-bold tracking-tight text-white drop-shadow-md leading-[1.05] mb-3 sm:mb-4`}>
             {slide.title}
           </h2>
 
