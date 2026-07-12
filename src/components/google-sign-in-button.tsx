@@ -114,8 +114,9 @@ export function GoogleSignInButton({
           client_id: CLIENT_ID,
           callback: handleCredential,
           use_fedcm_for_prompt: true,
-          auto_select: false,
+          auto_select: true,
           cancel_on_tap_outside: true,
+          context: "signin",
         });
         const width = Math.min(Math.round(container.clientWidth) || 360, 400);
         id.renderButton(container, {

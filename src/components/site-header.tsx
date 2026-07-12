@@ -151,7 +151,7 @@ export async function SiteHeader() {
                       key={link.href}
                       href={link.href}
                       role="menuitem"
-                      className="block px-3.5 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent)]"
+                      className="block px-3.5 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--accent)] hover:text-white"
                     >
                       {link.label}
                     </Link>

@@ -18,6 +18,7 @@ import {
   Store,
   UserRound,
   X,
+  LogOut,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
 import { HoverScrollRegion } from "@/components/hover-scroll-region";
@@ -121,12 +122,25 @@ function UserCard({ name, email }: { name: string; email: string }) {
     <div className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3.5 py-3">
       <p className="truncate text-sm font-semibold">{name}</p>
       <p className="truncate text-xs text-white/55">{email}</p>
-      <Link
-        href="/"
-        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gold)] hover:underline"
-      >
-        ← Back to store
-      </Link>
+      <div className="mt-2 flex items-center justify-between gap-2">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--gold)] hover:underline"
+        >
+          ← Store
+        </Link>
+        <button
+          onClick={async () => {
+            await fetch("/api/auth/sign-out", { method: "POST" });
+            window.location.assign("/sign-in");
+          }}
+          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-white/70 hover:bg-red-500/10 hover:text-red-400"
+          title="Sign out"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }

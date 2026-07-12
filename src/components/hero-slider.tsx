@@ -39,7 +39,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
         }}
         navigation
         pagination={{ clickable: true }}
-        className="h-[280px] sm:h-[360px] lg:h-[376px]"
+        className="h-[280px] sm:h-[360px] lg:h-[376px] w-full"
       >
         {slides.map((slide, index) => (
           <SwiperSlide key={`${slide.title}-${index}`}>
