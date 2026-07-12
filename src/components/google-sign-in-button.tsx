@@ -11,6 +11,7 @@ type GoogleIdApi = {
     use_fedcm_for_prompt?: boolean;
     auto_select?: boolean;
     cancel_on_tap_outside?: boolean;
+    context?: string;
   }) => void;
   renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
   prompt?: () => void;
