@@ -118,13 +118,38 @@ class WelcomeActivity : BaseActivity() {
 
     private fun beginGoogleSignIn() {
         hideError()
-        val clientId = BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
-        if (clientId.isBlank()) {
-            showError("Google sign-in needs its Google Cloud client ID before it can be used.")
-            return
-        }
-
         setGoogleLoading(true)
+        // BuildConfig is set at compile time; if blank, pull live client ID from supertech.africa
+        // (same GOOGLE_WEB_CLIENT_ID used on Vercel). Vercel env never ships inside the APK by itself.
+        executor.execute {
+            val clientId = resolveGoogleWebClientId()
+            runOnUiThread {
+                if (clientId.isBlank()) {
+                    setGoogleLoading(false)
+                    showError(
+                        "Google client ID is missing. Rebuild the app with SUPERTECH_GOOGLE_WEB_CLIENT_ID, " +
+                            "or ensure https://supertech.africa/api/auth/google/config is online."
+                    )
+                    return@runOnUiThread
+                }
+                launchGoogleCredential(clientId)
+            }
+        }
+    }
+
+    private fun resolveGoogleWebClientId(): String {
+        val baked = BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
+        if (baked.isNotBlank()) return baked
+        return try {
+            val result = Net.get("/api/auth/google/config")
+            if (!result.ok) return ""
+            result.json().optString("clientId").trim()
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    private fun launchGoogleCredential(clientId: String) {
         val googleOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
             .setServerClientId(clientId)
@@ -153,7 +178,22 @@ class WelcomeActivity : BaseActivity() {
                 showError("Google account information could not be read. Try again.")
             } catch (error: GetCredentialException) {
                 setGoogleLoading(false)
-                showError(error.message ?: "Google sign-in was cancelled.")
+                val msg = error.message.orEmpty()
+                showError(
+                    when {
+                        msg.contains("16:", ignoreCase = true) ||
+                            msg.contains("canceled", ignoreCase = true) ||
+                            msg.contains("cancelled", ignoreCase = true) ->
+                            "Google sign-in was cancelled."
+                        msg.contains("no credentials", ignoreCase = true) ||
+                            msg.contains("Cannot find a matching credential", ignoreCase = true) ->
+                            "No Google account available on this phone. Add a Google account in Settings, then try again."
+                        msg.contains("developer console", ignoreCase = true) ||
+                            msg.contains("API_NOT_CONNECTED", ignoreCase = true) ->
+                            "Google project setup: add this app’s package (africa.supertech.marketplace) and SHA-1 in Google Cloud."
+                        else -> msg.ifBlank { "Google sign-in failed. Try again." }
+                    }
+                )
             }
         }
     }
