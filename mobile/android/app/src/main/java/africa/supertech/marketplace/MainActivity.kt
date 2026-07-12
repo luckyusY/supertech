@@ -1301,9 +1301,15 @@ class MainActivity : AppCompatActivity() {
         }
         promoLink("Verified sellers", Color.WHITE) { render(Tab.Stores) }
         promo.addView(text(" · ", 11f, Color.WHITE, Typeface.NORMAL))
-        promoLink("Request") { startActivity(Intent(this, RequestProductActivity::class.java)) }
+        promoLink("Call", gold) {
+            startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$supportPhoneTel")))
+        }
         promo.addView(text(" · ", 11f, Color.WHITE, Typeface.NORMAL))
-        promoLink("Track") { startActivity(Intent(this, TrackOrderActivity::class.java)) }
+        promoLink("WhatsApp", gold) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(supportWhatsApp)))
+        }
+        promo.addView(text(" · ", 11f, Color.WHITE, Typeface.NORMAL))
+        promoLink("Request") { startActivity(Intent(this, RequestProductActivity::class.java)) }
         promo.addView(text(" · ", 11f, Color.WHITE, Typeface.NORMAL))
         promoLink("Sell") { startActivity(Intent(this, BecomeVendorActivity::class.java)) }
         wrap.addView(promo, LinearLayout.LayoutParams(match(), wrap()))
@@ -1315,73 +1321,22 @@ class MainActivity : AppCompatActivity() {
             setBackgroundColor(backgroundStrong)
         }
 
-        // Logo with notification badge when unread exist
+        // Clean logo — no in-app notification badge while using the app
         val logoWrap = FrameLayout(this).apply {
-            contentDescription = "SuperTech · notifications"
-            pressable()
-            setOnClickListener {
-                if (NotificationsStore.unreadCount() > 0) {
-                    startActivity(Intent(this@MainActivity, NotificationsActivity::class.java))
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                } else {
-                    hideSearchSuggestions()
-                    render(Tab.Home)
-                }
-            }
-        }
-        logoWrap.addView(FrameLayout(this).apply {
             background = rounded(Color.TRANSPARENT, Color.WHITE, dp(10).toFloat())
             elevation = dp(3).toFloat()
-            addView(ImageView(this@MainActivity).apply {
-                setImageResource(R.mipmap.ic_launcher)
-                scaleType = ImageView.ScaleType.CENTER_CROP
-            }, FrameLayout.LayoutParams(dp(40), dp(40)))
-        }, FrameLayout.LayoutParams(dp(40), dp(40)))
-        val unreadLogo = NotificationsStore.unreadCount()
-        if (unreadLogo > 0) {
-            logoWrap.addView(TextView(this).apply {
-                text = if (unreadLogo > 9) "9+" else unreadLogo.toString()
-                textSize = 9f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-                background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
-                minWidth = dp(18)
-                setPadding(dp(4), dp(1), dp(4), dp(1))
-            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END).apply {
-                topMargin = dp(-2); rightMargin = dp(-4)
-            })
-        }
-        row.addView(logoWrap, LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(6) })
-
-        // Notification bell on home header
-        row.addView(FrameLayout(this).apply {
-            contentDescription = "Notifications"
+            contentDescription = "SuperTech home"
             pressable()
             setOnClickListener {
-                startActivity(Intent(this@MainActivity, NotificationsActivity::class.java))
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                hideSearchSuggestions()
+                render(Tab.Home)
             }
-            addView(ImageView(this@MainActivity).apply {
-                setImageResource(R.drawable.ic_bell)
-                setColorFilter(Color.WHITE)
-                setPadding(dp(10), dp(10), dp(10), dp(10))
-            }, FrameLayout.LayoutParams(dp(40), dp(40)))
-            val u = NotificationsStore.unreadCount()
-            if (u > 0) {
-                addView(TextView(this@MainActivity).apply {
-                    text = if (u > 9) "9+" else u.toString()
-                    textSize = 9f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(Color.WHITE)
-                    gravity = Gravity.CENTER
-                    background = rounded(Color.TRANSPARENT, danger, dp(9).toFloat())
-                    setPadding(dp(4), 0, dp(4), 0)
-                }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END).apply {
-                    topMargin = dp(2); rightMargin = dp(2)
-                })
-            }
-        }, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(2) })
+        }
+        logoWrap.addView(ImageView(this).apply {
+            setImageResource(R.mipmap.ic_launcher)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }, FrameLayout.LayoutParams(dp(40), dp(40)))
+        row.addView(logoWrap, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(8) })
 
         val search = EditText(this).apply {
             setSingleLine(true)
@@ -1427,26 +1382,37 @@ class MainActivity : AppCompatActivity() {
         }, FrameLayout.LayoutParams(dp(42), dp(42), Gravity.END or Gravity.CENTER_VERTICAL))
         row.addView(searchWrap, LinearLayout.LayoutParams(0, dp(42), 1f))
 
-        fun contactBtn(icon: Int, desc: String, onClick: () -> Unit): View {
-            return ImageButton(this).apply {
-                setImageResource(icon)
-                setColorFilter(Color.WHITE)
-                setBackgroundColor(Color.TRANSPARENT)
-                contentDescription = desc
-                setPadding(dp(8), dp(8), dp(8), dp(8))
-                minimumWidth = dp(44)
-                minimumHeight = dp(44)
-                setOnClickListener { onClick() }
+        // Notifications sit here (where call/WhatsApp used to be) — clear trailing control
+        val notifBtn = FrameLayout(this).apply {
+            contentDescription = "Notifications"
+            pressable()
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, NotificationsActivity::class.java))
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
         }
-
-        row.addView(contactBtn(R.drawable.ic_phone, "Call support") {
-            startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$supportPhoneTel")))
-        }, LinearLayout.LayoutParams(dp(44), dp(44)).apply { leftMargin = dp(2) })
-
-        row.addView(contactBtn(R.drawable.ic_whatsapp, "WhatsApp support") {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(supportWhatsApp)))
-        }, LinearLayout.LayoutParams(dp(44), dp(44)))
+        notifBtn.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_bell)
+            setColorFilter(Color.WHITE)
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+        }, FrameLayout.LayoutParams(dp(44), dp(44)))
+        // In-app: badge only on bell (not on logo). While app is open, still show count on bell.
+        val unread = NotificationsStore.unreadCount()
+        if (unread > 0) {
+            notifBtn.addView(TextView(this).apply {
+                text = if (unread > 9) "9+" else unread.toString()
+                textSize = 10f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
+                minWidth = dp(18)
+                setPadding(dp(5), dp(1), dp(5), dp(1))
+            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END).apply {
+                topMargin = dp(2); rightMargin = dp(2)
+            })
+        }
+        row.addView(notifBtn, LinearLayout.LayoutParams(dp(48), dp(44)).apply { leftMargin = dp(4) })
 
         wrap.addView(row, LinearLayout.LayoutParams(match(), wrap()))
         return wrap
@@ -2989,7 +2955,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun addToCart(product: Product) {
         Cart.add(product.slug, product.name, product.price, heroImage = product.heroImage)
-        NotificationsStore.pushEvent(this, "Added to cart", product.name)
+        NotificationsStore.pushEvent(
+            this,
+            "Added to cart",
+            product.name,
+            kind = "cart",
+            imageUrl = product.heroImage
+        )
         Toast.makeText(this, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
         bumpCartTab()
     }

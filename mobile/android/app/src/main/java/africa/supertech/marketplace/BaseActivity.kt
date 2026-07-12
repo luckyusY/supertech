@@ -350,41 +350,16 @@ abstract class BaseActivity : AppCompatActivity() {
         } else {
             bar.addView(View(this), LinearLayout.LayoutParams(dp(8), dp(1)))
         }
-        // Logo with unread badge (tap opens notifications when unread > 0)
-        NotificationsStore.init(this)
-        val unread = NotificationsStore.unreadCount()
-        val logoWrap = FrameLayout(this).apply {
-            contentDescription = "SuperTech"
-            pressable()
-            setOnClickListener {
-                if (NotificationsStore.unreadCount() > 0) {
-                    startActivity(Intent(this@BaseActivity, NotificationsActivity::class.java))
-                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-                }
-            }
-        }
-        logoWrap.addView(FrameLayout(this).apply {
+        // Clean logo (no in-app notification badge on logo while app is open)
+        bar.addView(FrameLayout(this).apply {
             background = rounded(Color.TRANSPARENT, Color.WHITE, dp(10).toFloat())
             elevation = dp(2).toFloat()
             addView(ImageView(this@BaseActivity).apply {
                 setImageResource(R.mipmap.ic_launcher)
                 scaleType = ImageView.ScaleType.CENTER_CROP
+                contentDescription = "SuperTech"
             }, FrameLayout.LayoutParams(dp(38), dp(38)))
-        }, FrameLayout.LayoutParams(dp(38), dp(38)))
-        if (unread > 0) {
-            logoWrap.addView(TextView(this).apply {
-                text = if (unread > 9) "9+" else unread.toString()
-                textSize = 9f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-                background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
-                setPadding(dp(4), dp(1), dp(4), dp(1))
-            }, FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.END).apply {
-                topMargin = dp(-2); rightMargin = dp(-4)
-            })
-        }
-        bar.addView(logoWrap, LinearLayout.LayoutParams(dp(42), dp(42)).apply { rightMargin = dp(8) })
+        }, LinearLayout.LayoutParams(dp(38), dp(38)).apply { rightMargin = dp(10) })
         val titleCol = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         if (title.isNotBlank()) {
             titleCol.addView(TextView(this).apply {
@@ -409,7 +384,8 @@ abstract class BaseActivity : AppCompatActivity() {
             })
         }
         bar.addView(titleCol, LinearLayout.LayoutParams(0, wc(), 1f))
-        bar.addView(notificationBellButton(), LinearLayout.LayoutParams(dp(44), dp(44)))
+        // Notification control (trailing — same slot as call/WA on home)
+        bar.addView(notificationBellButton(), LinearLayout.LayoutParams(dp(48), dp(44)))
         return bar
     }
 
@@ -428,18 +404,20 @@ abstract class BaseActivity : AppCompatActivity() {
             setColorFilter(Color.WHITE)
             setPadding(dp(10), dp(10), dp(10), dp(10))
         }, FrameLayout.LayoutParams(dp(44), dp(44)))
+        // Badge on bell only (not logo) while user is inside the app
         val unread = NotificationsStore.unreadCount()
         if (unread > 0) {
             wrap.addView(TextView(this).apply {
                 text = if (unread > 9) "9+" else unread.toString()
-                textSize = 9f
+                textSize = 10f
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
-                background = rounded(Color.TRANSPARENT, danger, dp(9).toFloat())
-                setPadding(dp(4), dp(1), dp(4), dp(1))
+                background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
+                minWidth = dp(18)
+                setPadding(dp(5), dp(1), dp(5), dp(1))
             }, FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.END).apply {
-                topMargin = dp(4); rightMargin = dp(4)
+                topMargin = dp(2); rightMargin = dp(2)
             })
         }
         return wrap

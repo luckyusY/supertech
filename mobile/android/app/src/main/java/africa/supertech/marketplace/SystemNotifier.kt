@@ -7,26 +7,34 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.AudioAttributes
-import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 
 /**
- * Posts system tray notifications with sound + launcher badge count.
+ * System tray notifications with SuperTech logo, optional product image,
+ * unique chime, vibration, and launcher badge count.
  */
 object SystemNotifier {
-    const val CHANNEL_ID = "supertech_alerts"
+    /** Bump channel id when sound/settings change (Android freezes channel after create). */
+    const val CHANNEL_ID = "supertech_alerts_v2"
     private const val CHANNEL_NAME = "SuperTech alerts"
-    private var notifIdSeq = 4000
 
     fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val mgr = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // Remove legacy silent-ish channel if present
+        try {
+            mgr.deleteNotificationChannel("supertech_alerts")
+        } catch (_: Exception) {
+        }
         if (mgr.getNotificationChannel(CHANNEL_ID) != null) return
-        val sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val sound = chimeUri(context)
         val attrs = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -36,12 +44,18 @@ object SystemNotifier {
             CHANNEL_NAME,
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
-            description = "Orders, cart, and SuperTech updates"
+            description = "Orders, cart, and SuperTech updates with SuperTech chime"
             enableVibration(true)
+            vibrationPattern = longArrayOf(0, 80, 60, 80)
             setShowBadge(true)
             setSound(sound, attrs)
         }
         mgr.createNotificationChannel(channel)
+    }
+
+    private fun chimeUri(context: Context): Uri {
+        // Unique SuperTech three-note chime packaged in res/raw
+        return Uri.parse("android.resource://${context.packageName}/${R.raw.supertech_chime}")
     }
 
     fun canPost(context: Context): Boolean {
@@ -59,7 +73,8 @@ object SystemNotifier {
         title: String,
         body: String,
         itemId: String = System.currentTimeMillis().toString(),
-        playSound: Boolean = true
+        playSound: Boolean = true,
+        imageUrl: String? = null
     ) {
         ensureChannel(context)
         if (!canPost(context)) return
@@ -73,8 +88,8 @@ object SystemNotifier {
             open,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val unread = NotificationsStore.unreadCount().coerceAtLeast(1)
+        val logo = logoBitmap(context)
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_bell)
             .setContentTitle(title)
@@ -86,15 +101,31 @@ object SystemNotifier {
             .setNumber(unread)
             .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setColor(0xFFE8770A.toInt())
+        if (logo != null) {
+            builder.setLargeIcon(logo)
+        }
+        // Optional product/store image as big picture
+        val big = loadRemoteBitmap(imageUrl)
+        if (big != null) {
+            builder.setStyle(
+                NotificationCompat.BigPictureStyle()
+                    .bigPicture(big)
+                    .bigLargeIcon(null as Bitmap?)
+                    .setSummaryText(body)
+            )
+            builder.setLargeIcon(big)
+        }
         if (playSound) {
-            builder.setSound(sound)
-            builder.setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_VIBRATE)
+            builder.setSound(chimeUri(context))
+            builder.setVibrate(longArrayOf(0, 80, 60, 80))
+        } else {
+            builder.setSilent(true)
         }
         try {
             NotificationManagerCompat.from(context)
                 .notify(itemId.hashCode() and 0x7fffffff, builder.build())
         } catch (_: SecurityException) {
-            // Permission revoked mid-session
         }
     }
 
@@ -106,6 +137,8 @@ object SystemNotifier {
             NotificationManagerCompat.from(context).cancel(999001)
             return
         }
+        // Silent badge-holder for launcher when app is backgrounded
+        if (AppLifecycle.isForeground) return
         val open = Intent(context, NotificationsActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -115,6 +148,7 @@ object SystemNotifier {
             open,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val logo = logoBitmap(context)
         val n = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_bell)
             .setContentTitle("SuperTech")
@@ -123,12 +157,38 @@ object SystemNotifier {
             .setOnlyAlertOnce(true)
             .setSilent(true)
             .setContentIntent(pi)
-            .setOngoing(false)
             .setAutoCancel(true)
-            .build()
+            .setColor(0xFFE8770A.toInt())
+        if (logo != null) n.setLargeIcon(logo)
         try {
-            NotificationManagerCompat.from(context).notify(999001, n)
+            NotificationManagerCompat.from(context).notify(999001, n.build())
         } catch (_: SecurityException) {
+        }
+    }
+
+    private fun logoBitmap(context: Context): Bitmap? {
+        return try {
+            BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun loadRemoteBitmap(url: String?): Bitmap? {
+        if (url.isNullOrBlank()) return null
+        return try {
+            val full = when {
+                url.startsWith("http", true) -> url
+                url.startsWith("/") -> "${Net.BASE}$url"
+                else -> "${Net.BASE}/$url"
+            }
+            val conn = java.net.URL(full).openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 4000
+            conn.readTimeout = 4000
+            conn.instanceFollowRedirects = true
+            conn.inputStream.use { BitmapFactory.decodeStream(it) }
+        } catch (_: Exception) {
+            null
         }
     }
 }

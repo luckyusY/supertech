@@ -18,7 +18,8 @@ object NotificationsStore {
         val kind: String,
         val createdAt: String,
         var read: Boolean,
-        val refId: String = ""
+        val refId: String = "",
+        val imageUrl: String = ""
     )
 
     private const val PREFS = "supertech_notifications"
@@ -49,7 +50,8 @@ object NotificationsStore {
                             kind = o.optString("kind"),
                             createdAt = o.optString("createdAt"),
                             read = o.optBoolean("read") || readIds.contains(id),
-                            refId = o.optString("refId")
+                            refId = o.optString("refId"),
+                            imageUrl = o.optString("imageUrl")
                         )
                     }
                 } catch (_: Exception) {
@@ -108,15 +110,35 @@ object NotificationsStore {
         memory[item.id] = item
         if (persistNow) persist(context)
         if (systemNotify && !item.read) {
-            SystemNotifier.show(context.applicationContext, item.title, item.body, item.id, playSound = true)
-            SystemNotifier.updateBadgeOnly(context.applicationContext)
+            // Always alert the phone tray with SuperTech chime; in-app logo badges stay off while foreground.
+            SystemNotifier.show(
+                context.applicationContext,
+                item.title,
+                item.body,
+                item.id,
+                playSound = true,
+                imageUrl = item.imageUrl.takeIf { it.isNotBlank() }
+            )
+            if (!AppLifecycle.isForeground) {
+                SystemNotifier.updateBadgeOnly(context.applicationContext)
+            }
         }
     }
 
-    fun pushEvent(context: Context, title: String, body: String, kind: String = "app") {
+    fun pushEvent(
+        context: Context,
+        title: String,
+        body: String,
+        kind: String = "app",
+        imageUrl: String = ""
+    ) {
         val id = "evt-${System.currentTimeMillis()}"
         val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).format(Date())
-        pushLocal(context, Item(id, title, body, kind, iso, false), systemNotify = true)
+        pushLocal(
+            context,
+            Item(id, title, body, kind, iso, false, imageUrl = imageUrl),
+            systemNotify = true
+        )
     }
 
     fun all(): List<Item> = memory.values.sortedByDescending { it.createdAt }
@@ -159,6 +181,7 @@ object NotificationsStore {
                     .put("createdAt", item.createdAt)
                     .put("read", item.read)
                     .put("refId", item.refId)
+                    .put("imageUrl", item.imageUrl)
             )
         }
         val readIds = memory.values.filter { it.read }.map { it.id }.toSet()

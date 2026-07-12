@@ -65,6 +65,20 @@ class NotificationsActivity : BaseActivity() {
         if (!item.read) {
             card.background = rounded(brand, Color.WHITE, dp(16).toFloat())
         }
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        // Logo / product image thumb
+        val thumb = android.widget.ImageView(this).apply {
+            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            setImageResource(R.mipmap.ic_launcher)
+            background = rounded(line, softGreen, dp(12).toFloat())
+        }
+        row.addView(thumb, LinearLayout.LayoutParams(dp(48), dp(48)).apply { rightMargin = dp(12) })
+        if (item.imageUrl.isNotBlank()) loadImage(thumb, item.imageUrl)
+
+        val copy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val top = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -76,13 +90,16 @@ class NotificationsActivity : BaseActivity() {
         if (!item.read) {
             top.addView(chip("New", softGreen, brand))
         }
-        card.addView(top)
-        card.addView(text(item.body, 13f, muted).apply {
-            setPadding(0, dp(6), 0, 0)
+        copy.addView(top)
+        copy.addView(text(item.body, 13f, muted).apply {
+            setPadding(0, dp(4), 0, 0)
             setLineSpacing(0f, 1.2f)
+            maxLines = 3
         })
         val whenLabel = item.createdAt.take(16).replace('T', ' ')
-        card.addView(text(whenLabel, 11f, muted).apply { setPadding(0, dp(8), 0, 0) })
+        copy.addView(text(whenLabel, 11f, muted).apply { setPadding(0, dp(6), 0, 0) })
+        row.addView(copy, LinearLayout.LayoutParams(0, wc(), 1f))
+        card.addView(row)
         card.pressable()
         card.setOnClickListener {
             NotificationsStore.markRead(this, item.id)

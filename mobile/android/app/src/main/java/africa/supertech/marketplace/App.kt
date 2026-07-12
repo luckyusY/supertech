@@ -9,6 +9,7 @@ class App : Application() {
         Net.init(this)
         Wishlist.init(this)
         MarketplaceCache.init(this)
+        AppLifecycle.install(this)
         SystemNotifier.ensureChannel(this)
         NotificationsStore.init(this)
     }
