@@ -2703,7 +2703,7 @@ class MainActivity : AppCompatActivity() {
         }, FrameLayout.LayoutParams(match(), dp(52), Gravity.BOTTOM))
 
         cover.addView(TextView(this).apply {
-            text = "✓ Verified"
+            text = "Verified"
             textSize = 10f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)

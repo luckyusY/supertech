@@ -192,7 +192,7 @@ class VendorProfileActivity : BaseActivity() {
         }, FrameLayout.LayoutParams(mp(), dp(90), Gravity.BOTTOM))
 
         cover.addView(TextView(this).apply {
-            text = "✓ Official store"
+            text = "Official store"
             textSize = 11f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
