@@ -15,6 +15,7 @@ class RequestProductActivity : BaseActivity() {
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submit: Button
+    override fun dockHighlight(): DockTab = DockTab.REQUEST
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,8 +27,10 @@ class RequestProductActivity : BaseActivity() {
         val form = card()
         form.block(fieldLabel("What product do you need?"), 0)
         val product = inputField("e.g. MacBook Air M2", Types.TEXT); form.block(product, 10)
+        // Prefill from PDP / deep links
+        intent.getStringExtra("productName")?.takeIf { it.isNotBlank() }?.let { product.setText(it) }
         form.block(fieldLabel("Category"), 0)
-        val category = categoryPicker(); form.block(category, 10)
+        val category = categoryPicker(intent.getStringExtra("category")); form.block(category, 10)
         form.block(fieldLabel("Your name"), 0)
         val name = inputField("Full name", Types.TEXT); form.block(name, 10)
         form.block(fieldLabel("Email"), 0)

@@ -10,6 +10,7 @@ import java.util.Locale
 import java.util.concurrent.Executors
 
 class AdminAnalyticsActivity : BaseActivity() {
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.DASHBOARD
     private val executor = Executors.newSingleThreadExecutor()
     private val money = NumberFormat.getNumberInstance(Locale.US)
     private lateinit var body: LinearLayout

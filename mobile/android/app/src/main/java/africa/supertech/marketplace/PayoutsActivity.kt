@@ -13,6 +13,7 @@ import java.util.concurrent.Executors
 
 /** Native payouts — vendors see their payout history, admins see summaries. */
 class PayoutsActivity : BaseActivity() {
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.DASHBOARD
 
     private val executor = Executors.newSingleThreadExecutor()
     private val money = NumberFormat.getNumberInstance(Locale.US)

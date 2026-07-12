@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 
 /** Native vendor storefront + payment settings → PUT /api/vendor-profile. */
 class StorefrontActivity : BaseActivity() {
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.DASHBOARD
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submit: Button

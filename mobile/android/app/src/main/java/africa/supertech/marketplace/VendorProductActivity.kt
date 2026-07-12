@@ -21,6 +21,8 @@ import java.util.concurrent.Executors
 
 /** Native "list a product" form for vendors → POST /api/product-submissions. */
 class VendorProductActivity : BaseActivity() {
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.DASHBOARD
+    override fun dockHighlight(): DockTab = DockTab.ACCOUNT
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submit: Button
@@ -36,8 +38,8 @@ class VendorProductActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         val session = Net.session()
-        if (session == null || session.role != "vendor" && session.role != "admin") {
-            toast("Sign in as a vendor to list products")
+        if (session == null || (session.role != "vendor" && session.role != "admin")) {
+            toast("Sign in as a vendor or admin to manage products")
             startActivity(android.content.Intent(this, SignInActivity::class.java))
             finish()
             return

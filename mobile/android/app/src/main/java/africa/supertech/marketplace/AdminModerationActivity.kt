@@ -12,6 +12,8 @@ import java.util.concurrent.Executors
 
 /** Native admin moderation — approve/reject vendor applications and products. */
 class AdminModerationActivity : BaseActivity() {
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.DASHBOARD
+    override fun dockHighlight(): DockTab = DockTab.ACCOUNT
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var body: LinearLayout
@@ -32,7 +34,8 @@ class AdminModerationActivity : BaseActivity() {
 
     private fun load() {
         body.removeAllViews()
-        body.addView(text("Loading pending items…", 14f, muted))
+        body.addView(skeletonList(4))
+        animateContentIn(body)
         executor.execute {
             val applications = Net.get("/api/vendor-applications?status=pending")
             val submissions = Net.get("/api/product-submissions?status=pending_review&limit=50")
@@ -61,7 +64,7 @@ class AdminModerationActivity : BaseActivity() {
         } else {
             for (i in 0 until subs.length()) {
                 val p = subs.optJSONObject(i) ?: continue
-                body.addView(submissionCard(p).also { animateIn(it, i) })
+                body.addView(submissionCard(p, i + 1).also { animateIn(it, i) })
             }
         }
     }
@@ -79,17 +82,27 @@ class AdminModerationActivity : BaseActivity() {
         return margin(cardView)
     }
 
-    private fun submissionCard(p: JSONObject): View {
+    private fun submissionCard(p: JSONObject, index: Int = 1): View {
         val id = idOf(p)
-        val cardView = card()
-        cardView.addView(text(p.optString("name", "Product"), 16f, ink, Typeface.BOLD))
-        cardView.addView(text("${p.optString("category", "Tech")} · RWF ${p.optDouble("price", 0.0).toLong()}", 13f, muted))
-        cardView.addView(text("Vendor: ${p.optString("vendorSlug", "—")}", 12f, muted))
-        cardView.addView(actionRow(
-            onApprove = { patchSubmission(id, "approved", cardView) },
-            onReject = { patchSubmission(id, "rejected", cardView) }
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(numberedThumbRow(
+            index = index,
+            imageUrl = p.optString("heroImage"),
+            title = p.optString("name", "Product"),
+            meta = "${p.optString("category", "Tech")} · Vendor: ${p.optString("vendorSlug", "—")}",
+            statusLabel = "In review",
+            statusFill = android.graphics.Color.rgb(252, 246, 230),
+            statusFg = amber,
+            money = "RWF ${p.optDouble("price", 0.0).toLong()}"
         ))
-        return margin(cardView)
+        val cardView = card()
+        cardView.setPadding(dp(12), dp(8), dp(12), dp(12))
+        cardView.addView(actionRow(
+            onApprove = { patchSubmission(id, "approved", col) },
+            onReject = { patchSubmission(id, "rejected", col) }
+        ))
+        col.addView(cardView, LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(10) })
+        return col
     }
 
     private fun actionRow(onApprove: () -> Unit, onReject: () -> Unit): View {
@@ -97,10 +110,10 @@ class AdminModerationActivity : BaseActivity() {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(10), 0, 0)
         }
-        val approve = primaryButton("Approve", onApprove)
-        val reject = secondaryButton("Reject", onReject).apply { setTextColor(danger) }
-        row.addView(approve, LinearLayout.LayoutParams(0, wc(), 1f).apply { rightMargin = dp(5) })
-        row.addView(reject, LinearLayout.LayoutParams(0, wc(), 1f).apply { leftMargin = dp(5) })
+        val approve = successButton("✓ Approve", onApprove)
+        val reject = dangerButton("Reject", onReject)
+        row.addView(approve, LinearLayout.LayoutParams(0, dp(52), 1f).apply { rightMargin = dp(8) })
+        row.addView(reject, LinearLayout.LayoutParams(0, dp(52), 1f).apply { leftMargin = dp(8) })
         return row
     }
 

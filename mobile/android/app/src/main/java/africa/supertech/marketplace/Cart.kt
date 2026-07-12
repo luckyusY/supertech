@@ -2,14 +2,23 @@ package africa.supertech.marketplace
 
 /** App-wide cart shared between the marketplace, product detail and checkout. */
 object Cart {
-    data class Line(val slug: String, val name: String, val price: Double, var qty: Int)
+    data class Line(
+        val slug: String,
+        val name: String,
+        val price: Double,
+        var qty: Int,
+        val heroImage: String = ""
+    )
 
     val lines = LinkedHashMap<String, Line>()
 
-    fun add(slug: String, name: String, price: Double, qty: Int = 1) {
+    fun add(slug: String, name: String, price: Double, qty: Int = 1, heroImage: String = "") {
         val existing = lines[slug]
-        if (existing != null) existing.qty += qty
-        else lines[slug] = Line(slug, name, price, qty)
+        if (existing != null) {
+            existing.qty += qty
+        } else {
+            lines[slug] = Line(slug, name, price, qty, heroImage)
+        }
     }
 
     fun changeQty(slug: String, delta: Int) {

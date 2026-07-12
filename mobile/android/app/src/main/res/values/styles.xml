@@ -17,6 +17,15 @@
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">#FFFFFF</item>
         <item name="android:colorAccent">@color/colorAccent</item>
+        <!-- Directional push stack: forward from right, back from left -->
+        <item name="android:windowAnimationStyle">@style/SuperTech.ActivityAnimation</item>
+    </style>
+
+    <style name="SuperTech.ActivityAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 
 

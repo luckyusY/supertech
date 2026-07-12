@@ -16,22 +16,31 @@ export async function GET() {
     getPublicCategories(),
   ]);
 
+  const vendorBySlug = new Map(vendors.map((v) => [v.slug, v]));
+
   return NextResponse.json({
-    products: products.map((product) => ({
-      slug: product.slug,
-      name: product.name,
-      category: product.category,
-      badge: product.badge,
-      description: product.description,
-      price: product.price,
-      stockLabel: product.stockLabel,
-      shipWindow: product.shipWindow,
-      accent: product.accent,
-      heroImage: product.heroImage,
-      features: product.features,
-      vendorSlug: product.vendorSlug,
-      featured: Boolean(product.featured),
-    })),
+    products: products.map((product) => {
+      const vendor = vendorBySlug.get(product.vendorSlug);
+      return {
+        slug: product.slug,
+        name: product.name,
+        category: product.category,
+        badge: product.badge,
+        description: product.description,
+        price: product.price,
+        compareAt: product.compareAt ?? null,
+        rating: product.rating ?? 0,
+        reviewCount: product.reviewCount ?? 0,
+        stockLabel: product.stockLabel,
+        shipWindow: product.shipWindow,
+        accent: product.accent,
+        heroImage: product.heroImage,
+        features: product.features,
+        vendorSlug: product.vendorSlug,
+        vendorName: vendor?.name ?? product.vendorSlug,
+        featured: Boolean(product.featured),
+      };
+    }),
     featuredProducts: featuredProducts.map((product) => product.slug),
     vendors: vendors.map((vendor) => ({
       slug: vendor.slug,
@@ -45,6 +54,8 @@ export async function GET() {
       categories: vendor.categories,
       activeProducts: vendor.activeProducts,
       fulfillmentRate: vendor.fulfillmentRate,
+      coverImage: vendor.coverImage ?? "",
+      logoMark: vendor.logoMark ?? "",
     })),
     categories,
   });

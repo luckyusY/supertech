@@ -1,20 +1,24 @@
 package africa.supertech.marketplace
 
-import android.content.Intent
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import org.json.JSONObject
-import java.text.NumberFormat
 import java.util.Locale
 import java.util.concurrent.Executors
 
+/**
+ * Official store page — cover header + 2-col retail product cards (same as Home/Shop).
+ */
 class VendorProfileActivity : BaseActivity() {
     private val executor = Executors.newSingleThreadExecutor()
-    private val money = NumberFormat.getNumberInstance(Locale.US)
     private lateinit var body: LinearLayout
     private var slug: String = ""
+    override fun dockHighlight(): DockTab = DockTab.STORES
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +28,7 @@ class VendorProfileActivity : BaseActivity() {
             finish()
             return
         }
-        val content = scaffold("Vendor", withBack = true)
+        val content = scaffold("Official store", withBack = true)
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.block(body, 0)
         load()
@@ -32,7 +36,7 @@ class VendorProfileActivity : BaseActivity() {
 
     private fun load() {
         body.removeAllViews()
-        body.addView(text("Loading vendor...", 14f, muted))
+        body.addView(skeletonList(3))
         executor.execute {
             val result = Net.get("/api/mobile/marketplace")
             runOnUiThread { render(result) }
@@ -42,7 +46,7 @@ class VendorProfileActivity : BaseActivity() {
     private fun render(result: Net.Result) {
         body.removeAllViews()
         if (!result.ok) {
-            body.addView(errorCard(result.errorMessage("Could not load vendor.")))
+            body.addView(errorState(result.errorMessage("Could not load store."), onRetry = { load() }))
             return
         }
         val json = result.json()
@@ -51,71 +55,92 @@ class VendorProfileActivity : BaseActivity() {
             .mapNotNull { vendors?.optJSONObject(it) }
             .firstOrNull { it.optString("slug") == slug }
         if (vendor == null) {
-            body.addView(errorCard("Vendor is not available right now."))
+            body.addView(errorState("Store is not available right now.", onRetry = { load() }))
             return
         }
         body.block(vendorHeader(vendor), 14)
-        body.addView(sectionTitle("Products"))
+        body.addView(sectionTitle("Products from this store"))
+
+        val catalog = ArrayList<CatalogProduct>()
         val products = json.optJSONArray("products")
-        var count = 0
         for (i in 0 until (products?.length() ?: 0)) {
-            val product = products?.optJSONObject(i) ?: continue
-            if (product.optString("vendorSlug") != slug) continue
-            body.addView(productCard(product).also { animateIn(it, count) })
-            count++
+            val p = products?.optJSONObject(i) ?: continue
+            if (p.optString("vendorSlug") != slug) continue
+            catalog.add(
+                CatalogProduct(
+                    slug = p.optString("slug"),
+                    name = p.optString("name", "Product"),
+                    category = p.optString("category", "Tech"),
+                    badge = p.optString("badge"),
+                    description = p.optString("description"),
+                    price = p.optDouble("price", 0.0),
+                    compareAt = p.optDouble("compareAt", 0.0),
+                    rating = p.optDouble("rating", 0.0),
+                    reviewCount = p.optInt("reviewCount", 0),
+                    stockLabel = p.optString("stockLabel"),
+                    accent = p.optString("accent", "#276076"),
+                    heroImage = p.optString("heroImage"),
+                    vendorSlug = p.optString("vendorSlug"),
+                    vendorName = vendor.optString("name"),
+                    featured = p.optBoolean("featured")
+                )
+            )
         }
-        if (count == 0) body.addView(emptyCard("No active products from this vendor yet."))
+        if (catalog.isEmpty()) {
+            body.addView(
+                emptyState(
+                    "No active products yet",
+                    "This store has no live listings right now.",
+                    "Browse marketplace"
+                ) { openMainTab("Home") }
+            )
+        } else {
+            body.addView(text("${catalog.size} products", 12f, muted).apply { setPadding(0, 0, 0, dp(8)) })
+            body.addView(retailProductGrid(catalog))
+        }
+        animateContentIn(body)
     }
 
     private fun vendorHeader(vendor: JSONObject): View {
-        val c = card()
-        c.addView(text(vendor.optString("name", "Vendor"), 23f, ink, Typeface.BOLD))
-        c.addView(text(vendor.optString("headline", "Trusted SuperTech vendor"), 14f, muted))
-        c.addView(text("${vendor.optString("location", "Rwanda")} · ${vendor.optString("responseTime", "Within 24 hours")}", 13f, muted))
-        c.addView(text("${vendor.optInt("activeProducts")} products · ${vendor.optString("fulfillmentRate", "—")} fulfillment", 13f, brand, Typeface.BOLD))
-        val cats = vendor.optJSONArray("categories")?.join(", ")?.replace("\"", "") ?: ""
-        if (cats.isNotBlank()) c.addView(text(cats, 12f, muted))
-        return c
-    }
-
-    private fun productCard(product: JSONObject): View {
-        val c = card()
-        c.pressable()
-        c.setOnClickListener {
-            startActivity(Intent(this, ProductDetailActivity::class.java).apply {
-                putExtra("slug", product.optString("slug"))
-                putExtra("name", product.optString("name"))
-                putExtra("category", product.optString("category"))
-                putExtra("description", product.optString("description"))
-                putExtra("price", product.optDouble("price", 0.0))
-                putExtra("stockLabel", product.optString("stockLabel"))
-                putExtra("shipWindow", product.optString("shipWindow"))
-                putExtra("heroImage", product.optString("heroImage"))
-                putExtra("vendorSlug", product.optString("vendorSlug"))
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val cover = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setBackgroundColor(try {
+                Color.parseColor(vendor.optString("accent", "#0A0F1A"))
+            } catch (_: Exception) {
+                backgroundStrong
             })
+            minimumHeight = dp(120)
         }
-        c.addView(text(product.optString("name", "Product"), 16f, ink, Typeface.BOLD))
-        c.addView(text(product.optString("category", "Tech"), 13f, muted))
-        c.addView(text("RWF ${money.format(product.optDouble("price", 0.0).toLong())}", 15f, brand, Typeface.BOLD))
-        return margin(c)
-    }
+        val coverUrl = vendor.optString("coverImage")
+        if (coverUrl.isNotBlank()) loadImage(cover, coverUrl)
+        col.addView(cover, LinearLayout.LayoutParams(mp(), dp(120)))
 
-    private fun errorCard(message: String): View {
         val c = card()
-        c.addView(text(message, 14f, muted))
-        c.addView(primaryButton("Try again") { load() }, LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(12) })
-        return c
-    }
-
-    private fun emptyCard(message: String): View {
-        val c = card()
-        c.addView(text(message, 14f, muted))
-        return c
-    }
-
-    private fun margin(view: View): View {
-        view.layoutParams = LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(12) }
-        return view
+        c.addView(text(vendor.optString("name", "Vendor"), 22f, ink, Typeface.BOLD))
+        c.addView(text(vendor.optString("headline", "Trusted SuperTech vendor"), 14f, muted).apply {
+            setPadding(0, dp(4), 0, 0)
+        })
+        val rating = vendor.optDouble("rating", 0.0)
+        c.addView(
+            text(
+                buildString {
+                    append(vendor.optString("location", "Rwanda"))
+                    if (rating > 0) append(" · ★ ${String.format(Locale.US, "%.1f", rating)}")
+                    append(" · ${vendor.optInt("activeProducts")} products")
+                },
+                13f,
+                brand,
+                Typeface.BOLD
+            ).apply { setPadding(0, dp(8), 0, 0) }
+        )
+        c.addView(
+            text("Verified SuperTech seller · ${vendor.optString("responseTime", "Fast response")}", 12f, muted).apply {
+                setPadding(0, dp(6), 0, 0)
+            }
+        )
+        col.addView(c, LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(-20) })
+        return col
     }
 
     override fun onDestroy() {

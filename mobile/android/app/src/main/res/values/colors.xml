@@ -5,10 +5,10 @@
     <color name="colorPrimaryDark">#D06A08</color>
     <color name="colorAccent">#E8770A</color>
 
-    <color name="supertechBackground">#F1F1F2</color>
+    <color name="supertechBackground">#F5F4F0</color>
     <color name="supertechForeground">#313133</color>
     <color name="supertechMuted">#75757A</color>
-    <color name="supertechLine">#DCDDE1</color>
+    <color name="supertechLine">#E4E5E9</color>
     <color name="supertechTeal">#276076</color>
     <color name="supertechGold">#F5A62A</color>
     <color name="supertechBackgroundStrong">#0A0F1A</color>
@@ -16,6 +16,14 @@
     <color name="supertechBlueStart">#0B3D91</color>
     <color name="supertechBlueMid">#1565C0</color>
     <color name="supertechBlueEnd">#0D47A1</color>
-    <color name="supertechDanger">#F04438</color>
-    <color name="supertechSuccess">#1FAE5B</color>
+    <color name="supertechDanger">#E02424</color>
+    <color name="supertechSuccess">#0E9F6E</color>
+    <color name="supertechWarning">#D97706</color>
+    <color name="supertechLike">#E11D48</color>
+
+    <!-- Ambient app canvas (SiteCanvas parity) -->
+    <color name="supertechCanvasBase">#F5F4F0</color>
+    <color name="supertechCanvasBaseDashboard">#F3F3F1</color>
+    <color name="supertechCanvasGlowBrand">#E8770A</color>
+    <color name="supertechCanvasGlowCool">#1C5468</color>
 </resources>

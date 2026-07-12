@@ -30,8 +30,11 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import org.json.JSONArray
 import org.json.JSONObject
@@ -52,13 +55,15 @@ class MainActivity : AppCompatActivity() {
     // Website-aligned tokens
     private val ink = Color.rgb(49, 49, 51)
     private val muted = Color.rgb(117, 117, 122)
-    private val line = Color.rgb(220, 221, 225)
-    private val page = Color.rgb(241, 241, 242)
+    private val line = Color.rgb(228, 229, 233)
+    private val page = Color.rgb(245, 244, 240) // canvas base
     private val brand = Color.rgb(232, 119, 10)
     private val brandDark = Color.rgb(208, 106, 8)
     private val softGreen = Color.rgb(255, 244, 229)
     private val amber = Color.rgb(245, 166, 42)
     private val gold = Color.rgb(245, 166, 42)
+    private val likeRose = Color.rgb(225, 29, 72)
+    private val danger = Color.rgb(224, 36, 36)
     private val skeleton = Color.rgb(229, 229, 231)
     private val blue = Color.rgb(39, 96, 118)
     private val backgroundStrong = Color.rgb(10, 15, 26)
@@ -73,8 +78,22 @@ class MainActivity : AppCompatActivity() {
     private lateinit var content: LinearLayout
     private lateinit var bottomTabs: LinearLayout
     private lateinit var swipe: SwipeRefreshLayout
+    private lateinit var shellRoot: LinearLayout
+    private lateinit var shellFrame: FrameLayout
+    private lateinit var pinnedHeader: LinearLayout
+    private lateinit var cartSticky: LinearLayout
+    private lateinit var aiFabView: View
+    private lateinit var appCanvas: AppCanvasView
+    private lateinit var contentScroll: ScrollView
+    private var headerSearch: EditText? = null
+    private var browseOverlay: View? = null
+    private var searchSuggestPanel: LinearLayout? = null
+    private var searchSuggestOpen = false
+    private val suggestHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var suggestRunnable: Runnable? = null
     private var currentTab = Tab.Home
     private var browseSheetOpen = false
+    private var dockHeightPx = 0
     private var isLoading = true
     private var loadError: String? = null
     private var products = emptyList<Product>()
@@ -86,55 +105,170 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        Wishlist.init(this)
         window.statusBarColor = backgroundStrong
         window.navigationBarColor = backgroundStrong
 
-        val root = LinearLayout(this).apply {
+        // Structure:
+        //   appCanvas (ambient, under all)
+        //   pinnedHeader (never scrolls)
+        //   shellFrame [swipe content + browse overlay]
+        //   dock (never covered by browse)
+        shellRoot = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(page)
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+
+        pinnedHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            elevation = dp(8).toFloat()
         }
 
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(0, 0, 0, dp(24))
+            setPadding(0, 0, 0, dp(28))
+            setBackgroundColor(Color.TRANSPARENT)
         }
 
-        val scroll = ScrollView(this).apply {
+        contentScroll = ScrollView(this).apply {
             isFillViewport = false
             overScrollMode = View.OVER_SCROLL_NEVER
+            setBackgroundColor(Color.TRANSPARENT)
             addView(content)
+            viewTreeObserver.addOnScrollChangedListener {
+                if (currentTab == Tab.Home && ::appCanvas.isInitialized) {
+                    val span = (resources.displayMetrics.heightPixels * 1.1f).toInt()
+                    appCanvas.scrollT = AppCanvasView.scrollProgress(scrollY, span)
+                }
+            }
         }
 
         swipe = SwipeRefreshLayout(this).apply {
             setColorSchemeColors(brand)
             setProgressBackgroundColorSchemeColor(Color.WHITE)
             setOnRefreshListener { loadMarketplace(fromSwipe = true) }
-            addView(scroll)
+            setBackgroundColor(Color.TRANSPARENT)
+            addView(contentScroll)
         }
+
+        shellFrame = FrameLayout(this).apply {
+            setBackgroundColor(Color.TRANSPARENT)
+            addView(swipe, FrameLayout.LayoutParams(match(), match()))
+        }
+
+        // Website-style search suggestions dropdown (over content, under header)
+        searchSuggestPanel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.WHITE)
+            elevation = dp(16).toFloat()
+            visibility = View.GONE
+            setPadding(0, 0, 0, dp(8))
+            background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                setStroke(dp(1), line)
+                cornerRadii = floatArrayOf(0f, 0f, 0f, 0f, dp(14).toFloat(), dp(14).toFloat(), dp(14).toFloat(), dp(14).toFloat())
+            }
+        }
+        shellFrame.addView(
+            searchSuggestPanel,
+            FrameLayout.LayoutParams(match(), wrap(), Gravity.TOP)
+        )
 
         bottomTabs = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             setPadding(dp(2), dp(6), dp(2), dp(8))
             setBackgroundColor(backgroundStrong)
-            elevation = dp(16).toFloat()
+            elevation = dp(20).toFloat()
         }
 
-        root.addView(swipe, LinearLayout.LayoutParams(match(), 0, 1f))
-        root.addView(bottomTabs, LinearLayout.LayoutParams(match(), dp(64)))
+        cartSticky = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundColor(Color.WHITE)
+            elevation = dp(12).toFloat()
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            visibility = View.GONE
+        }
 
-        val frame = FrameLayout(this).apply { setBackgroundColor(page) }
-        frame.addView(root, FrameLayout.LayoutParams(match(), match()))
+        shellRoot.addView(pinnedHeader, LinearLayout.LayoutParams(match(), wrap()))
+        shellRoot.addView(shellFrame, LinearLayout.LayoutParams(match(), 0, 1f))
+        shellRoot.addView(cartSticky, LinearLayout.LayoutParams(match(), wrap()))
+        shellRoot.addView(bottomTabs, LinearLayout.LayoutParams(match(), dp(64)))
+
+        // Apply system nav-bar inset so dock never sits under gesture bar
+        ViewCompat.setOnApplyWindowInsetsListener(bottomTabs) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(dp(2), dp(6), dp(2), dp(8) + bars.bottom)
+            v.layoutParams = (v.layoutParams as LinearLayout.LayoutParams).apply {
+                height = dp(56) + bars.bottom + dp(8)
+            }
+            dockHeightPx = v.layoutParams.height
+            insets
+        }
+
+        appCanvas = AppCanvasView(this).apply { zone = AppCanvasView.Zone.STOREFRONT }
+        val outer = FrameLayout(this)
+        outer.addView(appCanvas, FrameLayout.LayoutParams(match(), match()))
+        outer.addView(shellRoot, FrameLayout.LayoutParams(match(), match()))
+        aiFabView = aiFab()
         val fabParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT,
             Gravity.BOTTOM or Gravity.END
-        ).apply { setMargins(0, 0, dp(16), dp(64) + dp(16)) }
-        frame.addView(aiFab(), fabParams)
-        setContentView(frame)
+        ).apply { setMargins(0, 0, dp(16), dp(80)) }
+        outer.addView(aiFabView, fabParams)
+        setContentView(outer)
+        requestNotificationPermissionIfNeeded()
 
-        render(Tab.Home)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when {
+                    searchSuggestOpen -> hideSearchSuggestions()
+                    browseSheetOpen -> closeBrowseSheet()
+                    else -> {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                        isEnabled = true
+                    }
+                }
+            }
+        })
+
+        // Deep-link from global dock / intents, else last shell tab
+        applyOpenIntent(intent)
         loadMarketplace()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        applyOpenIntent(intent)
+    }
+
+    /** Handle openTab / openBrowse extras from global bottom dock on other screens. */
+    private fun applyOpenIntent(intent: Intent?) {
+        val openTab = intent?.getStringExtra("openTab")
+        val openBrowse = intent?.getBooleanExtra("openBrowse", false) == true
+        val startTab = when (openTab) {
+            "Shop" -> Tab.Shop
+            "Stores" -> Tab.Stores
+            "Cart" -> Tab.Cart
+            "Home" -> Tab.Home
+            else -> when (ShellPrefs.lastTab(this, "Home")) {
+                "Shop" -> Tab.Shop
+                "Stores" -> Tab.Stores
+                else -> Tab.Home
+            }
+        }
+        render(startTab)
+        if (openBrowse) {
+            content.post {
+                if (!browseSheetOpen) openBrowseSheet()
+            }
+        }
+        // Clear so rotate/recreate doesn't re-open browse forever
+        intent?.removeExtra("openBrowse")
     }
 
     override fun onDestroy() {
@@ -144,7 +278,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadMarketplace(fromSwipe: Boolean = false) {
-        isLoading = true
+        MarketplaceCache.init(this)
+        // Stale-while-revalidate: paint cache immediately when available
+        val cached = MarketplaceCache.get()
+        if (cached != null && products.isEmpty() && !fromSwipe) {
+            applyMarketplaceJson(cached, fromCache = true)
+        }
+
+        isLoading = products.isEmpty()
         loadError = null
         if (!fromSwipe) render(currentTab)
 
@@ -153,27 +294,22 @@ class MainActivity : AppCompatActivity() {
                 val result = Net.get("/api/mobile/marketplace")
                 if (!result.ok) error(result.errorMessage("Marketplace request failed (${result.code})."))
                 val json = result.json()
-                val nextProducts = parseProducts(json.optJSONArray("products") ?: JSONArray())
-                val nextVendors = parseVendors(json.optJSONArray("vendors") ?: JSONArray())
-                val nextCategories = parseStrings(json.optJSONArray("categories") ?: JSONArray()).ifEmpty {
-                    listOf("All")
-                }
-
+                MarketplaceCache.put(this@MainActivity, json)
                 runOnUiThread {
-                    products = nextProducts
-                    displayedProducts = nextProducts
-                    vendors = nextVendors
-                    categories = if (nextCategories.firstOrNull() == "All") nextCategories else listOf("All") + nextCategories
-                    selectedCategory = "All"
-                    isLoading = false
-                    loadError = null
+                    applyMarketplaceJson(json, fromCache = false)
                     swipe.isRefreshing = false
                     render(currentTab)
                 }
             } catch (error: Exception) {
                 runOnUiThread {
                     isLoading = false
-                    loadError = error.message ?: "Could not load SuperTech data. Check internet and try again."
+                    // Keep cached content if we have it
+                    if (products.isEmpty()) {
+                        loadError = error.message ?: "Could not load SuperTech data. Check internet and try again."
+                    } else {
+                        loadError = null
+                        Toast.makeText(this, "Using saved marketplace · refresh failed", Toast.LENGTH_SHORT).show()
+                    }
                     swipe.isRefreshing = false
                     render(currentTab)
                 }
@@ -181,9 +317,224 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyMarketplaceJson(json: JSONObject, fromCache: Boolean) {
+        val nextProducts = parseProducts(json.optJSONArray("products") ?: JSONArray())
+        val nextVendors = parseVendors(json.optJSONArray("vendors") ?: JSONArray())
+        val nextCategories = parseStrings(json.optJSONArray("categories") ?: JSONArray()).ifEmpty {
+            listOf("All")
+        }
+        products = nextProducts
+        if (selectedCategory == "All" || displayedProducts.isEmpty()) {
+            displayedProducts = nextProducts
+        }
+        vendors = nextVendors
+        categories = if (nextCategories.firstOrNull() == "All") nextCategories else listOf("All") + nextCategories
+        isLoading = false
+        loadError = null
+        if (fromCache && !MarketplaceCache.isFresh()) {
+            // Soft indicator only via re-fetch already running
+        }
+    }
+
+    private fun scheduleSearchSuggest(raw: String) {
+        suggestRunnable?.let { suggestHandler.removeCallbacks(it) }
+        val run = Runnable { showSearchSuggestions(raw) }
+        suggestRunnable = run
+        suggestHandler.postDelayed(run, 160)
+    }
+
+    private fun hideSearchSuggestions() {
+        searchSuggestOpen = false
+        searchSuggestPanel?.visibility = View.GONE
+        searchSuggestPanel?.removeAllViews()
+    }
+
+    /**
+     * Website-like suggest panel: products (image), stores, categories.
+     * Uses local marketplace data immediately (same shapes as /api/search/suggest).
+     */
+    private fun showSearchSuggestions(raw: String) {
+        val panel = searchSuggestPanel ?: return
+        val q = raw.trim().lowercase(Locale.US)
+        panel.removeAllViews()
+
+        // Header
+        val head = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(12), dp(10), dp(8))
+        }
+        head.addView(ImageView(this).apply {
+            setImageResource(R.mipmap.ic_launcher)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(Color.TRANSPARENT, softGreen, dp(6).toFloat())
+        }, LinearLayout.LayoutParams(dp(22), dp(22)).apply { rightMargin = dp(8) })
+        head.addView(text(if (q.isEmpty()) "Popular on SuperTech" else "Suggestions", 13f, ink, Typeface.BOLD), LinearLayout.LayoutParams(0, wrap(), 1f))
+        head.addView(TextView(this).apply {
+            text = "Close"
+            textSize = 12f
+            setTextColor(brand)
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(dp(8), dp(6), dp(8), dp(6))
+            pressable()
+            setOnClickListener { hideSearchSuggestions() }
+        })
+        panel.addView(head)
+
+        val productHits = if (q.isEmpty()) {
+            products.filter { it.featured }.ifEmpty { products }.take(5)
+        } else {
+            products.filter {
+                "${it.name} ${it.category} ${it.vendorName} ${it.description}".lowercase(Locale.US).contains(q)
+            }.take(5)
+        }
+        val vendorHits = if (q.isEmpty()) {
+            vendors.take(3)
+        } else {
+            vendors.filter {
+                "${it.name} ${it.headline} ${it.location}".lowercase(Locale.US).contains(q)
+            }.take(4)
+        }
+        val catHits = if (q.isEmpty()) {
+            categories.filter { it != "All" }.take(6)
+        } else {
+            categories.filter { it != "All" && it.lowercase(Locale.US).contains(q) }.take(5)
+        }
+
+        if (productHits.isEmpty() && vendorHits.isEmpty() && catHits.isEmpty()) {
+            panel.addView(text("No matches — try another word or Request a product", 13f, muted, Typeface.NORMAL).apply {
+                setPadding(dp(14), dp(8), dp(14), dp(14))
+            })
+            panel.visibility = View.VISIBLE
+            searchSuggestOpen = true
+            return
+        }
+
+        if (productHits.isNotEmpty()) {
+            panel.addView(suggestSectionTitle("Products"))
+            productHits.forEach { p ->
+                panel.addView(suggestProductRow(p))
+            }
+        }
+        if (vendorHits.isNotEmpty()) {
+            panel.addView(suggestSectionTitle("Stores"))
+            vendorHits.forEach { v ->
+                panel.addView(suggestVendorRow(v))
+            }
+        }
+        if (catHits.isNotEmpty()) {
+            panel.addView(suggestSectionTitle("Categories"))
+            catHits.forEach { cat ->
+                panel.addView(suggestCategoryRow(cat))
+            }
+        }
+
+        if (q.length >= 2) {
+            panel.addView(TextView(this).apply {
+                text = "Search all for “${raw.trim()}”"
+                textSize = 13f
+                setTextColor(brand)
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(dp(14), dp(12), dp(14), dp(14))
+                pressable()
+                setOnClickListener {
+                    hideSearchSuggestions()
+                    searchProducts(raw)
+                }
+            })
+        }
+
+        panel.visibility = View.VISIBLE
+        searchSuggestOpen = true
+    }
+
+    private fun suggestSectionTitle(label: String): View {
+        return text(label.uppercase(Locale.US), 11f, muted, Typeface.BOLD).apply {
+            setPadding(dp(14), dp(10), dp(14), dp(4))
+            letterSpacing = 0.06f
+        }
+    }
+
+    private fun suggestProductRow(p: Product): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            pressable()
+            setOnClickListener {
+                hideSearchSuggestions()
+                hideKeyboard()
+                openProduct(p)
+            }
+        }
+        val thumb = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setBackgroundColor(p.color)
+            setImageResource(android.R.drawable.ic_menu_gallery)
+            setColorFilter(Color.WHITE)
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+        }
+        if (p.heroImage.isNotBlank()) loadImage(thumb, p.heroImage)
+        row.addView(thumb, LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(10) })
+        val copy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        copy.addView(text(p.name, 14f, ink, Typeface.BOLD).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END })
+        copy.addView(text("RWF ${money.format(p.price)} · ${p.category}", 12f, muted, Typeface.NORMAL).apply { maxLines = 1 })
+        row.addView(copy, LinearLayout.LayoutParams(0, wrap(), 1f))
+        return row
+    }
+
+    private fun suggestVendorRow(v: Vendor): View {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(8), dp(12), dp(8))
+            pressable()
+            setOnClickListener {
+                hideSearchSuggestions()
+                hideKeyboard()
+                startActivity(Intent(this@MainActivity, VendorProfileActivity::class.java).putExtra("slug", v.slug))
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            }
+        }
+        val mark = TextView(this).apply {
+            text = v.logoMark.ifBlank { v.name.take(1).uppercase(Locale.US) }
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            textSize = 13f
+            background = gradient(brand, brandDark, dp(22).toFloat())
+        }
+        row.addView(mark, LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(10) })
+        val copy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        copy.addView(text(v.name, 14f, ink, Typeface.BOLD).apply { maxLines = 1 })
+        copy.addView(text("${v.activeProducts} products · ${v.location}", 12f, muted, Typeface.NORMAL).apply { maxLines = 1 })
+        row.addView(copy, LinearLayout.LayoutParams(0, wrap(), 1f))
+        return row
+    }
+
+    private fun suggestCategoryRow(cat: String): View {
+        return TextView(this).apply {
+            text = cat
+            textSize = 14f
+            setTextColor(ink)
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = rounded(Color.TRANSPARENT, Color.TRANSPARENT, 0f)
+            pressable()
+            setOnClickListener {
+                hideSearchSuggestions()
+                hideKeyboard()
+                selectedCategory = cat
+                displayedProducts = products.filter { it.category.equals(cat, true) }
+                render(Tab.Shop)
+            }
+        }
+    }
+
     private fun searchProducts(query: String) {
         val cleanQuery = query.trim()
         if (cleanQuery.length < 2) return
+        hideSearchSuggestions()
         hideKeyboard()
 
         isLoading = true
@@ -215,11 +566,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun render(tab: Tab) {
         if (tab == Tab.Browse) {
-            showBrowseSheet()
+            // Toggle: open if closed, close if open — dock always stays usable
+            if (browseSheetOpen) closeBrowseSheet() else openBrowseSheet()
             return
         }
+        // Leaving Browse via another real destination closes sheet first
+        if (browseSheetOpen && tab != Tab.Browse) closeBrowseSheet()
+
         if (tab == Tab.Request) {
             startActivity(Intent(this, RequestProductActivity::class.java))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             return
         }
         if (tab == Tab.Account) {
@@ -228,12 +584,33 @@ class MainActivity : AppCompatActivity() {
         }
 
         currentTab = tab
-        browseSheetOpen = false
+        // Remember last real shell tab for smarter relaunch
+        if (tab == Tab.Home || tab == Tab.Shop || tab == Tab.Stores || tab == Tab.Cart) {
+            ShellPrefs.saveTab(this, tab.name)
+        }
+        ensurePinnedHeader()
+        if (tab != Tab.Cart) hideCartSticky()
+        // AI chat must never cover cart checkout sticky
+        if (::aiFabView.isInitialized) {
+            if (tab == Tab.Cart || browseSheetOpen) {
+                aiFabView.visibility = View.GONE
+            } else {
+                aiFabView.visibility = View.VISIBLE
+                positionAiFab(aboveSticky = false)
+            }
+        }
         content.animate().cancel()
         clearTransientAnimations(content)
         content.alpha = 1f
         content.translationY = 0f
         content.removeAllViews()
+        if (::appCanvas.isInitialized) {
+            if (tab == Tab.Home) {
+                // scrollT updates from scroll listener
+            } else {
+                appCanvas.scrollT = 1f // dim canvas when browsing lists
+            }
+        }
         when (tab) {
             Tab.Home -> renderHome()
             Tab.Shop -> renderShop()
@@ -252,9 +629,14 @@ class MainActivity : AppCompatActivity() {
             .start()
     }
 
+    /** Keeps dark header fixed above the scroll surface (website mobile chrome). */
+    private fun ensurePinnedHeader() {
+        if (pinnedHeader.childCount == 0) {
+            pinnedHeader.addView(darkShopperHeader(), LinearLayout.LayoutParams(match(), wrap()))
+        }
+    }
+
     private fun renderHome() {
-        // Photo Factory dark header + Adorama hero + blue category rail
-        content.addView(darkShopperHeader())
         content.addView(heroCarousel())
         if (!isLoading && categories.size > 1) {
             content.addView(blueCategoryRail(categories.filterNot { it == "All" }.take(12)))
@@ -274,10 +656,11 @@ class MainActivity : AppCompatActivity() {
                 addView(featuredCarousel(featured))
             }
 
-            val fresh = products.filterNot { it.featured }.take(4).ifEmpty { products.take(4) }
-            if (fresh.isNotEmpty() && products.size > featured.size) {
+            // 2-col grid for consistency with Shop (not horizontal list cards)
+            val fresh = products.filterNot { it.featured }.take(6).ifEmpty { products.take(6) }
+            if (fresh.isNotEmpty()) {
                 addView(sectionHeader("Fresh on the market", "Latest products from vendors", "See all") { render(Tab.Shop) })
-                fresh.forEachIndexed { i, p -> addView(productCard(p).animateIn(i)) }
+                addView(productGrid(fresh))
             }
 
             if (vendors.isNotEmpty()) {
@@ -285,7 +668,7 @@ class MainActivity : AppCompatActivity() {
                 addView(vendorStrip(vendors))
             }
 
-            addView(sectionHeader("Quick actions", "Move faster inside the app", null) {})
+            addView(sectionHeader("Quick actions", "Most-used shopper tools", null) {})
             addView(actionGrid())
         })
     }
@@ -299,8 +682,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderShop() {
-        content.addView(darkShopperHeader())
         content.addView(paddedSection {
+            val title = when {
+                selectedCategory != "All" -> selectedCategory
+                else -> "Shop"
+            }
+            addView(sectionHeader(title, "Browse verified listings", null) {})
             addView(categoryChips(categories))
             if (isLoading) {
                 repeat(4) { addView(skeletonCard()) }
@@ -308,7 +695,10 @@ class MainActivity : AppCompatActivity() {
             }
             stateBlock()?.let { addView(it) }
             if (loadError == null && displayedProducts.isEmpty()) {
-                addView(emptyCard("No products found", "Try a different search or refresh the marketplace."))
+                addView(emptyCard("No products found", "Try another category or request the product."))
+                addView(primaryButton("Request a product") {
+                    startActivity(Intent(this@MainActivity, RequestProductActivity::class.java))
+                })
                 return@paddedSection
             }
             if (loadError == null) {
@@ -331,6 +721,7 @@ class MainActivity : AppCompatActivity() {
                     rightMargin = if (col == 0) dp(5) else 0
                     bottomMargin = dp(10)
                 }
+                // Same retail product card everywhere (Home / Shop / popular / empty cart)
                 rowView.addView(gridProductCard(product).animateIn(rowIndex), lp)
             }
             if (pair.size == 1) {
@@ -341,85 +732,283 @@ class MainActivity : AppCompatActivity() {
         return grid
     }
 
+    /**
+     * Website-parity retail card (product-card.tsx):
+     * image + badges + white ♥ · vendor·★ · title · price · full Add + WhatsApp footer
+     */
     private fun gridProductCard(product: Product): View {
+        val mode = productMode(product.category)
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = rounded(line, Color.WHITE, dp(16).toFloat())
+            background = rounded(line, Color.WHITE, dp(14).toFloat())
+            elevation = dp(3).toFloat()
             clipToOutline = true
             outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(0, 0, view.width, view.height, dp(16).toFloat())
+                    outline.setRoundRect(0, 0, view.width, view.height, dp(14).toFloat())
                 }
             }
+        }
+
+        val imageH = dp(148)
+        val imageWrap = FrameLayout(this).apply {
             pressable()
             setOnClickListener { openProduct(product) }
         }
-
-        val imageWrap = FrameLayout(this)
         val image = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
+            scaleType = ImageView.ScaleType.CENTER_CROP
             setImageResource(android.R.drawable.ic_menu_gallery)
             setColorFilter(Color.WHITE)
             setBackgroundColor(product.color)
             setPadding(dp(24), dp(24), dp(24), dp(24))
         }
         loadImage(image, product.heroImage)
-        imageWrap.addView(image, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, dp(124)))
+        imageWrap.addView(image, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, imageH))
 
-        val tag = product.stockLabel.ifBlank { product.badge }
-        if (tag.isNotBlank()) {
-            imageWrap.addView(TextView(this).apply {
-                text = tag
-                textSize = 9f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(brandDark)
-                background = rounded(Color.TRANSPARENT, Color.argb(235, 255, 255, 255), dp(9).toFloat())
-                setPadding(dp(7), dp(3), dp(7), dp(3))
-            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.START).apply {
-                topMargin = dp(7); leftMargin = dp(7)
-            })
-        }
-        card.addView(imageWrap, LinearLayout.LayoutParams(match(), dp(124)))
-
-        val copy = LinearLayout(this).apply {
+        // Badges top-start (mode / discount / stock / badge)
+        val badgeCol = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(11), dp(9), dp(11), dp(11))
+            setPadding(dp(8), dp(8), dp(8), 0)
         }
-        copy.addView(text(product.name, 13f, ink, Typeface.BOLD).apply { maxLines = 2; minLines = 2 })
-        val seller = vendorName(product.vendorSlug)
-        copy.addView(text(seller?.let { "by $it" } ?: product.category, 10f, muted, Typeface.NORMAL).apply {
+        val discount = if (mode == "shop" && product.compareAt > product.price && product.compareAt > 0) {
+            (((1.0 - product.price / product.compareAt) * 100).toInt()).coerceIn(1, 99)
+        } else null
+        if (discount != null) {
+            badgeCol.addView(TextView(this).apply {
+                text = "-$discount%"
+                textSize = 10f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+                background = rounded(Color.TRANSPARENT, brand, dp(6).toFloat())
+                setPadding(dp(7), dp(3), dp(7), dp(3))
+            }, LinearLayout.LayoutParams(wrap(), wrap()).apply { bottomMargin = dp(4) })
+        }
+        when (mode) {
+            "motors", "property" -> {
+                badgeCol.addView(TextView(this).apply {
+                    text = if (mode == "motors") "Motors" else "Property"
+                    textSize = 9f
+                    typeface = Typeface.DEFAULT_BOLD
+                    setTextColor(Color.WHITE)
+                    background = rounded(Color.TRANSPARENT, blueMid, dp(6).toFloat())
+                    setPadding(dp(7), dp(3), dp(7), dp(3))
+                })
+            }
+            else -> {
+                val tag = product.badge.ifBlank { product.stockLabel }
+                if (tag.isNotBlank()) {
+                    badgeCol.addView(TextView(this).apply {
+                        text = tag
+                        textSize = 9f
+                        typeface = Typeface.DEFAULT_BOLD
+                        setTextColor(ink)
+                        background = rounded(Color.TRANSPARENT, Color.argb(242, 255, 255, 255), dp(6).toFloat())
+                        setPadding(dp(7), dp(3), dp(7), dp(3))
+                        maxLines = 1
+                        ellipsize = android.text.TextUtils.TruncateAt.END
+                    })
+                }
+            }
+        }
+        imageWrap.addView(badgeCol, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.START))
+
+        // Website-style white wishlist circle
+        imageWrap.addView(
+            likeButtonOnImage(product.slug),
+            FrameLayout.LayoutParams(dp(34), dp(34), Gravity.TOP or Gravity.END).apply {
+                topMargin = dp(8); rightMargin = dp(8)
+            }
+        )
+
+        card.addView(imageWrap, LinearLayout.LayoutParams(match(), imageH))
+
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(10), dp(10), dp(10), dp(8))
+            pressable()
+            setOnClickListener { openProduct(product) }
+        }
+
+        // Vendor · ★ rating | New
+        val seller = product.vendorName.ifBlank { vendorName(product.vendorSlug).orEmpty() }
+            .ifBlank { product.category }
+        val ratingLabel = if (product.reviewCount > 0 && product.rating > 0) {
+            String.format(Locale.US, "%.1f", product.rating)
+        } else "New"
+        val metaRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        metaRow.addView(text(seller, 11f, muted, Typeface.NORMAL).apply {
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(0, dp(3), 0, dp(4))
+        }, LinearLayout.LayoutParams(0, wrap(), 1f))
+        metaRow.addView(text("·", 11f, line, Typeface.NORMAL).apply {
+            setPadding(dp(4), 0, dp(4), 0)
+        })
+        val starRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        starRow.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_star)
+            setColorFilter(gold)
+        }, LinearLayout.LayoutParams(dp(12), dp(12)).apply { rightMargin = dp(3) })
+        starRow.addView(text(ratingLabel, 11f, ink, Typeface.BOLD))
+        metaRow.addView(starRow)
+        body.addView(metaRow)
+
+        body.addView(text(product.name, 13f, ink, Typeface.BOLD).apply {
+            maxLines = 2
+            minLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setPadding(0, dp(6), 0, dp(4))
         })
 
+        // Price block
         val priceRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        priceRow.addView(text("RWF ${money.format(product.price)}", 13f, brand, Typeface.BOLD).apply {
+        priceRow.addView(text("RWF ${money.format(product.price)}", 15f, brand, Typeface.BOLD).apply {
             maxLines = 1
-        }, LinearLayout.LayoutParams(0, wrap(), 1f))
-        priceRow.addView(TextView(this).apply {
-            text = "＋"
-            textSize = 16f
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        if (mode != "shop") {
+            priceRow.addView(text(" asking", 10f, muted, Typeface.BOLD).apply {
+                setPadding(dp(4), 0, 0, 0)
+            })
+        } else if (product.compareAt > product.price) {
+            priceRow.addView(TextView(this).apply {
+                text = "RWF ${money.format(product.compareAt)}"
+                textSize = 11f
+                setTextColor(muted)
+                paintFlags = paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+                setPadding(dp(6), 0, 0, 0)
+            })
+        }
+        body.addView(priceRow)
+        if (product.stockLabel.isNotBlank() && mode == "shop") {
+            body.addView(text(product.stockLabel, 11f, muted, Typeface.NORMAL).apply {
+                setPadding(0, dp(2), 0, 0)
+                maxLines = 1
+            })
+        }
+        card.addView(body)
+
+        // Footer: full Add/Enquire + WhatsApp (website parity)
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+            background = GradientDrawable().apply {
+                setColor(Color.WHITE)
+                setStroke(dp(1), line)
+            }
+        }
+
+        val primaryLabel = when (mode) {
+            "motors", "property" -> "Enquire"
+            else -> if (isOutOfStock(product.stockLabel)) "Request" else "Add"
+        }
+        val primary = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            background = rounded(Color.TRANSPARENT, brand, dp(14).toFloat())
-            contentDescription = "Add to cart"
+            background = rounded(Color.TRANSPARENT, brand, dp(8).toFloat())
+            minimumHeight = dp(40)
             pressable()
-            setOnClickListener { addToCart(product) }
-        }, LinearLayout.LayoutParams(dp(28), dp(28)))
-        copy.addView(priceRow)
-        card.addView(copy)
+            setOnClickListener {
+                when {
+                    mode != "shop" -> openProduct(product)
+                    isOutOfStock(product.stockLabel) -> {
+                        startActivity(Intent(this@MainActivity, RequestProductActivity::class.java).apply {
+                            putExtra("productName", product.name)
+                            putExtra("category", product.category)
+                        })
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                    }
+                    else -> addToCart(product)
+                }
+            }
+        }
+        if (mode == "shop" && !isOutOfStock(product.stockLabel)) {
+            primary.addView(ImageView(this).apply {
+                setImageResource(R.drawable.ic_cart)
+                setColorFilter(Color.WHITE)
+            }, LinearLayout.LayoutParams(dp(16), dp(16)).apply { rightMargin = dp(6) })
+        }
+        primary.addView(text(primaryLabel, 12f, Color.WHITE, Typeface.BOLD))
+        footer.addView(primary, LinearLayout.LayoutParams(0, dp(40), 1f).apply { rightMargin = dp(6) })
+
+        val wa = FrameLayout(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.rgb(31, 174, 91), dp(8).toFloat())
+            contentDescription = "WhatsApp about ${product.name}"
+            pressable()
+            setOnClickListener {
+                val msg = Uri.encode("Hello, I'm interested in ${product.name} on SuperTech.")
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/250783998231?text=$msg")))
+            }
+        }
+        wa.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_whatsapp)
+            setColorFilter(Color.WHITE)
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+        }, FrameLayout.LayoutParams(dp(40), dp(40)))
+        footer.addView(wa, LinearLayout.LayoutParams(dp(40), dp(40)))
+        card.addView(footer)
+
         return card
+    }
+
+    private fun isOutOfStock(stockLabel: String): Boolean {
+        val v = stockLabel.trim().lowercase(Locale.US)
+        return v.contains("out of stock") || v.contains("sold out") || v == "unavailable"
+    }
+
+    /** Website-style white circle wishlist control. */
+    private fun likeButtonOnImage(slug: String): View {
+        val wrap = FrameLayout(this).apply {
+            background = rounded(Color.argb(20, 0, 0, 0), Color.argb(245, 255, 255, 255), dp(17).toFloat())
+            elevation = dp(2).toFloat()
+            contentDescription = if (Wishlist.isSaved(slug)) "Remove from saved" else "Save product"
+            isClickable = true
+            pressable()
+        }
+        val icon = ImageView(this).apply {
+            val saved = Wishlist.isSaved(slug)
+            setImageResource(if (saved) R.drawable.ic_heart_fill else R.drawable.ic_heart)
+            setColorFilter(if (saved) likeRose else muted)
+            setPadding(dp(8), dp(8), dp(8), dp(8))
+        }
+        wrap.addView(icon, FrameLayout.LayoutParams(dp(34), dp(34)))
+        wrap.setOnClickListener {
+            val saved = Wishlist.toggle(slug)
+            icon.setImageResource(if (saved) R.drawable.ic_heart_fill else R.drawable.ic_heart)
+            icon.setColorFilter(if (saved) likeRose else muted)
+            wrap.contentDescription = if (saved) "Remove from saved" else "Save product"
+            icon.animate().scaleX(0.8f).scaleY(0.8f).setDuration(80).withEndAction {
+                icon.animate().scaleX(1.12f).scaleY(1.12f).setDuration(100).withEndAction {
+                    icon.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+                }.start()
+            }.start()
+            Toast.makeText(this, if (saved) "Saved" else "Removed from saved", Toast.LENGTH_SHORT).show()
+        }
+        return wrap
+    }
+
+    private fun productMode(category: String): String {
+        val c = category.lowercase(Locale.US)
+        if (c.contains("car") || c.contains("motor")) return "motors"
+        if (c.contains("apartment") || c.contains("land") || c.contains("commercial") || c.contains("property")) {
+            return "property"
+        }
+        return "shop"
     }
 
     private fun vendorName(slug: String): String? =
         slug.takeIf { it.isNotBlank() }?.let { s -> vendors.firstOrNull { it.slug == s }?.name }
 
     private fun renderVendors() {
-        content.addView(darkShopperHeader())
         content.addView(paddedSection {
             addView(sectionHeader("Official stores", "Verified sellers on SuperTech", null) {})
             if (isLoading) {
@@ -552,26 +1141,137 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderCart() {
-        content.addView(darkShopperHeader())
         content.addView(paddedSection {
-            addView(sectionHeader("Cart", "Review selected products before checkout", null) {})
+            // Brand cart header
+            val head = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(4), 0, dp(12))
+            }
+            head.addView(ImageView(this@MainActivity).apply {
+                setImageResource(R.mipmap.ic_launcher)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                background = rounded(Color.TRANSPARENT, Color.WHITE, dp(10).toFloat())
+            }, LinearLayout.LayoutParams(dp(36), dp(36)).apply { rightMargin = dp(10) })
+            val headCopy = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+            headCopy.addView(text("Your cart", 20f, ink, Typeface.BOLD))
+            headCopy.addView(text("SuperTech · Review before checkout", 12f, muted, Typeface.NORMAL))
+            head.addView(headCopy, LinearLayout.LayoutParams(0, wrap(), 1f))
+            addView(head)
+
             val lines = Cart.lines.values.toList()
             if (lines.isEmpty()) {
-                addView(emptyCard("Your cart is empty", "Add products from the shop and they will appear here."))
-                addView(primaryButton("Browse products") { render(Tab.Shop) })
+                hideCartSticky()
+                val empty = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(dp(16), dp(28), dp(16), dp(20))
+                    background = rounded(line, Color.WHITE, dp(16).toFloat())
+                    elevation = dp(2).toFloat()
+                }
+                empty.addView(ImageView(this@MainActivity).apply {
+                    setImageResource(R.drawable.ic_cart)
+                    setColorFilter(brand)
+                }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { bottomMargin = dp(12) })
+                empty.addView(text("Your cart is empty", 18f, ink, Typeface.BOLD).apply { gravity = Gravity.CENTER })
+                empty.addView(text("Add products from the shop — they’ll show up here with photos and totals.", 13f, muted, Typeface.NORMAL).apply {
+                    gravity = Gravity.CENTER
+                    setPadding(dp(8), dp(8), dp(8), dp(16))
+                })
+                empty.addView(primaryButton("Browse products") { render(Tab.Shop) }.apply { minimumHeight = dp(52) })
+                addView(empty.withMargins(bottom = 16))
+                val picks = products.filter { it.featured }.ifEmpty { products }.take(4)
+                if (picks.isNotEmpty()) {
+                    addView(sectionHeader("Popular now", "Same product cards as the shop", "See all") { render(Tab.Shop) })
+                    addView(productGrid(picks))
+                }
                 return@paddedSection
             }
             lines.forEachIndexed { i, line ->
                 addView(cartCard(line).animateIn(i))
             }
-            addView(divider())
-            addView(summaryRow("Items", Cart.count().toString()))
-            addView(summaryRow("Estimated total", "RWF ${money.format(Cart.total())}"))
-            addView(primaryButton("Checkout") {
-                startActivity(Intent(this@MainActivity, CheckoutActivity::class.java))
+            // Summary card
+            val sum = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(16), dp(16), dp(16))
+                background = rounded(line, Color.WHITE, dp(16).toFloat())
+                elevation = dp(3).toFloat()
+            }
+            sum.addView(text("Order summary", 15f, ink, Typeface.BOLD))
+            sum.addView(summaryRow("Items", Cart.count().toString()))
+            sum.addView(summaryRow("Estimated total", "RWF ${money.format(Cart.total())}"))
+            sum.addView(secondaryButton("Continue shopping") { render(Tab.Shop) }.apply {
+                minimumHeight = dp(48)
+            }.also { v ->
+                // layout margin via parent later
             })
-            addView(secondaryButton("Continue shopping") { render(Tab.Shop) })
+            addView(sum.withMargins(bottom = 12))
+            val cont = sum.getChildAt(sum.childCount - 1)
+            (cont.layoutParams as? LinearLayout.LayoutParams)?.topMargin = dp(12)
+            showCartSticky()
         })
+    }
+
+    private fun showCartSticky() {
+        cartSticky.removeAllViews()
+        cartSticky.visibility = View.VISIBLE
+        cartSticky.setBackgroundColor(Color.WHITE)
+        cartSticky.elevation = dp(16).toFloat()
+        cartSticky.setPadding(dp(14), dp(12), dp(14), dp(12))
+        cartSticky.background = GradientDrawable().apply {
+            setColor(Color.WHITE)
+            setStroke(dp(1), line)
+        }
+        val logo = ImageView(this).apply {
+            setImageResource(R.mipmap.ic_launcher)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            background = rounded(Color.TRANSPARENT, softGreen, dp(8).toFloat())
+        }
+        cartSticky.addView(logo, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(10) })
+        val copy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        copy.addView(text("${Cart.count()} items · SuperTech", 12f, muted, Typeface.NORMAL))
+        copy.addView(text("RWF ${money.format(Cart.total())}", 18f, brand, Typeface.BOLD))
+        cartSticky.addView(copy, LinearLayout.LayoutParams(0, wrap(), 1f))
+        val checkout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            background = gradient(brand, brandDark, dp(12).toFloat())
+            elevation = dp(4).toFloat()
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+            pressable()
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, CheckoutActivity::class.java))
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            }
+        }
+        // Hide AI chat FAB so it never covers Checkout on cart
+        if (::aiFabView.isInitialized) aiFabView.visibility = View.GONE
+
+        checkout.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_cart)
+            setColorFilter(Color.WHITE)
+        }, LinearLayout.LayoutParams(dp(18), dp(18)).apply { rightMargin = dp(8) })
+        checkout.addView(text("Checkout", 14f, Color.WHITE, Typeface.BOLD))
+        cartSticky.addView(checkout, LinearLayout.LayoutParams(wrap(), dp(48)))
+    }
+
+    private fun hideCartSticky() {
+        cartSticky.removeAllViews()
+        cartSticky.visibility = View.GONE
+        // Restore AI FAB when leaving cart (unless Browse sheet open)
+        if (::aiFabView.isInitialized && !browseSheetOpen && currentTab != Tab.Cart) {
+            aiFabView.visibility = View.VISIBLE
+            positionAiFab(aboveSticky = false)
+        }
+    }
+
+    private fun positionAiFab(aboveSticky: Boolean) {
+        if (!::aiFabView.isInitialized) return
+        val lp = aiFabView.layoutParams as? FrameLayout.LayoutParams ?: return
+        // Cart sticky ~56dp + dock ~64 + margin; normal only dock
+        val bottom = if (aboveSticky) dp(150) else dp(88)
+        lp.setMargins(0, 0, dp(16), bottom)
+        aiFabView.layoutParams = lp
     }
 
     /** Photo Factory–style dark shopper header: logo | search | phone | WhatsApp */
@@ -581,16 +1281,32 @@ class MainActivity : AppCompatActivity() {
             setBackgroundColor(backgroundStrong)
         }
 
-        // Promo strip
-        wrap.addView(TextView(this).apply {
-            text = "Verified sellers  ·  Request · Track  ·  Sell"
-            textSize = 11f
+        // Promo strip — tappable shortcuts
+        val promo = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(dp(8), dp(6), dp(8), dp(4))
+            setPadding(dp(6), dp(6), dp(6), dp(4))
             setBackgroundColor(backgroundStrong)
-        }, LinearLayout.LayoutParams(match(), wrap()))
+        }
+        fun promoLink(label: String, color: Int = gold, onClick: () -> Unit) {
+            promo.addView(TextView(this).apply {
+                text = label
+                textSize = 11f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(color)
+                setPadding(dp(6), dp(2), dp(6), dp(2))
+                pressable()
+                setOnClickListener { onClick() }
+            })
+        }
+        promoLink("Verified sellers", Color.WHITE) { render(Tab.Stores) }
+        promo.addView(text(" · ", 11f, Color.WHITE, Typeface.NORMAL))
+        promoLink("Request") { startActivity(Intent(this, RequestProductActivity::class.java)) }
+        promo.addView(text(" · ", 11f, Color.WHITE, Typeface.NORMAL))
+        promoLink("Track") { startActivity(Intent(this, TrackOrderActivity::class.java)) }
+        promo.addView(text(" · ", 11f, Color.WHITE, Typeface.NORMAL))
+        promoLink("Sell") { startActivity(Intent(this, BecomeVendorActivity::class.java)) }
+        wrap.addView(promo, LinearLayout.LayoutParams(match(), wrap()))
 
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -599,39 +1315,117 @@ class MainActivity : AppCompatActivity() {
             setBackgroundColor(backgroundStrong)
         }
 
-        val logo = ImageView(this).apply {
-            setImageResource(R.mipmap.ic_launcher)
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            background = rounded(Color.TRANSPARENT, Color.WHITE, dp(8).toFloat())
-            clipToOutline = true
-            contentDescription = "SuperTech"
+        // Logo with notification badge when unread exist
+        val logoWrap = FrameLayout(this).apply {
+            contentDescription = "SuperTech · notifications"
+            pressable()
+            setOnClickListener {
+                if (NotificationsStore.unreadCount() > 0) {
+                    startActivity(Intent(this@MainActivity, NotificationsActivity::class.java))
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+                } else {
+                    hideSearchSuggestions()
+                    render(Tab.Home)
+                }
+            }
         }
-        row.addView(logo, LinearLayout.LayoutParams(dp(34), dp(34)).apply { rightMargin = dp(8) })
+        logoWrap.addView(FrameLayout(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.WHITE, dp(10).toFloat())
+            elevation = dp(3).toFloat()
+            addView(ImageView(this@MainActivity).apply {
+                setImageResource(R.mipmap.ic_launcher)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+            }, FrameLayout.LayoutParams(dp(40), dp(40)))
+        }, FrameLayout.LayoutParams(dp(40), dp(40)))
+        val unreadLogo = NotificationsStore.unreadCount()
+        if (unreadLogo > 0) {
+            logoWrap.addView(TextView(this).apply {
+                text = if (unreadLogo > 9) "9+" else unreadLogo.toString()
+                textSize = 9f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
+                minWidth = dp(18)
+                setPadding(dp(4), dp(1), dp(4), dp(1))
+            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END).apply {
+                topMargin = dp(-2); rightMargin = dp(-4)
+            })
+        }
+        row.addView(logoWrap, LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(6) })
+
+        // Notification bell on home header
+        row.addView(FrameLayout(this).apply {
+            contentDescription = "Notifications"
+            pressable()
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, NotificationsActivity::class.java))
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+            }
+            addView(ImageView(this@MainActivity).apply {
+                setImageResource(R.drawable.ic_bell)
+                setColorFilter(Color.WHITE)
+                setPadding(dp(10), dp(10), dp(10), dp(10))
+            }, FrameLayout.LayoutParams(dp(40), dp(40)))
+            val u = NotificationsStore.unreadCount()
+            if (u > 0) {
+                addView(TextView(this@MainActivity).apply {
+                    text = if (u > 9) "9+" else u.toString()
+                    textSize = 9f
+                    typeface = Typeface.DEFAULT_BOLD
+                    setTextColor(Color.WHITE)
+                    gravity = Gravity.CENTER
+                    background = rounded(Color.TRANSPARENT, danger, dp(9).toFloat())
+                    setPadding(dp(4), 0, dp(4), 0)
+                }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END).apply {
+                    topMargin = dp(2); rightMargin = dp(2)
+                })
+            }
+        }, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(2) })
 
         val search = EditText(this).apply {
             setSingleLine(true)
-            hint = "Search"
+            hint = "Search products, stores…"
             textSize = 14f
             setTextColor(ink)
             setHintTextColor(muted)
             imeOptions = EditorInfo.IME_ACTION_SEARCH
-            setPadding(dp(14), 0, dp(36), 0)
+            setPadding(dp(14), 0, dp(40), 0)
             background = rounded(Color.TRANSPARENT, Color.WHITE, dp(20).toFloat())
             setOnEditorActionListener { view, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    hideSearchSuggestions()
                     searchProducts(view.text.toString())
                     true
                 } else false
             }
+            setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) scheduleSearchSuggest(text?.toString().orEmpty())
+                else suggestHandler.postDelayed({ hideSearchSuggestions() }, 180)
+            }
+            addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    scheduleSearchSuggest(s?.toString().orEmpty())
+                }
+                override fun afterTextChanged(s: android.text.Editable?) {}
+            })
         }
+        headerSearch = search
         val searchWrap = FrameLayout(this)
-        searchWrap.addView(search, FrameLayout.LayoutParams(match(), dp(36)))
-        searchWrap.addView(ImageView(this).apply {
+        searchWrap.addView(search, FrameLayout.LayoutParams(match(), dp(42)))
+        searchWrap.addView(ImageButton(this).apply {
             setImageResource(R.drawable.ic_search)
             setColorFilter(brand)
+            setBackgroundColor(Color.TRANSPARENT)
             setPadding(dp(8), dp(8), dp(8), dp(8))
-        }, FrameLayout.LayoutParams(dp(36), dp(36), Gravity.END or Gravity.CENTER_VERTICAL))
-        row.addView(searchWrap, LinearLayout.LayoutParams(0, dp(36), 1f))
+            contentDescription = "Search"
+            setOnClickListener {
+                hideSearchSuggestions()
+                searchProducts(search.text.toString())
+            }
+        }, FrameLayout.LayoutParams(dp(42), dp(42), Gravity.END or Gravity.CENTER_VERTICAL))
+        row.addView(searchWrap, LinearLayout.LayoutParams(0, dp(42), 1f))
 
         fun contactBtn(icon: Int, desc: String, onClick: () -> Unit): View {
             return ImageButton(this).apply {
@@ -640,58 +1434,124 @@ class MainActivity : AppCompatActivity() {
                 setBackgroundColor(Color.TRANSPARENT)
                 contentDescription = desc
                 setPadding(dp(8), dp(8), dp(8), dp(8))
+                minimumWidth = dp(44)
+                minimumHeight = dp(44)
                 setOnClickListener { onClick() }
             }
         }
 
-        row.addView(contactBtn(R.drawable.ic_support, "Call support") {
+        row.addView(contactBtn(R.drawable.ic_phone, "Call support") {
             startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$supportPhoneTel")))
-        }, LinearLayout.LayoutParams(dp(40), dp(40)).apply { leftMargin = dp(4) })
+        }, LinearLayout.LayoutParams(dp(44), dp(44)).apply { leftMargin = dp(2) })
 
-        // WhatsApp uses support icon alternate — reuse sparkle/message via store truck
-        row.addView(contactBtn(R.drawable.ic_sparkle, "WhatsApp support") {
+        row.addView(contactBtn(R.drawable.ic_whatsapp, "WhatsApp support") {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(supportWhatsApp)))
-        }, LinearLayout.LayoutParams(dp(40), dp(40)))
+        }, LinearLayout.LayoutParams(dp(44), dp(44)))
 
         wrap.addView(row, LinearLayout.LayoutParams(match(), wrap()))
         return wrap
     }
 
-    /** Snapping page scroller: always settles on a full page, no half states. */
+    /**
+     * Snapping page scroller for the hero.
+     * Claims horizontal gestures so parent ScrollView / SwipeRefresh do not steal them.
+     */
     private inner class PagerScrollView(
         private val pageStride: Int,
         private val pageCount: Int,
         private val onPage: (Int) -> Unit
     ) : HorizontalScrollView(this@MainActivity) {
+        private var downX = 0f
+        private var downY = 0f
+        private var draggingHorizontal = false
+        private val touchSlop = android.view.ViewConfiguration.get(context).scaledTouchSlop
+
         init {
             isHorizontalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
+            isFillViewport = true
             viewTreeObserver.addOnScrollChangedListener {
-                onPage(((scrollX + pageStride / 2) / pageStride).coerceIn(0, pageCount - 1))
+                if (pageStride > 0) {
+                    onPage(((scrollX + pageStride / 2) / pageStride).coerceIn(0, pageCount - 1))
+                }
             }
         }
 
         private fun snap() {
+            if (pageStride <= 0) return
             val page = ((scrollX + pageStride / 2) / pageStride).coerceIn(0, pageCount - 1)
             post { smoothScrollTo(page * pageStride, 0) }
         }
 
         override fun fling(velocityX: Int) {
-            // Convert the fling into a single-page move for a pager feel.
-            val current = scrollX / pageStride
+            if (pageStride <= 0) return
+            val current = (scrollX + pageStride / 2) / pageStride
             val target = when {
                 velocityX > 400 -> current + 1
-                velocityX < -400 -> current
-                else -> ((scrollX + pageStride / 2) / pageStride)
+                velocityX < -400 -> current - 1
+                else -> current
             }.coerceIn(0, pageCount - 1)
             post { smoothScrollTo(target * pageStride, 0) }
         }
 
+        override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = ev.x
+                    downY = ev.y
+                    draggingHorizontal = false
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                    swipe.isEnabled = false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = kotlin.math.abs(ev.x - downX)
+                    val dy = kotlin.math.abs(ev.y - downY)
+                    if (dx > touchSlop || dy > touchSlop) {
+                        if (dx > dy) {
+                            draggingHorizontal = true
+                            parent?.requestDisallowInterceptTouchEvent(true)
+                            swipe.isEnabled = false
+                        } else {
+                            parent?.requestDisallowInterceptTouchEvent(false)
+                            swipe.isEnabled = true
+                            return false
+                        }
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    parent?.requestDisallowInterceptTouchEvent(false)
+                    swipe.isEnabled = true
+                }
+            }
+            return super.onInterceptTouchEvent(ev)
+        }
+
         override fun onTouchEvent(ev: MotionEvent): Boolean {
-            if (ev.action == MotionEvent.ACTION_UP || ev.action == MotionEvent.ACTION_CANCEL) {
-                val handled = super.onTouchEvent(ev)
-                snap()
-                return handled
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = ev.x
+                    downY = ev.y
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                    swipe.isEnabled = false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = kotlin.math.abs(ev.x - downX)
+                    val dy = kotlin.math.abs(ev.y - downY)
+                    if (dx > dy) {
+                        parent?.requestDisallowInterceptTouchEvent(true)
+                        swipe.isEnabled = false
+                    } else if (dy > touchSlop && dy > dx) {
+                        parent?.requestDisallowInterceptTouchEvent(false)
+                        swipe.isEnabled = true
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val handled = super.onTouchEvent(ev)
+                    snap()
+                    parent?.requestDisallowInterceptTouchEvent(false)
+                    swipe.isEnabled = true
+                    return handled
+                }
             }
             return super.onTouchEvent(ev)
         }
@@ -702,7 +1562,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun heroCarousel(): View {
         val slideWidth = resources.displayMetrics.widthPixels
-        val slideHeight = dp(300)
+        val slideHeight = dp(290)
         val stride = slideWidth
 
         data class HeroSpec(
@@ -885,20 +1745,17 @@ class MainActivity : AppCompatActivity() {
             backgroundTintList = null
             background = rounded(Color.TRANSPARENT, gold, dp(8).toFloat())
             stateListAnimator = null
+            minimumHeight = dp(44)
             pressable()
             setOnClickListener { onCta() }
-        }, LinearLayout.LayoutParams(wrap(), dp(42)).apply { topMargin = dp(12) })
+        }, LinearLayout.LayoutParams(wrap(), dp(44)).apply { topMargin = dp(12) })
 
-        // Feature chips
-        val chips = HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
-            overScrollMode = View.OVER_SCROLL_NEVER
-        }
+        // Feature chips — non-scrolling so they never steal hero swipes
         val chipRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(0, dp(12), 0, 0)
+            setPadding(0, dp(12), 0, dp(4))
         }
-        features.forEach { (iconRes, label) ->
+        features.take(3).forEach { (iconRes, label) ->
             val chip = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
@@ -909,13 +1766,16 @@ class MainActivity : AppCompatActivity() {
                 setImageResource(iconRes)
                 setColorFilter(gold)
             }, LinearLayout.LayoutParams(dp(14), dp(14)).apply { rightMargin = dp(6) })
-            chip.addView(text(label, 11f, Color.WHITE, Typeface.BOLD))
+            chip.addView(text(label, 11f, Color.WHITE, Typeface.BOLD).apply {
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
             chipRow.addView(chip, LinearLayout.LayoutParams(wrap(), wrap()).apply { rightMargin = dp(6) })
         }
-        chips.addView(chipRow)
-        panel.addView(chips)
+        panel.addView(chipRow)
 
         frame.addView(panel, FrameLayout.LayoutParams(match(), match()))
+        frame.contentDescription = "Promo carousel slide"
         return frame
     }
 
@@ -970,55 +1830,107 @@ class MainActivity : AppCompatActivity() {
         return wrap
     }
 
-    /** Photo Factory Browse bottom sheet with visual category rows. */
-    private fun showBrowseSheet() {
+    /**
+     * Browse sheet as an in-activity overlay inside [shellFrame] (above content, BELOW dock).
+     * Dock stays fully visible and tappable — Browse toggles open/close.
+     */
+    private fun openBrowseSheet() {
+        if (browseSheetOpen) return
         browseSheetOpen = true
+        aiFabView.visibility = View.GONE
         renderTabs()
 
-        val dialog = android.app.Dialog(this, android.R.style.Theme_Translucent_NoTitleBar)
-        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        fun dismissAnd(action: () -> Unit = {}) {
+            closeBrowseSheet()
+            action()
+        }
 
-        val root = FrameLayout(this).apply {
-            setBackgroundColor(Color.argb(140, 0, 0, 0))
-            setOnClickListener {
-                browseSheetOpen = false
-                dialog.dismiss()
-                renderTabs()
-            }
+        val overlay = FrameLayout(this).apply {
+            setBackgroundColor(Color.argb(150, 0, 0, 0))
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { closeBrowseSheet() }
+            alpha = 0f
         }
 
         val sheet = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = rounded(Color.TRANSPARENT, Color.rgb(242, 242, 242), dp(16).toFloat())
-            elevation = dp(20).toFloat()
-            setOnClickListener { /* consume */ }
+            background = rounded(Color.TRANSPARENT, Color.rgb(245, 245, 246), dp(18).toFloat())
+            elevation = dp(12).toFloat()
+            isClickable = true
+            setOnClickListener { /* consume — don't close when tapping sheet */ }
+            translationY = dp(40).toFloat()
+            alpha = 0.96f
         }
 
-        // Tab strip
-        val tabStrip = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
+        // —— Header: handle + title + close
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
             setBackgroundColor(backgroundStrong)
-            setPadding(dp(8), dp(12), dp(8), 0)
+            setPadding(dp(12), dp(10), dp(12), dp(0))
         }
+        header.addView(View(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.argb(120, 255, 255, 255), dp(3).toFloat())
+        }, LinearLayout.LayoutParams(dp(44), dp(4)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(10)
+        })
+
+        val titleRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(8))
+        }
+        titleRow.addView(text("Browse", 18f, Color.WHITE, Typeface.BOLD), LinearLayout.LayoutParams(0, wrap(), 1f))
+        titleRow.addView(TextView(this).apply {
+            text = "Close"
+            textSize = 13f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(gold)
+            setPadding(dp(12), dp(8), dp(4), dp(8))
+            pressable()
+            setOnClickListener { closeBrowseSheet() }
+            contentDescription = "Close browse menu"
+        })
+        header.addView(titleRow)
+
+        // —— Sheet tabs
+        val tabStrip = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            setBackgroundColor(backgroundStrong)
+        }
+        val tabRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp(8), 0, dp(8), 0)
+        }
+        tabStrip.addView(tabRow)
+
         val sheetTabs = listOf("Categories", "Vendors", "Tools", "Deals")
         var activeSheetTab = 0
         val sheetBody = ScrollView(this).apply {
-            setPadding(dp(12), dp(12), dp(12), dp(24))
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            isFillViewport = true
         }
         val sheetContent = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         sheetBody.addView(sheetContent)
 
         fun paintSheet() {
             sheetContent.removeAllViews()
+            if (isLoading && products.isEmpty()) {
+                sheetContent.addView(text("Loading marketplace…", 14f, muted, Typeface.NORMAL).apply {
+                    gravity = Gravity.CENTER
+                    setPadding(0, dp(32), 0, dp(32))
+                })
+                return
+            }
             when (activeSheetTab) {
                 0 -> {
-                    // Shortcut pills
                     val pills = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
                     listOf(
-                        "Flash deals" to { selectedCategory = "All"; displayedProducts = products; dialog.dismiss(); browseSheetOpen = false; render(Tab.Shop) },
-                        "Request" to { dialog.dismiss(); browseSheetOpen = false; startActivity(Intent(this, RequestProductActivity::class.java)) },
-                        "Track" to { dialog.dismiss(); browseSheetOpen = false; startActivity(Intent(this, TrackOrderActivity::class.java)) },
-                        "Stores" to { dialog.dismiss(); browseSheetOpen = false; render(Tab.Stores) }
+                        "All products" to { dismissAnd { selectedCategory = "All"; displayedProducts = products; render(Tab.Shop) } },
+                        "Request" to { dismissAnd { startActivity(Intent(this, RequestProductActivity::class.java)) } },
+                        "Track" to { dismissAnd { startActivity(Intent(this, TrackOrderActivity::class.java)) } },
+                        "Stores" to { dismissAnd { render(Tab.Stores) } }
                     ).forEach { (label, action) ->
                         pills.addView(TextView(this).apply {
                             text = label
@@ -1034,23 +1946,27 @@ class MainActivity : AppCompatActivity() {
                     sheetContent.addView(HorizontalScrollView(this).apply {
                         isHorizontalScrollBarEnabled = false
                         addView(pills)
-                    }, LinearLayout.LayoutParams(match(), wrap()).apply { bottomMargin = dp(10) })
+                    }, LinearLayout.LayoutParams(match(), wrap()).apply { bottomMargin = dp(12) })
 
-                    categories.filterNot { it == "All" }.forEach { category ->
+                    val cats = categories.filterNot { it == "All" }
+                    if (cats.isEmpty()) {
+                        sheetContent.addView(text("No categories yet. Pull to refresh on Home.", 13f, muted, Typeface.NORMAL))
+                    }
+                    cats.forEach { category ->
                         val sample = products.firstOrNull { it.category.equals(category, true) }
                         val row = LinearLayout(this).apply {
                             orientation = LinearLayout.HORIZONTAL
                             gravity = Gravity.CENTER_VERTICAL
-                            background = rounded(Color.argb(20, 0, 0, 0), Color.WHITE, dp(10).toFloat())
+                            minimumHeight = dp(72)
+                            background = rounded(Color.argb(18, 0, 0, 0), Color.WHITE, dp(12).toFloat())
                             setPadding(dp(10), dp(10), dp(12), dp(10))
-                            elevation = dp(1).toFloat()
                             pressable()
                             setOnClickListener {
-                                selectedCategory = category
-                                displayedProducts = products.filter { it.category.equals(category, true) }
-                                browseSheetOpen = false
-                                dialog.dismiss()
-                                render(Tab.Shop)
+                                dismissAnd {
+                                    selectedCategory = category
+                                    displayedProducts = products.filter { it.category.equals(category, true) }
+                                    render(Tab.Shop)
+                                }
                             }
                         }
                         val thumb = ImageView(this).apply {
@@ -1064,32 +1980,51 @@ class MainActivity : AppCompatActivity() {
                             thumb.setPadding(dp(14), dp(14), dp(14), dp(14))
                         }
                         row.addView(thumb, LinearLayout.LayoutParams(dp(56), dp(56)).apply { rightMargin = dp(12) })
-                        row.addView(text(category, 16f, ink, Typeface.BOLD), LinearLayout.LayoutParams(0, wrap(), 1f))
+                        row.addView(text(category, 15f, ink, Typeface.BOLD).apply {
+                            maxLines = 2
+                        }, LinearLayout.LayoutParams(0, wrap(), 1f))
                         row.addView(ImageView(this).apply {
                             setImageResource(R.drawable.ic_chevron)
-                            setColorFilter(ink)
-                        }, LinearLayout.LayoutParams(dp(22), dp(22)))
+                            setColorFilter(muted)
+                        }, LinearLayout.LayoutParams(dp(20), dp(20)))
                         sheetContent.addView(row, LinearLayout.LayoutParams(match(), wrap()).apply { bottomMargin = dp(8) })
                     }
                 }
                 1 -> {
-                    vendors.take(20).forEach { vendor ->
+                    if (vendors.isEmpty()) {
+                        sheetContent.addView(text("No stores yet.", 14f, muted, Typeface.NORMAL))
+                    }
+                    vendors.take(30).forEach { vendor ->
                         val row = LinearLayout(this).apply {
                             orientation = LinearLayout.HORIZONTAL
                             gravity = Gravity.CENTER_VERTICAL
-                            background = rounded(Color.argb(20, 0, 0, 0), Color.WHITE, dp(10).toFloat())
-                            setPadding(dp(12), dp(14), dp(12), dp(14))
+                            minimumHeight = dp(72)
+                            background = rounded(Color.argb(18, 0, 0, 0), Color.WHITE, dp(12).toFloat())
+                            setPadding(dp(12), dp(12), dp(12), dp(12))
                             pressable()
                             setOnClickListener {
-                                browseSheetOpen = false
-                                dialog.dismiss()
-                                startActivity(Intent(this@MainActivity, VendorProfileActivity::class.java).putExtra("slug", vendor.slug))
+                                dismissAnd {
+                                    startActivity(
+                                        Intent(this@MainActivity, VendorProfileActivity::class.java)
+                                            .putExtra("slug", vendor.slug)
+                                    )
+                                }
                             }
                         }
-                        row.addView(iconBubbleLocal(R.drawable.ic_store, brand, softGreen), LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(12) })
+                        row.addView(
+                            iconBubbleLocal(R.drawable.ic_store, brand, softGreen),
+                            LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(12) }
+                        )
                         val copy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
                         copy.addView(text(vendor.name, 15f, ink, Typeface.BOLD))
-                        copy.addView(text(vendor.headline.ifBlank { "${vendor.activeProducts} products" }, 12f, muted, Typeface.NORMAL))
+                        copy.addView(
+                            text(
+                                vendor.headline.ifBlank { "${vendor.activeProducts} products · ${vendor.location}" },
+                                12f,
+                                muted,
+                                Typeface.NORMAL
+                            )
+                        )
                         row.addView(copy, LinearLayout.LayoutParams(0, wrap(), 1f))
                         sheetContent.addView(row, LinearLayout.LayoutParams(match(), wrap()).apply { bottomMargin = dp(8) })
                     }
@@ -1099,25 +2034,25 @@ class MainActivity : AppCompatActivity() {
                         Triple(R.drawable.ic_box, "Request a product", Intent(this, RequestProductActivity::class.java)),
                         Triple(R.drawable.ic_truck, "Track your order", Intent(this, TrackOrderActivity::class.java)),
                         Triple(R.drawable.ic_store, "Become a vendor", Intent(this, BecomeVendorActivity::class.java)),
-                        Triple(R.drawable.ic_lock, "Privacy", Intent(this, PrivacyActivity::class.java))
+                        Triple(R.drawable.ic_lock, "Privacy policy", Intent(this, PrivacyActivity::class.java))
                     ).forEach { (icon, label, intent) ->
                         val row = LinearLayout(this).apply {
                             orientation = LinearLayout.HORIZONTAL
                             gravity = Gravity.CENTER_VERTICAL
-                            background = rounded(Color.argb(20, 0, 0, 0), Color.WHITE, dp(10).toFloat())
-                            setPadding(dp(12), dp(14), dp(12), dp(14))
+                            minimumHeight = dp(64)
+                            background = rounded(Color.argb(18, 0, 0, 0), Color.WHITE, dp(12).toFloat())
+                            setPadding(dp(12), dp(12), dp(12), dp(12))
                             pressable()
-                            setOnClickListener {
-                                browseSheetOpen = false
-                                dialog.dismiss()
-                                startActivity(intent)
-                            }
+                            setOnClickListener { dismissAnd { startActivity(intent) } }
                         }
-                        row.addView(iconBubbleLocal(icon, brand, softGreen), LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(12) })
+                        row.addView(
+                            iconBubbleLocal(icon, brand, softGreen),
+                            LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(12) }
+                        )
                         row.addView(text(label, 15f, ink, Typeface.BOLD), LinearLayout.LayoutParams(0, wrap(), 1f))
                         row.addView(ImageView(this).apply {
                             setImageResource(R.drawable.ic_chevron)
-                            setColorFilter(ink)
+                            setColorFilter(muted)
                         }, LinearLayout.LayoutParams(dp(20), dp(20)))
                         sheetContent.addView(row, LinearLayout.LayoutParams(match(), wrap()).apply { bottomMargin = dp(8) })
                     }
@@ -1129,103 +2064,118 @@ class MainActivity : AppCompatActivity() {
                             displayedProducts = products
                             render(Tab.Shop)
                         },
-                        "Flash picks" to { render(Tab.Shop) },
-                        "Beauty & care" to {
+                        "Flash / featured picks" to {
+                            displayedProducts = products.filter { it.featured }.ifEmpty { products }
+                            selectedCategory = "All"
+                            render(Tab.Shop)
+                        },
+                        "Beauty & personal care" to {
                             selectedCategory = "Beauty & Personal Care"
                             displayedProducts = products.filter { it.category.contains("Beauty", true) }
+                            render(Tab.Shop)
+                        },
+                        "Mobile essentials" to {
+                            selectedCategory = "Mobile Essentials"
+                            displayedProducts = products.filter { it.category.contains("Mobile", true) }
                             render(Tab.Shop)
                         }
                     ).forEach { (label, action) ->
                         val row = TextView(this).apply {
                             text = label
-                            textSize = 16f
+                            textSize = 15f
                             typeface = Typeface.DEFAULT_BOLD
                             setTextColor(ink)
-                            background = rounded(Color.argb(20, 0, 0, 0), Color.WHITE, dp(10).toFloat())
+                            background = rounded(Color.argb(18, 0, 0, 0), Color.WHITE, dp(12).toFloat())
                             setPadding(dp(16), dp(18), dp(16), dp(18))
                             pressable()
-                            setOnClickListener {
-                                browseSheetOpen = false
-                                dialog.dismiss()
-                                action()
-                            }
+                            setOnClickListener { dismissAnd { action() } }
                         }
                         sheetContent.addView(row, LinearLayout.LayoutParams(match(), wrap()).apply { bottomMargin = dp(8) })
                     }
                 }
             }
-            sheetContent.addView(TextView(this).apply {
-                text = "SuperTech advantage\nVerified sellers, product requests, and trackable orders."
-                textSize = 13f
-                setTextColor(muted)
-                setLineSpacing(0f, 1.2f)
-                background = rounded(Color.TRANSPARENT, Color.WHITE, dp(10).toFloat())
-                setPadding(dp(14), dp(14), dp(14), dp(14))
-            }, LinearLayout.LayoutParams(match(), wrap()).apply { topMargin = dp(12) })
         }
 
         sheetTabs.forEachIndexed { index, label ->
             val btn = TextView(this).apply {
                 text = label
-                textSize = 14f
+                textSize = 13f
                 typeface = Typeface.DEFAULT_BOLD
-                setPadding(dp(14), dp(12), dp(14), dp(12))
+                setPadding(dp(14), dp(10), dp(14), dp(12))
                 setTextColor(if (index == 0) ink else Color.WHITE)
-                background = rounded(Color.TRANSPARENT, if (index == 0) Color.WHITE else Color.TRANSPARENT, dp(8).toFloat())
+                background = rounded(
+                    Color.TRANSPARENT,
+                    if (index == 0) Color.WHITE else Color.TRANSPARENT,
+                    dp(8).toFloat()
+                )
                 pressable()
                 setOnClickListener {
                     activeSheetTab = index
-                    for (i in 0 until tabStrip.childCount) {
-                        val child = tabStrip.getChildAt(i) as TextView
+                    for (i in 0 until tabRow.childCount) {
+                        val child = tabRow.getChildAt(i) as TextView
                         val on = i == index
                         child.setTextColor(if (on) ink else Color.WHITE)
-                        child.background = rounded(Color.TRANSPARENT, if (on) Color.WHITE else Color.TRANSPARENT, dp(8).toFloat())
+                        child.background = rounded(
+                            Color.TRANSPARENT,
+                            if (on) Color.WHITE else Color.TRANSPARENT,
+                            dp(8).toFloat()
+                        )
                     }
                     paintSheet()
                 }
             }
-            tabStrip.addView(btn, LinearLayout.LayoutParams(wrap(), wrap()).apply { rightMargin = dp(4) })
+            tabRow.addView(btn, LinearLayout.LayoutParams(wrap(), wrap()).apply { rightMargin = dp(4) })
         }
 
-        val handle = View(this).apply {
-            background = rounded(Color.TRANSPARENT, Color.argb(100, 255, 255, 255), dp(3).toFloat())
+        // Done footer — always visible, clear way to close without hunting for X
+        val doneBar = TextView(this).apply {
+            text = "Done — close browse"
+            gravity = Gravity.CENTER
+            textSize = 14f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+            background = gradient(brand, brandDark, 0f)
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            pressable()
+            setOnClickListener { closeBrowseSheet() }
+            contentDescription = "Close browse menu"
         }
-        val close = ImageButton(this).apply {
-            setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-            setColorFilter(gold)
-            setBackgroundColor(Color.TRANSPARENT)
-            setOnClickListener {
-                browseSheetOpen = false
-                dialog.dismiss()
-                renderTabs()
-            }
-        }
-
-        val header = FrameLayout(this).apply { setBackgroundColor(backgroundStrong) }
-        header.addView(handle, FrameLayout.LayoutParams(dp(40), dp(4), Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply {
-            topMargin = dp(8)
-        })
-        header.addView(close, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.END or Gravity.TOP))
-        header.addView(tabStrip, FrameLayout.LayoutParams(match(), wrap(), Gravity.BOTTOM).apply {
-            topMargin = dp(20)
-        })
 
         sheet.addView(header, LinearLayout.LayoutParams(match(), wrap()))
+        sheet.addView(tabStrip, LinearLayout.LayoutParams(match(), wrap()))
         sheet.addView(sheetBody, LinearLayout.LayoutParams(match(), 0, 1f))
+        sheet.addView(doneBar, LinearLayout.LayoutParams(match(), wrap()))
         paintSheet()
 
-        val sheetLp = FrameLayout.LayoutParams(match(), (resources.displayMetrics.heightPixels * 0.78f).toInt(), Gravity.BOTTOM).apply {
-            leftMargin = dp(8)
-            rightMargin = dp(8)
-            bottomMargin = dp(68)
+        // Sheet fills the content area only (shellFrame) — dock remains below
+        val sheetLp = FrameLayout.LayoutParams(match(), match(), Gravity.BOTTOM).apply {
+            leftMargin = dp(0)
+            rightMargin = dp(0)
+            topMargin = dp(12)
         }
-        root.addView(sheet, sheetLp)
-        dialog.setContentView(root)
-        dialog.setOnDismissListener {
+        overlay.addView(sheet, sheetLp)
+        shellFrame.addView(overlay, FrameLayout.LayoutParams(match(), match()))
+        browseOverlay = overlay
+
+        overlay.animate().alpha(1f).setDuration(180).start()
+        sheet.animate().translationY(0f).alpha(1f).setDuration(220)
+            .setInterpolator(DecelerateInterpolator()).start()
+    }
+
+    private fun closeBrowseSheet() {
+        val overlay = browseOverlay ?: run {
             browseSheetOpen = false
+            aiFabView.visibility = View.VISIBLE
             renderTabs()
+            return
         }
-        dialog.show()
+        browseSheetOpen = false
+        overlay.animate().alpha(0f).setDuration(150).withEndAction {
+            (overlay.parent as? ViewGroup)?.removeView(overlay)
+            if (browseOverlay === overlay) browseOverlay = null
+        }.start()
+        aiFabView.visibility = View.VISIBLE
+        renderTabs()
     }
 
     private fun iconBubbleLocal(iconRes: Int, tint: Int, fill: Int): View {
@@ -1240,94 +2190,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Horizontal product gallery with tall image-first cards. */
+    /** Horizontal product gallery — same retail product card, fixed width. */
     private fun featuredCarousel(items: List<Product>): View {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(2), 0, dp(6))
         }
         items.forEachIndexed { i, product ->
-            val lp = LinearLayout.LayoutParams(dp(190), wrap())
+            val lp = LinearLayout.LayoutParams(dp(188), wrap())
             lp.rightMargin = dp(12)
-            row.addView(featuredCard(product).animateIn(i), lp)
+            row.addView(gridProductCard(product).animateIn(i), lp)
         }
         return HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
             addView(row)
         }.withMargins(bottom = 8)
-    }
-
-    private fun featuredCard(product: Product): View {
-        val card = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = rounded(line, Color.WHITE, dp(18).toFloat())
-            elevation = dp(3).toFloat()
-            clipToOutline = true
-            outlineProvider = object : ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(0, 0, view.width, view.height, dp(18).toFloat())
-                }
-            }
-            pressable()
-            setOnClickListener { openProduct(product) }
-        }
-
-        val imageWrap = FrameLayout(this)
-        val image = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_INSIDE
-            setImageResource(android.R.drawable.ic_menu_gallery)
-            setColorFilter(Color.WHITE)
-            setBackgroundColor(product.color)
-            setPadding(dp(26), dp(26), dp(26), dp(26))
-        }
-        loadImage(image, product.heroImage)
-        imageWrap.addView(image, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, dp(132)))
-
-        val tag = product.stockLabel.ifBlank { product.badge }
-        if (tag.isNotBlank()) {
-            imageWrap.addView(TextView(this).apply {
-                text = tag
-                textSize = 10f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(brandDark)
-                background = rounded(Color.TRANSPARENT, Color.argb(235, 255, 255, 255), dp(10).toFloat())
-                setPadding(dp(8), dp(4), dp(8), dp(4))
-            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.START).apply {
-                topMargin = dp(8); leftMargin = dp(8)
-            })
-        }
-        card.addView(imageWrap, LinearLayout.LayoutParams(match(), dp(132)))
-
-        val copy = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(12), dp(10), dp(12), dp(12))
-        }
-        copy.addView(text(product.name, 14f, ink, Typeface.BOLD).apply { maxLines = 2; minLines = 2 })
-        copy.addView(text(vendorName(product.vendorSlug)?.let { "by $it" } ?: product.category, 10f, muted, Typeface.NORMAL).apply {
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(0, dp(4), 0, dp(2))
-        })
-
-        val priceRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        priceRow.addView(text("RWF ${money.format(product.price)}", 15f, brand, Typeface.BOLD), LinearLayout.LayoutParams(0, wrap(), 1f))
-        priceRow.addView(TextView(this).apply {
-            text = "＋"
-            textSize = 17f
-            gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            background = rounded(Color.TRANSPARENT, brand, dp(16).toFloat())
-            contentDescription = "Add to cart"
-            pressable()
-            setOnClickListener { addToCart(product) }
-        }, LinearLayout.LayoutParams(dp(32), dp(32)))
-        copy.addView(priceRow)
-        card.addView(copy)
-        return card
     }
 
     /** Horizontal strip of compact vendor cards. */
@@ -1422,46 +2300,50 @@ class MainActivity : AppCompatActivity() {
             grid.addView(tile, params)
         }
 
+        // Four high-value actions only (cleaner home)
+        add(R.drawable.ic_box, "Request item", "Source any product") {
+            startActivity(Intent(this, RequestProductActivity::class.java))
+        }
+        add(R.drawable.ic_truck, "Track order", "Follow your delivery") {
+            startActivity(Intent(this, TrackOrderActivity::class.java))
+        }
+        add(R.drawable.ic_store, "Sell on SuperTech", "Become a vendor") {
+            startActivity(Intent(this, BecomeVendorActivity::class.java))
+        }
         add(R.drawable.ic_sparkle, "AI support", "Ask the assistant") { openAi() }
-        add(R.drawable.ic_shop, "Full catalog", "Every product in app") { render(Tab.Shop) }
-        add(R.drawable.ic_truck, "Track order", "Follow your delivery") { startActivity(Intent(this, TrackOrderActivity::class.java)) }
-        add(R.drawable.ic_store, "Vendors", "View trusted suppliers") { render(Tab.Stores) }
-        add(R.drawable.ic_wallet, "Become vendor", "Start selling tech") { startActivity(Intent(this, BecomeVendorActivity::class.java)) }
-        add(R.drawable.ic_box, "Request item", "Source any product") { startActivity(Intent(this, RequestProductActivity::class.java)) }
         return grid.withMargins(bottom = 18)
     }
 
     private fun trustStrip(): View {
+        val productCount = if (isLoading) "…" else products.size.toString()
+        val vendorCount = if (isLoading) "…" else vendors.size.toString()
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(dp(8), dp(10), dp(8), dp(10))
+            setPadding(dp(6), dp(12), dp(6), dp(12))
             background = rounded(line, Color.WHITE, dp(14).toFloat())
             elevation = dp(1).toFloat()
         }
         listOf(
-            Triple(R.drawable.ic_shield, "Verified", "sellers"),
-            Triple(R.drawable.ic_truck, "Local", "delivery"),
-            Triple(R.drawable.ic_sparkle, "AI", "support")
+            productCount to "products",
+            vendorCount to "vendors",
+            "Verified" to "sellers"
         ).forEachIndexed { index, item ->
             val cell = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
+                orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
             }
-            cell.addView(ImageView(this).apply {
-                setImageResource(item.first)
-                setColorFilter(if (index == 1) blue else brand)
-            }, LinearLayout.LayoutParams(dp(20), dp(20)))
-            val copy = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(dp(7), 0, 0, 0)
-            }
-            copy.addView(text(item.second, 11f, ink, Typeface.BOLD))
-            copy.addView(text(item.third, 10f, muted, Typeface.NORMAL))
-            cell.addView(copy)
+            cell.addView(text(item.first, 16f, brand, Typeface.BOLD).apply { gravity = Gravity.CENTER })
+            cell.addView(text(item.second, 11f, muted, Typeface.NORMAL).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, dp(2), 0, 0)
+            })
             row.addView(cell, LinearLayout.LayoutParams(0, wrap(), 1f))
+            if (index < 2) {
+                row.addView(View(this).apply { setBackgroundColor(line) }, LinearLayout.LayoutParams(dp(1), dp(36)))
+            }
         }
-        return row.withMargins(bottom = 4)
+        return row.withMargins(bottom = 14)
     }
 
     private fun categoryLauncher(items: List<String>): View {
@@ -1604,7 +2486,9 @@ class MainActivity : AppCompatActivity() {
             elevation = dp(2).toFloat()
             contentDescription = "Add to cart"
             pressable()
-            setOnClickListener { addToCart(product) }
+            setOnClickListener {
+                if (productMode(product.category) == "shop") addToCart(product) else openProduct(product)
+            }
         }
 
         card.addView(image, LinearLayout.LayoutParams(dp(92), dp(92)))
@@ -1619,54 +2503,81 @@ class MainActivity : AppCompatActivity() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(14), dp(14), dp(14), dp(14))
             background = rounded(line, Color.WHITE, dp(16).toFloat())
-            elevation = dp(3).toFloat()
+            elevation = dp(4).toFloat()
         }
 
         val product = products.firstOrNull { it.slug == itemLine.slug }
-        if (product != null) {
-            val image = ImageView(this).apply {
-                scaleType = ImageView.ScaleType.CENTER_INSIDE
-                setImageResource(android.R.drawable.ic_menu_gallery)
-                setColorFilter(Color.WHITE)
-                setBackgroundColor(product.color)
-                setPadding(dp(12), dp(12), dp(12), dp(12))
-                roundCorners(dp(12).toFloat())
-            }
-            loadImage(image, product.heroImage)
-            card.addView(image, LinearLayout.LayoutParams(dp(56), dp(56)))
+        val imageUrl = itemLine.heroImage.ifBlank { product?.heroImage.orEmpty() }
+        val image = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setImageResource(android.R.drawable.ic_menu_gallery)
+            setColorFilter(Color.WHITE)
+            setBackgroundColor(product?.color ?: softGreen)
+            if (imageUrl.isBlank()) setPadding(dp(16), dp(16), dp(16), dp(16))
+            roundCorners(dp(14).toFloat())
         }
+        if (imageUrl.isNotBlank()) loadImage(image, imageUrl)
+        card.addView(image, LinearLayout.LayoutParams(dp(88), dp(88)).apply { rightMargin = dp(12) })
 
         val copy = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(12), 0, dp(8), 0)
+            setPadding(0, 0, dp(4), 0)
         }
-        copy.addView(text(itemLine.name, 15f, ink, Typeface.BOLD).apply { maxLines = 2 })
-        copy.addView(text("RWF ${money.format(itemLine.price)}", 14f, brand, Typeface.BOLD))
+        copy.addView(text(itemLine.name, 15f, ink, Typeface.BOLD).apply {
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        copy.addView(text("RWF ${money.format(itemLine.price)} each", 12f, muted, Typeface.NORMAL).apply {
+            setPadding(0, dp(4), 0, 0)
+        })
+        copy.addView(text("Line total  RWF ${money.format(itemLine.price * itemLine.qty)}", 15f, brand, Typeface.BOLD).apply {
+            setPadding(0, dp(4), 0, dp(10))
+        })
 
-        val stepper = LinearLayout(this).apply {
+        val controls = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        stepper.addView(stepButton("−") { changeQty(itemLine.slug, -1) })
-        stepper.addView(text(itemLine.qty.toString(), 16f, ink, Typeface.BOLD).apply {
+        controls.addView(stepButton("−") { changeQty(itemLine.slug, -1) })
+        controls.addView(text(itemLine.qty.toString(), 16f, ink, Typeface.BOLD).apply {
             gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(dp(32), wrap())
+            background = rounded(line, softGreen, dp(10).toFloat())
+            setPadding(dp(4), dp(6), dp(4), dp(6))
+            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply {
+                leftMargin = dp(6); rightMargin = dp(6)
+            }
         })
-        stepper.addView(stepButton("+") { changeQty(itemLine.slug, 1) })
+        controls.addView(stepButton("+") { changeQty(itemLine.slug, 1) })
+        controls.addView(TextView(this).apply {
+            text = "Remove"
+            textSize = 12f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(danger)
+            gravity = Gravity.CENTER
+            background = rounded(danger, Color.rgb(255, 241, 242), dp(10).toFloat())
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            pressable()
+            setOnClickListener {
+                Cart.remove(itemLine.slug)
+                render(Tab.Cart)
+            }
+        }, LinearLayout.LayoutParams(wrap(), dp(40)).apply { leftMargin = dp(10) })
+        copy.addView(controls)
 
         card.addView(copy, LinearLayout.LayoutParams(0, wrap(), 1f))
-        card.addView(stepper)
         return card.withMargins(bottom = 12)
     }
 
     private fun stepButton(symbol: String, onClick: () -> Unit): View {
         return TextView(this).apply {
             text = symbol
-            textSize = 18f
+            textSize = 20f
             gravity = Gravity.CENTER
-            setTextColor(brand)
-            background = rounded(line, Color.WHITE, dp(16).toFloat())
-            layoutParams = LinearLayout.LayoutParams(dp(34), dp(34))
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            background = gradient(brand, brandDark, dp(12).toFloat())
+            elevation = dp(2).toFloat()
+            layoutParams = LinearLayout.LayoutParams(dp(40), dp(40))
             pressable()
             setOnClickListener { onClick() }
         }
@@ -1675,44 +2586,86 @@ class MainActivity : AppCompatActivity() {
     private fun vendorCard(vendor: Vendor): View {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(16), dp(16), dp(16))
             background = rounded(line, Color.WHITE, dp(16).toFloat())
             elevation = dp(3).toFloat()
+            clipToOutline = true
         }
 
+        // Cover image
+        val cover = FrameLayout(this)
+        val coverBg = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setBackgroundColor(try {
+                Color.parseColor(vendor.accent.ifBlank { "#102019" })
+            } catch (_: Exception) {
+                backgroundStrong
+            })
+        }
+        cover.addView(coverBg, FrameLayout.LayoutParams(match(), dp(96)))
+        if (vendor.coverImage.isNotBlank()) loadImage(coverBg, vendor.coverImage)
+
+        // Logo circle overlapping bottom of cover
+        val logoWrap = FrameLayout(this).apply {
+            background = rounded(Color.WHITE, Color.WHITE, dp(24).toFloat())
+            elevation = dp(4).toFloat()
+        }
+        if (vendor.coverImage.isNotBlank()) {
+            val logoImg = ImageView(this).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+            }
+            logoWrap.addView(logoImg, FrameLayout.LayoutParams(dp(48), dp(48)))
+            // Use cover as logo crop fallback
+            loadImage(logoImg, vendor.coverImage)
+        } else {
+            logoWrap.addView(TextView(this).apply {
+                text = vendor.logoMark.ifBlank { vendor.name.trim().take(2).uppercase(Locale.US) }
+                textSize = 14f
+                gravity = Gravity.CENTER
+                setTextColor(Color.WHITE)
+                typeface = Typeface.DEFAULT_BOLD
+                background = gradient(brand, brandDark, dp(24).toFloat())
+            }, FrameLayout.LayoutParams(dp(48), dp(48)))
+        }
+        cover.addView(
+            logoWrap,
+            FrameLayout.LayoutParams(dp(48), dp(48), Gravity.BOTTOM or Gravity.START).apply {
+                leftMargin = dp(14); bottomMargin = dp(-24)
+            }
+        )
+        card.addView(cover, LinearLayout.LayoutParams(match(), dp(96)))
+
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(32), dp(14), dp(14))
+        }
         val top = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val avatar = TextView(this).apply {
-            text = vendor.name.trim().take(1).uppercase(Locale.US)
-            textSize = 18f
-            gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            background = gradient(brand, brandDark, dp(22).toFloat())
-        }
-        top.addView(avatar, LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(12) })
         top.addView(text(vendor.name, 17f, ink, Typeface.BOLD), LinearLayout.LayoutParams(0, wrap(), 1f))
         if (vendor.rating > 0) {
             top.addView(TextView(this).apply {
                 text = "★ ${String.format(Locale.US, "%.1f", vendor.rating)}"
-                textSize = 13f
+                textSize = 12f
                 setTextColor(amber)
                 typeface = Typeface.DEFAULT_BOLD
                 background = rounded(Color.TRANSPARENT, Color.rgb(252, 246, 230), dp(12).toFloat())
                 setPadding(dp(10), dp(5), dp(10), dp(5))
             })
         }
-
-        card.addView(top)
-        card.addView(text("${vendor.location} · ${vendor.headline}", 14f, muted, Typeface.NORMAL).apply {
-            setPadding(0, dp(8), 0, 0)
+        body.addView(top)
+        body.addView(text("${vendor.location} · ${vendor.headline}", 13f, muted, Typeface.NORMAL).apply {
+            setPadding(0, dp(6), 0, 0)
+            maxLines = 2
         })
-        card.addView(label("${vendor.activeProducts} products · ${vendor.responseTime}", brand))
-        card.addView(secondaryButton("View vendor") {
+        body.addView(text("${vendor.activeProducts} products · ${vendor.responseTime}", 12f, brand, Typeface.BOLD).apply {
+            setPadding(0, dp(6), 0, dp(10))
+        })
+        body.addView(secondaryButton("Visit store") {
             startActivity(Intent(this, VendorProfileActivity::class.java).putExtra("slug", vendor.slug))
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         })
+        card.addView(body)
         return card.withMargins(bottom = 12)
     }
 
@@ -2035,7 +2988,8 @@ class MainActivity : AppCompatActivity() {
     // ---- Cart ----
 
     private fun addToCart(product: Product) {
-        Cart.add(product.slug, product.name, product.price)
+        Cart.add(product.slug, product.name, product.price, heroImage = product.heroImage)
+        NotificationsStore.pushEvent(this, "Added to cart", product.name)
         Toast.makeText(this, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
         bumpCartTab()
     }
@@ -2070,11 +3024,15 @@ class MainActivity : AppCompatActivity() {
                 badge = item.optString("badge"),
                 description = item.optString("description"),
                 price = item.optDouble("price", 0.0),
+                compareAt = item.optDouble("compareAt", 0.0).let { if (it.isNaN()) 0.0 else it },
+                rating = item.optDouble("rating", 0.0),
+                reviewCount = item.optInt("reviewCount", 0),
                 stockLabel = item.optString("stockLabel"),
                 accent = item.optString("accent"),
                 heroImage = item.optString("heroImage"),
                 features = parseStrings(item.optJSONArray("features") ?: JSONArray()),
                 vendorSlug = item.optString("vendorSlug"),
+                vendorName = item.optString("vendorName"),
                 featured = item.optBoolean("featured", false)
             )
         }
@@ -2090,7 +3048,10 @@ class MainActivity : AppCompatActivity() {
                 location = item.optString("location", "Rwanda"),
                 responseTime = item.optString("responseTime", "Fast response"),
                 rating = item.optDouble("rating", 0.0),
-                activeProducts = item.optInt("activeProducts", 0)
+                activeProducts = item.optInt("activeProducts", 0),
+                coverImage = item.optString("coverImage"),
+                logoMark = item.optString("logoMark"),
+                accent = item.optString("accent")
             )
         }
     }
@@ -2162,6 +3123,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun openAi() {
         startActivity(Intent(this, AiSupportActivity::class.java))
+        overridePendingTransition(R.anim.slide_up_in, R.anim.fade_out)
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (android.os.Build.VERSION.SDK_INT < 33) return
+        if (androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) return
+        androidx.core.app.ActivityCompat.requestPermissions(
+            this,
+            arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+            9101
+        )
     }
 
     private fun openProduct(product: Product) {
@@ -2175,14 +3151,18 @@ class MainActivity : AppCompatActivity() {
             putExtra("badge", product.badge)
             putExtra("accent", product.accent)
             putExtra("heroImage", product.heroImage)
+            putExtra("vendorSlug", product.vendorSlug)
+            putExtra("vendorName", vendorName(product.vendorSlug).orEmpty())
             putExtra("features", ArrayList(product.features))
         })
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
     /** Account button: jump to the dashboard if signed in, otherwise sign in. */
     private fun openAccount() {
         val target = if (Net.isLoggedIn()) DashboardActivity::class.java else SignInActivity::class.java
         startActivity(Intent(this, target))
+        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
     private fun aiFab(): View {
@@ -2327,11 +3307,15 @@ class MainActivity : AppCompatActivity() {
         val badge: String,
         val description: String,
         val price: Double,
+        val compareAt: Double = 0.0,
+        val rating: Double = 0.0,
+        val reviewCount: Int = 0,
         val stockLabel: String,
         val accent: String,
         val heroImage: String,
         val features: List<String>,
         val vendorSlug: String,
+        val vendorName: String = "",
         val featured: Boolean
     ) {
         val color: Int
@@ -2349,7 +3333,10 @@ class MainActivity : AppCompatActivity() {
         val location: String,
         val responseTime: String,
         val rating: Double,
-        val activeProducts: Int
+        val activeProducts: Int,
+        val coverImage: String = "",
+        val logoMark: String = "",
+        val accent: String = ""
     )
 
     private companion object {

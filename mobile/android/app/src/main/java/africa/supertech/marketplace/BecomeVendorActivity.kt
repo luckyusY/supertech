@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 
 /** Native "become a vendor" application — public → POST /api/vendor-applications. */
 class BecomeVendorActivity : BaseActivity() {
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.AUTH
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submit: Button

@@ -15,6 +15,8 @@ class SignInActivity : BaseActivity() {
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submitButton: Button
 
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.AUTH
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

@@ -7,5 +7,9 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         Net.init(this)
+        Wishlist.init(this)
+        MarketplaceCache.init(this)
+        SystemNotifier.ensureChannel(this)
+        NotificationsStore.init(this)
     }
 }

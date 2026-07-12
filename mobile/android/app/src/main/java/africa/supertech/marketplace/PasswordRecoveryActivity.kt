@@ -11,6 +11,7 @@ import org.json.JSONObject
 import java.util.concurrent.Executors
 
 class PasswordRecoveryActivity : BaseActivity() {
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.AUTH
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submit: Button
 

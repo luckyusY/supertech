@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -27,6 +28,8 @@ class WelcomeActivity : BaseActivity() {
     private lateinit var googleButton: Button
     private lateinit var errorText: TextView
 
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.AUTH
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val preferences = getSharedPreferences("supertech", MODE_PRIVATE)
@@ -40,13 +43,24 @@ class WelcomeActivity : BaseActivity() {
         content.gravity = Gravity.CENTER_HORIZONTAL
         content.setPadding(dp(24), dp(34), dp(24), dp(24))
 
-        content.addView(ImageView(this).apply {
-            setImageResource(R.mipmap.ic_launcher)
-            scaleType = ImageView.ScaleType.FIT_CENTER
-            contentDescription = "SuperTech"
-        }, LinearLayout.LayoutParams(dp(112), dp(112)).apply { bottomMargin = dp(20) })
+        content.addView(FrameLayout(this).apply {
+            background = rounded(line, Color.WHITE, dp(28).toFloat())
+            elevation = dp(6).toFloat()
+            addView(ImageView(this@WelcomeActivity).apply {
+                setImageResource(R.mipmap.ic_launcher)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                contentDescription = "SuperTech"
+            }, FrameLayout.LayoutParams(dp(120), dp(120)))
+        }, LinearLayout.LayoutParams(dp(120), dp(120)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(18)
+        })
 
-        content.block(text("Welcome to SuperTech", 28f, ink, Typeface.BOLD).apply {
+        content.block(text("SuperTech", 14f, brand, Typeface.BOLD).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.12f
+        }, 4)
+        content.block(text("Welcome to SuperTech", 26f, ink, Typeface.BOLD).apply {
             gravity = Gravity.CENTER
         }, 8)
         content.block(text("Discover trusted products, request what you need, and manage every order from one app.", 15f, muted).apply {
