@@ -2,8 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 
-const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-
 type CredentialResponse = { credential?: string };
 
 type GoogleIdApi = {
@@ -11,8 +9,11 @@ type GoogleIdApi = {
     client_id: string;
     callback: (response: CredentialResponse) => void;
     use_fedcm_for_prompt?: boolean;
+    auto_select?: boolean;
+    cancel_on_tap_outside?: boolean;
   }) => void;
   renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
+  prompt?: () => void;
 };
 
 declare global {
@@ -39,20 +40,42 @@ function loadGsi(): Promise<void> {
   return gsiPromise;
 }
 
-type Props = { nextPath?: string };
+async function resolveClientId(prop?: string): Promise<string> {
+  const fromProp = prop?.trim();
+  if (fromProp) return fromProp;
+  const fromEnv = process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim();
+  if (fromEnv) return fromEnv;
+  // Runtime: GOOGLE_WEB_CLIENT_ID on the server (works without NEXT_PUBLIC rebuild)
+  try {
+    const res = await fetch("/api/auth/google/config", { cache: "no-store" });
+    const data = (await res.json()) as { clientId?: string | null };
+    return data.clientId?.trim() || "";
+  } catch {
+    return "";
+  }
+}
 
-export function GoogleSignInButton({ nextPath }: Props) {
+type Props = {
+  nextPath?: string;
+  clientId?: string;
+  enableOneTap?: boolean;
+};
+
+export function GoogleSignInButton({
+  nextPath,
+  clientId: clientIdProp,
+  enableOneTap = true,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  // When no client id is configured we still render a branded, disabled-looking
-  // fallback so the layout stays consistent during/after setup.
   const [ready, setReady] = useState(false);
+  const [missingConfig, setMissingConfig] = useState(false);
 
   useEffect(() => {
-    if (!CLIENT_ID || !containerRef.current) return;
     let cancelled = false;
     const container = containerRef.current;
+    if (!container) return;
 
     async function handleCredential(response: CredentialResponse) {
       if (!response.credential) {
@@ -69,7 +92,6 @@ export function GoogleSignInButton({ nextPath }: Props) {
         });
         const payload = (await res.json()) as { error?: string };
         if (!res.ok) throw new Error(payload.error ?? "Google sign-in failed.");
-        // Hard navigation so the server-rendered header re-reads the new session.
         window.location.assign(nextPath ?? "/");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Google sign-in failed.");
@@ -77,14 +99,23 @@ export function GoogleSignInButton({ nextPath }: Props) {
       }
     }
 
-    loadGsi()
-      .then(() => {
+    (async () => {
+      const CLIENT_ID = await resolveClientId(clientIdProp);
+      if (cancelled) return;
+      if (!CLIENT_ID) {
+        setMissingConfig(true);
+        return;
+      }
+      try {
+        await loadGsi();
         const id = window.google?.accounts?.id;
-        if (cancelled || !id) return;
+        if (cancelled || !id || !container) return;
         id.initialize({
-          client_id: CLIENT_ID as string,
+          client_id: CLIENT_ID,
           callback: handleCredential,
           use_fedcm_for_prompt: true,
+          auto_select: false,
+          cancel_on_tap_outside: true,
         });
         const width = Math.min(Math.round(container.clientWidth) || 360, 400);
         id.renderButton(container, {
@@ -96,25 +127,42 @@ export function GoogleSignInButton({ nextPath }: Props) {
           logo_alignment: "center",
           width,
         });
-        setReady(true);
-      })
-      .catch(() => {
+        if (!cancelled) setReady(true);
+        if (enableOneTap && typeof id.prompt === "function") {
+          try {
+            id.prompt();
+          } catch {
+            // One Tap can be blocked by browser; button still works
+          }
+        }
+      } catch {
         if (!cancelled) setError("Couldn't load Google sign-in.");
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, [nextPath]);
+  }, [nextPath, clientIdProp, enableOneTap]);
 
-  if (!CLIENT_ID) return null;
+  if (missingConfig) {
+    return (
+      <p className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--page)] px-3 py-3 text-center text-xs text-[var(--muted)]">
+        Google sign-in needs{" "}
+        <code className="font-mono text-[11px]">GOOGLE_WEB_CLIENT_ID</code> in
+        Vercel env (your Web client ID), then{" "}
+        <strong>redeploy</strong>. Optional: also set{" "}
+        <code className="font-mono text-[11px]">NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID</code>{" "}
+        to the same value.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-2">
       <div className="relative flex min-h-[44px] justify-center">
-        {/* Google Identity Services renders its official button into this node. */}
         <div ref={containerRef} className="w-full [&>div]:!w-full [&_iframe]:!w-full" />
-        {!ready && (
+        {!ready && !error && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white text-sm font-semibold text-[var(--muted)]">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading Google…
@@ -133,3 +181,6 @@ export function GoogleSignInButton({ nextPath }: Props) {
     </div>
   );
 }
+
+/** Alias used by forms; same component. */
+export { GoogleSignInButton as GoogleSignIn };

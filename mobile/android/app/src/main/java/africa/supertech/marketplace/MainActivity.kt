@@ -101,6 +101,9 @@ class MainActivity : AppCompatActivity() {
     private var vendors = emptyList<Vendor>()
     private var categories = listOf("All")
     private var selectedCategory = "All"
+    /** Live badge on header bell — updated without rebuilding the whole header. */
+    private var notifBadgeView: TextView? = null
+    private val notifListener: () -> Unit = { refreshNotifBadge() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -220,6 +223,9 @@ class MainActivity : AppCompatActivity() {
         outer.addView(aiFabView, fabParams)
         setContentView(outer)
         requestNotificationPermissionIfNeeded()
+        NotificationsStore.init(this)
+        NotificationsStore.addListener(notifListener)
+        Cart.init(this)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -272,16 +278,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        NotificationsStore.removeListener(notifListener)
         executor.shutdownNow()
         imageExecutor.shutdownNow()
         super.onDestroy()
     }
 
+    override fun onResume() {
+        super.onResume()
+        refreshNotifBadge()
+    }
+
     private fun loadMarketplace(fromSwipe: Boolean = false) {
         MarketplaceCache.init(this)
-        // Stale-while-revalidate: paint cache immediately when available
+        // Stale-while-revalidate: paint disk/memory cache immediately so slow nets still show products
         val cached = MarketplaceCache.get()
-        if (cached != null && products.isEmpty() && !fromSwipe) {
+        if (cached != null && (products.isEmpty() || fromSwipe.not()) && !fromSwipe) {
             applyMarketplaceJson(cached, fromCache = true)
         }
 
@@ -291,24 +303,31 @@ class MainActivity : AppCompatActivity() {
 
         executor.execute {
             try {
-                val result = Net.get("/api/mobile/marketplace")
-                if (!result.ok) error(result.errorMessage("Marketplace request failed (${result.code})."))
-                val json = result.json()
+                val json = MarketplaceCache.fetchWithRetry(maxAttempts = 3)
+                    ?: error("Marketplace request failed after retries.")
                 MarketplaceCache.put(this@MainActivity, json)
                 runOnUiThread {
                     applyMarketplaceJson(json, fromCache = false)
                     swipe.isRefreshing = false
                     render(currentTab)
+                    prefetchProductImages(products.take(16))
                 }
             } catch (error: Exception) {
                 runOnUiThread {
                     isLoading = false
-                    // Keep cached content if we have it
+                    if (products.isEmpty() && MarketplaceCache.isUsableOffline()) {
+                        MarketplaceCache.get()?.let { applyMarketplaceJson(it, fromCache = true) }
+                    }
                     if (products.isEmpty()) {
-                        loadError = error.message ?: "Could not load SuperTech data. Check internet and try again."
+                        loadError = error.message
+                            ?: "Could not load SuperTech data. Check internet and try again."
                     } else {
                         loadError = null
-                        Toast.makeText(this, "Using saved marketplace · refresh failed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Showing saved catalog · will refresh when network improves",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     swipe.isRefreshing = false
                     render(currentTab)
@@ -319,20 +338,66 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyMarketplaceJson(json: JSONObject, fromCache: Boolean) {
         val nextProducts = parseProducts(json.optJSONArray("products") ?: JSONArray())
+        // Never wipe a good list with an empty parse on flaky responses
+        if (nextProducts.isEmpty() && products.isNotEmpty()) return
         val nextVendors = parseVendors(json.optJSONArray("vendors") ?: JSONArray())
         val nextCategories = parseStrings(json.optJSONArray("categories") ?: JSONArray()).ifEmpty {
             listOf("All")
         }
         products = nextProducts
-        if (selectedCategory == "All" || displayedProducts.isEmpty()) {
-            displayedProducts = nextProducts
+        if (selectedCategory == "All" || displayedProducts.isEmpty() ||
+            displayedProducts.none { p -> nextProducts.any { it.slug == p.slug } }
+        ) {
+            displayedProducts = if (selectedCategory == "All") nextProducts
+            else nextProducts.filter {
+                it.category.equals(selectedCategory, true) ||
+                    it.category.contains(selectedCategory, true)
+            }.ifEmpty { nextProducts }
         }
-        vendors = nextVendors
-        categories = if (nextCategories.firstOrNull() == "All") nextCategories else listOf("All") + nextCategories
+        if (nextVendors.isNotEmpty()) vendors = nextVendors
+        if (nextCategories.isNotEmpty()) {
+            categories = if (nextCategories.firstOrNull() == "All") nextCategories
+            else listOf("All") + nextCategories
+        }
         isLoading = false
         loadError = null
         if (fromCache && !MarketplaceCache.isFresh()) {
             // Soft indicator only via re-fetch already running
+        }
+    }
+
+    /** Warm image cache for first screen of products (helps slow networks on scroll). */
+    private fun prefetchProductImages(list: List<Product>) {
+        list.forEach { p ->
+            if (p.heroImage.isBlank()) return@forEach
+            val url = if (p.heroImage.startsWith("http")) p.heroImage
+            else if (p.heroImage.startsWith("/")) "$apiBase${p.heroImage}"
+            else "$apiBase/${p.heroImage}"
+            if (imageCache.containsKey(url)) return@forEach
+            imageExecutor.execute {
+                try {
+                    val conn = URL(url).openConnection() as HttpURLConnection
+                    conn.connectTimeout = 6000
+                    conn.readTimeout = 8000
+                    conn.instanceFollowRedirects = true
+                    conn.inputStream.use { stream ->
+                        val bmp = BitmapFactory.decodeStream(stream) ?: return@execute
+                        imageCache[url] = bmp
+                    }
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
+    private fun refreshNotifBadge() {
+        val badge = notifBadgeView ?: return
+        val unread = NotificationsStore.unreadCount()
+        if (unread > 0) {
+            badge.visibility = View.VISIBLE
+            badge.text = if (unread > 9) "9+" else unread.toString()
+        } else {
+            badge.visibility = View.GONE
         }
     }
 
@@ -1382,7 +1447,7 @@ class MainActivity : AppCompatActivity() {
         }, FrameLayout.LayoutParams(dp(42), dp(42), Gravity.END or Gravity.CENTER_VERTICAL))
         row.addView(searchWrap, LinearLayout.LayoutParams(0, dp(42), 1f))
 
-        // Notifications replace former call/WhatsApp header icons — trailing, aligned to search
+        // Notifications — live badge updates via NotificationsStore listener (no app restart)
         val notifBtn = FrameLayout(this).apply {
             contentDescription = "Notifications"
             pressable()
@@ -1405,20 +1470,19 @@ class MainActivity : AppCompatActivity() {
             setPadding(dp(9), dp(9), dp(9), dp(9))
         }, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
         notifBtn.addView(iconChip, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
-        // In-app: badge only on bell (never on logo)
-        val unread = NotificationsStore.unreadCount()
-        if (unread > 0) {
-            notifBtn.addView(TextView(this).apply {
-                text = if (unread > 9) "9+" else unread.toString()
-                textSize = 10f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-                background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
-                minWidth = dp(18)
-                setPadding(dp(5), dp(1), dp(5), dp(1))
-            }, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END))
+        val badge = TextView(this).apply {
+            textSize = 10f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
+            minWidth = dp(18)
+            setPadding(dp(5), dp(1), dp(5), dp(1))
+            visibility = View.GONE
         }
+        notifBtn.addView(badge, FrameLayout.LayoutParams(wrap(), wrap(), Gravity.TOP or Gravity.END))
+        notifBadgeView = badge
+        refreshNotifBadge()
         row.addView(notifBtn, LinearLayout.LayoutParams(dp(44), dp(42)).apply { leftMargin = dp(8) })
 
         wrap.addView(row, LinearLayout.LayoutParams(match(), wrap()))
@@ -2969,6 +3033,8 @@ class MainActivity : AppCompatActivity() {
             kind = "cart",
             imageUrl = product.heroImage
         )
+        // Bell badge updates via store listener; also force a pass for this frame
+        refreshNotifBadge()
         Toast.makeText(this, "${product.name} added to cart", Toast.LENGTH_SHORT).show()
         bumpCartTab()
     }

@@ -33,8 +33,32 @@ object NotificationsStore {
 
     private val memory = LinkedHashMap<String, Item>()
     private val readIds = HashSet<String>()
+    private val listeners = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
     @Volatile private var initialized = false
     @Volatile private var refreshGeneration = 0
+
+    /** UI hooks (header bell badge) — called on main thread when possible. */
+    fun addListener(listener: () -> Unit) {
+        listeners.add(listener)
+    }
+
+    fun removeListener(listener: () -> Unit) {
+        listeners.remove(listener)
+    }
+
+    private fun emitChanged() {
+        val main = android.os.Looper.getMainLooper()
+        val run = Runnable {
+            listeners.forEach {
+                try {
+                    it()
+                } catch (_: Exception) {
+                }
+            }
+        }
+        if (android.os.Looper.myLooper() == main) run.run()
+        else android.os.Handler(main).post(run)
+    }
 
     fun init(context: Context) {
         if (initialized) return
@@ -166,6 +190,7 @@ object NotificationsStore {
         if (merged.read) readIds.add(merged.id)
         memory[merged.id] = merged
         if (persistNow) persist(context)
+        emitChanged()
         if (systemNotify && !merged.read) {
             SystemNotifier.show(
                 context.applicationContext,
@@ -214,6 +239,7 @@ object NotificationsStore {
             }
         }
         persist(context)
+        emitChanged()
         SystemNotifier.updateBadgeOnly(context)
         // Sync remote id if logged in (fire-and-forget from caller preferred)
         if (!id.startsWith("local-") && !id.startsWith("evt-") && Net.isLoggedIn()) {
@@ -240,6 +266,7 @@ object NotificationsStore {
             }
         }
         persist(context)
+        emitChanged()
         try {
             androidx.core.app.NotificationManagerCompat.from(context).cancelAll()
         } catch (_: Exception) {
@@ -340,6 +367,7 @@ object NotificationsStore {
             }
             if (gen != refreshGeneration) return false
             mergeRemote(context, list)
+            emitChanged()
             return true
         } catch (_: Exception) {
             return false

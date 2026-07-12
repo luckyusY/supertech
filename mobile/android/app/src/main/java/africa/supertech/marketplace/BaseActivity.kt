@@ -394,6 +394,7 @@ abstract class BaseActivity : AppCompatActivity() {
     /**
      * Header notification control — sits in the trailing slot (where call/WhatsApp
      * icons used to live). Circular hit target, badge on bell only (never on logo).
+     * Badge refreshes live via [NotificationsStore] listeners.
      */
     protected fun notificationBellButton(): View {
         NotificationsStore.init(this)
@@ -405,7 +406,6 @@ abstract class BaseActivity : AppCompatActivity() {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
             }
         }
-        // Soft circular chip so the bell is clearly placed and tappable
         val iconPad = FrameLayout(this).apply {
             background = rounded(
                 Color.argb(40, 255, 255, 255),
@@ -420,22 +420,38 @@ abstract class BaseActivity : AppCompatActivity() {
             setPadding(dp(9), dp(9), dp(9), dp(9))
         }, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
         wrap.addView(iconPad, FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER))
-        // Badge on bell only (not logo) while user is inside the app
-        val unread = NotificationsStore.unreadCount()
-        if (unread > 0) {
-            wrap.addView(TextView(this).apply {
-                text = if (unread > 9) "9+" else unread.toString()
-                textSize = 10f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-                background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
-                minWidth = dp(18)
-                setPadding(dp(5), dp(1), dp(5), dp(1))
-            }, FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.END).apply {
-                topMargin = 0; rightMargin = 0
-            })
+        val badge = TextView(this).apply {
+            textSize = 10f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            background = rounded(Color.TRANSPARENT, danger, dp(10).toFloat())
+            minWidth = dp(18)
+            setPadding(dp(5), dp(1), dp(5), dp(1))
+            visibility = View.GONE
+            tag = "notif_badge"
         }
+        wrap.addView(badge, FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.END))
+        fun paintBadge() {
+            val unread = NotificationsStore.unreadCount()
+            if (unread > 0) {
+                badge.visibility = View.VISIBLE
+                badge.text = if (unread > 9) "9+" else unread.toString()
+            } else {
+                badge.visibility = View.GONE
+            }
+        }
+        paintBadge()
+        val listener = { paintBadge() }
+        wrap.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                NotificationsStore.addListener(listener)
+                paintBadge()
+            }
+            override fun onViewDetachedFromWindow(v: View) {
+                NotificationsStore.removeListener(listener)
+            }
+        })
         return wrap
     }
 

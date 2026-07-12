@@ -1,6 +1,7 @@
 import { OAuth2Client } from "google-auth-library";
 import { NextResponse } from "next/server";
 import { buildSessionFromMongo, setAuthSessionCookie } from "@/lib/auth";
+import { getGoogleWebClientId } from "@/lib/google-auth";
 import { findOrCreateGoogleUser } from "@/lib/users";
 
 type GoogleSignInBody = {
@@ -9,10 +10,13 @@ type GoogleSignInBody = {
 
 export async function POST(request: Request) {
   try {
-    const clientId = process.env.GOOGLE_WEB_CLIENT_ID?.trim();
+    const clientId = getGoogleWebClientId();
     if (!clientId) {
       return NextResponse.json(
-        { error: "Google sign-in is not configured yet." },
+        {
+          error:
+            "Google sign-in is not configured. Set GOOGLE_WEB_CLIENT_ID (or NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID) in Vercel env and redeploy.",
+        },
         { status: 503 },
       );
     }
