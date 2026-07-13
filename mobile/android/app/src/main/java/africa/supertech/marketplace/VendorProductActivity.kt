@@ -1,8 +1,11 @@
 package africa.supertech.marketplace
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.Gravity
@@ -15,6 +18,7 @@ import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.DataOutputStream
@@ -63,6 +67,20 @@ class VendorProductActivity : BaseActivity() {
 
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) uploadImage(uri)
+        else toast("No image selected")
+    }
+
+    private val requestMediaPermission = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        val ok = grants.values.any { it } || grants.isEmpty()
+        if (ok || canReadImagesWithoutPermission()) {
+            openImagePicker()
+        } else {
+            toast("Allow photos access to upload product images")
+            uploadStatus.text = "Permission needed: allow Photos / Media for SuperTech in Settings."
+            uploadStatus.setTextColor(danger)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -192,7 +210,7 @@ class VendorProductActivity : BaseActivity() {
                     toast("Maximum $maxImages images")
                     return@secondaryButton
                 }
-                pickImage.launch("image/*")
+                ensureMediaPermissionThenPick()
             },
             LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(8) }
         )
@@ -396,6 +414,55 @@ class VendorProductActivity : BaseActivity() {
                     else -> showError(result.errorMessage("Could not save product."))
                 }
             }
+        }
+    }
+
+    /** Ask for gallery/photos permission before opening the system picker. */
+    private fun ensureMediaPermissionThenPick() {
+        val needed = mediaPermissionsNeeded()
+        if (needed.isEmpty()) {
+            openImagePicker()
+            return
+        }
+        val missing = needed.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) {
+            openImagePicker()
+            return
+        }
+        // Explain first, then system dialog
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Allow photo access")
+            .setMessage(
+                "SuperTech needs access to your photos so you can upload product images " +
+                    "for review. You can change this later in Settings."
+            )
+            .setPositiveButton("Continue") { _, _ ->
+                requestMediaPermission.launch(missing.toTypedArray())
+            }
+            .setNegativeButton("Not now", null)
+            .show()
+    }
+
+    private fun mediaPermissionsNeeded(): List<String> {
+        return if (Build.VERSION.SDK_INT >= 33) {
+            listOf(Manifest.permission.READ_MEDIA_IMAGES)
+        } else if (Build.VERSION.SDK_INT >= 23) {
+            listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        } else {
+            emptyList()
+        }
+    }
+
+    /** Android Photo Picker / GetContent often works without legacy storage grants. */
+    private fun canReadImagesWithoutPermission(): Boolean = Build.VERSION.SDK_INT >= 33
+
+    private fun openImagePicker() {
+        try {
+            pickImage.launch("image/*")
+        } catch (e: Exception) {
+            toast(e.message ?: "Could not open gallery")
         }
     }
 
