@@ -400,92 +400,187 @@ class VendorProductActivity : BaseActivity() {
     }
 
     private fun uploadImage(uri: Uri) {
+        if (galleryUrls.size >= maxImages) {
+            toast("Maximum $maxImages images")
+            return
+        }
+        if (!Net.isLoggedIn()) {
+            uploadStatus.text = "Sign in as a vendor to upload images."
+            uploadStatus.setTextColor(danger)
+            return
+        }
         uploadStatus.text = "Uploading image…"
         uploadStatus.setTextColor(muted)
         executor.execute {
             try {
+                val mime = contentResolver.getType(uri).orEmpty()
                 val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                if (bytes == null) {
-                    runOnUiThread { uploadStatus.text = "Could not read that image." }
+                if (bytes == null || bytes.isEmpty()) {
+                    runOnUiThread {
+                        uploadStatus.text = "Could not read that image."
+                        uploadStatus.setTextColor(danger)
+                    }
                     return@execute
                 }
-                val sign = Net.post("/api/cloudinary/sign", JSONObject().put("paramsToSign", JSONObject()))
+                // Must sign the same params we send to Cloudinary (folder is required)
+                val folder = "supertech/products"
+                val paramsToSign = JSONObject().put("folder", folder)
+                val sign = Net.post(
+                    "/api/cloudinary/sign",
+                    JSONObject().put("paramsToSign", paramsToSign)
+                )
                 if (!sign.ok) {
+                    val msg = when {
+                        sign.code == 401 || sign.code == 403 ->
+                            "Session expired — sign in as vendor and try again."
+                        sign.code == 0 ->
+                            "No connection. Check internet and try again."
+                        else ->
+                            sign.errorMessage("Image upload unavailable (${sign.code}).")
+                    }
                     runOnUiThread {
-                        uploadStatus.text = "Image upload unavailable right now."
+                        uploadStatus.text = msg
                         uploadStatus.setTextColor(danger)
                     }
                     return@execute
                 }
                 val s = sign.json()
-                val url = uploadToCloudinary(
-                    bytes,
-                    s.optString("cloudName"),
-                    s.optString("apiKey"),
-                    s.optLong("timestamp"),
-                    s.optString("signature")
+                val cloudName = s.optString("cloudName")
+                val apiKey = s.optString("apiKey")
+                val timestamp = s.optLong("timestamp")
+                val signature = s.optString("signature")
+                if (cloudName.isBlank() || apiKey.isBlank() || signature.isBlank()) {
+                    runOnUiThread {
+                        uploadStatus.text = "Cloudinary is not configured on the server."
+                        uploadStatus.setTextColor(danger)
+                    }
+                    return@execute
+                }
+                val filename = when {
+                    mime.contains("png") -> "upload.png"
+                    mime.contains("webp") -> "upload.webp"
+                    else -> "upload.jpg"
+                }
+                val contentType = when {
+                    mime.contains("png") -> "image/png"
+                    mime.contains("webp") -> "image/webp"
+                    mime.isNotBlank() -> mime
+                    else -> "image/jpeg"
+                }
+                val upload = uploadToCloudinary(
+                    bytes = bytes,
+                    cloudName = cloudName,
+                    apiKey = apiKey,
+                    timestamp = timestamp,
+                    signature = signature,
+                    folder = folder,
+                    filename = filename,
+                    contentType = contentType
                 )
                 runOnUiThread {
-                    if (url != null) {
-                        if (!galleryUrls.contains(url) && galleryUrls.size < maxImages) {
-                            galleryUrls.add(url)
+                    if (upload.url != null) {
+                        if (!galleryUrls.contains(upload.url) && galleryUrls.size < maxImages) {
+                            galleryUrls.add(upload.url)
                             renderGallery()
                         }
                         uploadStatus.text = "Image uploaded"
                         uploadStatus.setTextColor(brand)
                     } else {
-                        uploadStatus.text = "Upload failed. Try another image."
+                        uploadStatus.text = upload.error.ifBlank { "Upload failed. Try another image." }
                         uploadStatus.setTextColor(danger)
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 runOnUiThread {
-                    uploadStatus.text = "Upload failed. Try another image."
+                    uploadStatus.text = e.message?.take(120) ?: "Upload failed. Try another image."
                     uploadStatus.setTextColor(danger)
                 }
             }
         }
     }
 
+    private data class UploadResult(val url: String?, val error: String = "")
+
     private fun uploadToCloudinary(
-        bytes: ByteArray, cloudName: String, apiKey: String, timestamp: Long, signature: String
-    ): String? {
-        if (cloudName.isBlank() || apiKey.isBlank()) return null
+        bytes: ByteArray,
+        cloudName: String,
+        apiKey: String,
+        timestamp: Long,
+        signature: String,
+        folder: String,
+        filename: String,
+        contentType: String
+    ): UploadResult {
+        if (cloudName.isBlank() || apiKey.isBlank() || signature.isBlank()) {
+            return UploadResult(null, "Missing Cloudinary credentials.")
+        }
         val boundary = "----SuperTech${System.currentTimeMillis()}"
-        val connection = URL("https://api.cloudinary.com/v1_1/$cloudName/image/upload").openConnection() as HttpURLConnection
+        val connection = URL("https://api.cloudinary.com/v1_1/$cloudName/image/upload")
+            .openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
         connection.doOutput = true
-        connection.connectTimeout = 20000
-        connection.readTimeout = 40000
+        connection.doInput = true
+        connection.connectTimeout = 30000
+        connection.readTimeout = 60000
+        connection.useCaches = false
         connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+        connection.setRequestProperty("Accept", "application/json")
 
-        DataOutputStream(connection.outputStream).use { out ->
-            fun field(name: String, value: String) {
+        try {
+            connection.outputStream.use { raw ->
+                val out = DataOutputStream(raw)
+                fun field(name: String, value: String) {
+                    out.writeBytes("--$boundary\r\n")
+                    out.writeBytes("Content-Disposition: form-data; name=\"$name\"\r\n\r\n")
+                    out.writeBytes("$value\r\n")
+                }
+                // Only signed params + api_key (api_key is not part of the signature)
+                field("api_key", apiKey)
+                field("timestamp", timestamp.toString())
+                field("signature", signature)
+                field("folder", folder)
                 out.writeBytes("--$boundary\r\n")
-                out.writeBytes("Content-Disposition: form-data; name=\"$name\"\r\n\r\n")
-                out.writeBytes("$value\r\n")
+                out.writeBytes(
+                    "Content-Disposition: form-data; name=\"file\"; filename=\"$filename\"\r\n"
+                )
+                out.writeBytes("Content-Type: $contentType\r\n\r\n")
+                out.write(bytes)
+                out.writeBytes("\r\n")
+                out.writeBytes("--$boundary--\r\n")
+                out.flush()
             }
-            field("api_key", apiKey)
-            field("timestamp", timestamp.toString())
-            field("signature", signature)
-            field("folder", "supertech/products")
-            out.writeBytes("--$boundary\r\n")
-            out.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"upload.jpg\"\r\n")
-            out.writeBytes("Content-Type: image/jpeg\r\n\r\n")
-            out.write(bytes)
-            out.writeBytes("\r\n")
-            out.writeBytes("--$boundary--\r\n")
-            out.flush()
-        }
 
-        val code = connection.responseCode
-        val stream = if (code in 200..299) connection.inputStream else connection.errorStream
-        val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        connection.disconnect()
-        return try {
-            JSONObject(text).optString("secure_url").takeIf { it.isNotBlank() }
-        } catch (_: Exception) {
-            null
+            val code = connection.responseCode
+            val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+            val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            connection.disconnect()
+
+            if (code !in 200..299) {
+                val cloudErr = try {
+                    JSONObject(text).optString("error").ifBlank {
+                        JSONObject(text).optJSONObject("error")?.optString("message").orEmpty()
+                    }
+                } catch (_: Exception) {
+                    text.take(160)
+                }
+                return UploadResult(
+                    null,
+                    cloudErr.ifBlank { "Cloudinary error ($code)." }
+                )
+            }
+            val url = try {
+                JSONObject(text).optString("secure_url").takeIf { it.isNotBlank() }
+            } catch (_: Exception) {
+                null
+            }
+            return if (url != null) UploadResult(url)
+            else UploadResult(null, "Cloudinary returned no image URL.")
+        } catch (e: Exception) {
+            try {
+                connection.disconnect()
+            } catch (_: Exception) {
+            }
+            return UploadResult(null, e.message ?: "Network error uploading image.")
         }
     }
 
