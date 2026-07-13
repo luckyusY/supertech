@@ -214,7 +214,7 @@ class DashboardActivity : BaseActivity() {
             body.block(statGrid(listOf(
                 "Products" to total.toString(),
                 "Approved" to approved.toString(),
-                "In review" to pending.toString(),
+                "Awaiting review" to pending.toString(),
                 "Rejected" to rejected.toString()
             )), 4)
 
@@ -222,17 +222,49 @@ class DashboardActivity : BaseActivity() {
                 navigateForward(Intent(this, VendorProductActivity::class.java))
             }.also { animateIn(it) })
 
+            // Dedicated queue: products waiting on admin (clear for sellers)
+            val pendingList = ArrayList<JSONObject>()
+            val approvedList = ArrayList<JSONObject>()
+            val otherList = ArrayList<JSONObject>()
+            if (subs != null) {
+                for (i in 0 until subs.length()) {
+                    val p = subs.optJSONObject(i) ?: continue
+                    when (p.optString("status")) {
+                        "pending_review" -> pendingList.add(p)
+                        "approved" -> approvedList.add(p)
+                        else -> otherList.add(p)
+                    }
+                }
+            }
+
+            if (pendingList.isNotEmpty()) {
+                body.addView(sectionTitle("Products awaiting admin review (${pendingList.size})"))
+                body.addView(text(
+                    "These listings are not live yet. An admin will approve or request changes.",
+                    13f,
+                    muted
+                ).apply { setPadding(0, 0, 0, dp(8)) })
+                pendingList.forEachIndexed { i, p ->
+                    body.addView(productRow(p, index = i + 1).also { animateIn(it, i.coerceAtMost(12)) })
+                }
+            } else if (total > 0) {
+                body.addView(sectionTitle("Awaiting admin review"))
+                body.addView(text("No products waiting for review right now.", 13f, muted).apply {
+                    setPadding(0, 0, 0, dp(10))
+                })
+            }
+
             body.addView(sectionTitle("All your products ($total)"))
-            if (subs == null || subs.length() == 0) {
+            if (total == 0) {
                 body.addView(emptyState(
                     "No products yet",
                     "Submit your first product to start selling on SuperTech.",
                     "Add product"
                 ) { navigateForward(Intent(this, VendorProductActivity::class.java)) })
             } else {
-                for (i in 0 until subs.length()) {
-                    val p = subs.optJSONObject(i) ?: continue
-                    body.addView(productRow(p, index = i + 1).also { animateIn(it, i.coerceAtMost(20)) })
+                var idx = 1
+                (approvedList + otherList + pendingList).forEach { p ->
+                    body.addView(productRow(p, index = idx++).also { animateIn(it, (idx - 1).coerceAtMost(20)) })
                 }
             }
 

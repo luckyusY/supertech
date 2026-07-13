@@ -703,8 +703,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderHome() {
         content.addView(heroCarousel())
+        // Always show shop-by-category strip (website parity images + label)
         if (!isLoading && categories.size > 1) {
-            content.addView(blueCategoryRail(categories.filterNot { it == "All" }.take(12)))
+            content.addView(blueCategoryRail(categories.filterNot { it == "All" }))
         }
         content.addView(paddedSection {
             addView(trustStrip())
@@ -1545,8 +1546,98 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Snapping page scroller for the hero.
-     * Strongly claims horizontal gestures so vertical ScrollView / SwipeRefresh never steal them.
+     * Horizontal scroller that only steals gestures after a clear horizontal drag.
+     * Vertical swipes still scroll the home page / pull-to-refresh.
+     */
+    private fun hScroll(content: View): HorizontalScrollView {
+        return object : HorizontalScrollView(this) {
+            private var downX = 0f
+            private var downY = 0f
+            private var locked: Boolean? = null // null undecided, true horizontal, false vertical
+            private val slop = android.view.ViewConfiguration.get(context).scaledTouchSlop
+
+            init {
+                isHorizontalScrollBarEnabled = false
+                overScrollMode = View.OVER_SCROLL_NEVER
+                isFillViewport = false
+                isNestedScrollingEnabled = true
+                clipToPadding = false
+            }
+
+            private fun setParentsDisallow(disallow: Boolean) {
+                var p: android.view.ViewParent? = parent
+                while (p != null) {
+                    p.requestDisallowInterceptTouchEvent(disallow)
+                    p = p.parent
+                }
+                try {
+                    swipe.isEnabled = !disallow
+                } catch (_: Exception) {
+                }
+            }
+
+            override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+                when (ev.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        downX = ev.x
+                        downY = ev.y
+                        locked = null
+                        // Do NOT lock parents yet — allows vertical page scroll
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        if (locked == null) {
+                            val dx = kotlin.math.abs(ev.x - downX)
+                            val dy = kotlin.math.abs(ev.y - downY)
+                            if (dx > slop || dy > slop) {
+                                locked = dx > dy
+                                setParentsDisallow(locked == true)
+                            }
+                        }
+                        if (locked == true) return true
+                        if (locked == false) return false
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        locked = null
+                        setParentsDisallow(false)
+                    }
+                }
+                return super.onInterceptTouchEvent(ev)
+            }
+
+            override fun onTouchEvent(ev: MotionEvent): Boolean {
+                when (ev.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> {
+                        downX = ev.x
+                        downY = ev.y
+                        locked = null
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        if (locked == null) {
+                            val dx = kotlin.math.abs(ev.x - downX)
+                            val dy = kotlin.math.abs(ev.y - downY)
+                            if (dx > slop || dy > slop) {
+                                locked = dx > dy
+                                setParentsDisallow(locked == true)
+                            }
+                        }
+                        if (locked == false) {
+                            setParentsDisallow(false)
+                            return false
+                        }
+                        if (locked == true) setParentsDisallow(true)
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        locked = null
+                        setParentsDisallow(false)
+                    }
+                }
+                return super.onTouchEvent(ev)
+            }
+        }.also { it.addView(content) }
+    }
+
+    /**
+     * Snapping page scroller for the hero (swipe left/right between featured products).
      */
     private inner class PagerScrollView(
         private val pageStride: Int,
@@ -1555,18 +1646,16 @@ class MainActivity : AppCompatActivity() {
     ) : HorizontalScrollView(this@MainActivity) {
         private var downX = 0f
         private var downY = 0f
-        private var draggingHorizontal = false
+        private var locked: Boolean? = null
         private val touchSlop = android.view.ViewConfiguration.get(context).scaledTouchSlop
 
         init {
             isHorizontalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
-            // false: do not squeeze multi-page content into one viewport width
             isFillViewport = false
             isNestedScrollingEnabled = true
-            isClickable = true
-            isFocusable = true
-            descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+            isClickable = false
+            isFocusable = false
             viewTreeObserver.addOnScrollChangedListener {
                 if (pageStride > 0 && pageCount > 0) {
                     onPage(((scrollX + pageStride / 2) / pageStride).coerceIn(0, pageCount - 1))
@@ -1574,7 +1663,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        private fun disallowParents(disallow: Boolean) {
+        private fun setParentsDisallow(disallow: Boolean) {
             var p: android.view.ViewParent? = parent
             while (p != null) {
                 p.requestDisallowInterceptTouchEvent(disallow)
@@ -1597,8 +1686,8 @@ class MainActivity : AppCompatActivity() {
             if (pageStride <= 0 || pageCount <= 0) return
             val current = (scrollX + pageStride / 2) / pageStride
             val target = when {
-                velocityX > 300 -> current + 1
-                velocityX < -300 -> current - 1
+                velocityX > 250 -> current + 1
+                velocityX < -250 -> current - 1
                 else -> current
             }.coerceIn(0, pageCount - 1)
             post {
@@ -1613,64 +1702,52 @@ class MainActivity : AppCompatActivity() {
                 MotionEvent.ACTION_DOWN -> {
                     downX = ev.x
                     downY = ev.y
-                    draggingHorizontal = false
-                    // Keep parent from eating the stream while we decide direction
-                    disallowParents(true)
+                    locked = null
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = kotlin.math.abs(ev.x - downX)
                     val dy = kotlin.math.abs(ev.y - downY)
-                    if (!draggingHorizontal && (dx > touchSlop || dy > touchSlop)) {
-                        if (dx > dy) {
-                            draggingHorizontal = true
-                            disallowParents(true)
-                            return true
-                        } else {
-                            // Vertical — let home ScrollView / pull-to-refresh work
-                            disallowParents(false)
-                            return false
-                        }
+                    if (locked == null && (dx > touchSlop || dy > touchSlop)) {
+                        locked = dx > dy
+                        setParentsDisallow(locked == true)
                     }
-                    if (draggingHorizontal) {
-                        disallowParents(true)
-                        return true
-                    }
+                    if (locked == true) return true
+                    if (locked == false) return false
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (!draggingHorizontal) disallowParents(false)
+                    locked = null
+                    setParentsDisallow(false)
                 }
             }
-            return super.onInterceptTouchEvent(ev) || draggingHorizontal
+            return super.onInterceptTouchEvent(ev)
         }
 
-        @SuppressLint("ClickableViewAccessibility")
         override fun onTouchEvent(ev: MotionEvent): Boolean {
             if (pageCount <= 1) return super.onTouchEvent(ev)
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     downX = ev.x
                     downY = ev.y
-                    draggingHorizontal = false
-                    disallowParents(true)
+                    locked = null
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = kotlin.math.abs(ev.x - downX)
                     val dy = kotlin.math.abs(ev.y - downY)
-                    if (dx > dy) {
-                        draggingHorizontal = true
-                        disallowParents(true)
-                    } else if (dy > touchSlop && dy > dx * 1.2f && !draggingHorizontal) {
-                        disallowParents(false)
+                    if (locked == null && (dx > touchSlop || dy > touchSlop)) {
+                        locked = dx > dy
+                        setParentsDisallow(locked == true)
+                    }
+                    if (locked == false) {
+                        setParentsDisallow(false)
                         return false
                     }
+                    if (locked == true) setParentsDisallow(true)
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     val handled = super.onTouchEvent(ev)
-                    if (draggingHorizontal || kotlin.math.abs(ev.x - downX) > touchSlop) {
-                        snap()
-                    }
-                    draggingHorizontal = false
-                    disallowParents(false)
+                    if (locked == true || kotlin.math.abs(ev.x - downX) > touchSlop) snap()
+                    locked = null
+                    setParentsDisallow(false)
                     return handled
                 }
             }
@@ -1684,7 +1761,8 @@ class MainActivity : AppCompatActivity() {
      */
     private fun heroCarousel(): View {
         val slideWidth = resources.displayMetrics.widthPixels
-        val slideHeight = dp(420)
+        // Compact website-style mobile hero (image + copy without huge empty space)
+        val slideHeight = dp(360)
         val stride = slideWidth
 
         data class ProductHero(
@@ -1716,7 +1794,6 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         } else {
-            // Fallback promo while catalog loads (same banner assets as web merch)
             listOf(
                 ProductHero(
                     "Live now", "SuperTech", "Verified marketplace deals",
@@ -1738,8 +1815,7 @@ class MainActivity : AppCompatActivity() {
 
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            // Exact width so HorizontalScrollView can page by screen width
-            layoutParams = ViewGroup.LayoutParams(slideWidth * slides.size, slideHeight)
+            layoutParams = ViewGroup.LayoutParams(slideWidth * slides.size.coerceAtLeast(1), slideHeight)
         }
         slides.forEach { spec ->
             row.addView(
@@ -1820,7 +1896,10 @@ class MainActivity : AppCompatActivity() {
         return frame
     }
 
-    /** Website HeroSlider mobile layout: brand bg + product image card + copy + gold CTA. */
+    /**
+     * Website HeroSlider mobile layout — clean two-zone slide:
+     * top product image card, bottom copy + price + CTA (swipe-friendly, no full-slide click).
+     */
     private fun websiteHeroSlide(
         label: String,
         brand: String,
@@ -1830,140 +1909,114 @@ class MainActivity : AppCompatActivity() {
         imageUrl: String,
         onCta: () -> Unit
     ): View {
-        val frame = FrameLayout(this).apply { setBackgroundColor(Color.rgb(9, 9, 11)) }
+        val accent = this@MainActivity.brand
+        val frame = FrameLayout(this).apply { setBackgroundColor(Color.rgb(10, 15, 26)) }
 
-        // Brand background (website hero-brand-bg-mobile)
         val bg = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            alpha = 0.8f
+            alpha = 0.55f
         }
         frame.addView(bg, FrameLayout.LayoutParams(match(), match()))
         loadImage(bg, "$apiBase/banners/hero-brand-bg-mobile.jpg")
-        // Fallback dark if brand image fails — already dark bg
 
         frame.addView(View(this).apply {
             background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
-                    Color.argb(40, 9, 9, 11),
-                    Color.argb(120, 9, 9, 11),
-                    Color.argb(230, 9, 9, 11)
+                    Color.argb(60, 10, 15, 26),
+                    Color.argb(180, 10, 15, 26),
+                    Color.argb(245, 10, 15, 26)
                 )
             )
         }, FrameLayout.LayoutParams(match(), match()))
 
         val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(18), dp(16), dp(18), dp(40))
+            setPadding(dp(16), dp(14), dp(16), dp(28))
         }
 
-        // Floating product image card (website mobile layer)
+        // Product still — wide card like website mobile hero image
         val imageCard = FrameLayout(this).apply {
-            background = rounded(Color.argb(40, 255, 255, 255), Color.rgb(24, 24, 27), dp(20).toFloat())
-            elevation = dp(10).toFloat()
+            background = rounded(Color.argb(50, 255, 255, 255), Color.rgb(24, 28, 36), dp(18).toFloat())
+            elevation = dp(8).toFloat()
         }
         val productImg = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            setBackgroundColor(Color.rgb(39, 39, 42))
+            setBackgroundColor(Color.rgb(32, 36, 44))
         }
         imageCard.addView(productImg, FrameLayout.LayoutParams(match(), match()))
         if (imageUrl.isNotBlank()) loadImage(productImg, imageUrl)
-        col.addView(imageCard, LinearLayout.LayoutParams(dp(200), dp(160)).apply {
-            gravity = Gravity.CENTER_HORIZONTAL
-            bottomMargin = dp(14)
+        col.addView(imageCard, LinearLayout.LayoutParams(match(), dp(150)).apply {
+            bottomMargin = dp(12)
         })
 
-        // Label pill
         col.addView(TextView(this).apply {
-            text = "✦  ${label.uppercase(Locale.US)}"
+            text = label.uppercase(Locale.US)
             textSize = 10f
             typeface = Typeface.DEFAULT_BOLD
-            letterSpacing = 0.12f
+            letterSpacing = 0.14f
             setTextColor(Color.WHITE)
             background = rounded(
-                Color.argb(60, 255, 255, 255),
-                Color.argb(40, 255, 255, 255),
-                dp(20).toFloat()
+                Color.argb(70, 255, 255, 255),
+                Color.argb(35, 255, 255, 255),
+                dp(14).toFloat()
             )
-            setPadding(dp(12), dp(6), dp(12), dp(6))
-        }, LinearLayout.LayoutParams(wrap(), wrap()).apply {
-            gravity = Gravity.START
-            bottomMargin = dp(8)
+            setPadding(dp(10), dp(5), dp(10), dp(5))
+        }, LinearLayout.LayoutParams(wrap(), wrap()).apply { bottomMargin = dp(8) })
+
+        col.addView(text(brand.uppercase(Locale.US), 11f, accent, Typeface.BOLD).apply {
+            letterSpacing = 0.14f
         })
-
-        val accent = this@MainActivity.brand
-        col.addView(text(brand.uppercase(Locale.US), 12f, accent, Typeface.BOLD).apply {
-            letterSpacing = 0.16f
-        }, LinearLayout.LayoutParams(match(), wrap()))
-
-        col.addView(text(title, 26f, Color.WHITE, Typeface.BOLD).apply {
+        col.addView(text(title, 22f, Color.WHITE, Typeface.BOLD).apply {
             setPadding(0, dp(4), 0, 0)
             maxLines = 2
             ellipsize = android.text.TextUtils.TruncateAt.END
             setLineSpacing(0f, 1.05f)
         })
-
-        col.addView(text(body, 13f, Color.argb(180, 255, 255, 255), Typeface.NORMAL).apply {
-            setPadding(0, dp(6), 0, 0)
+        col.addView(text(body, 12f, Color.argb(190, 255, 255, 255), Typeface.NORMAL).apply {
+            setPadding(0, dp(4), 0, 0)
             maxLines = 2
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
 
         if (priceLine.isNotBlank()) {
-            val priceRow = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(10), 0, 0)
-            }
             val parts = priceLine.split(" · ")
-            priceRow.addView(TextView(this).apply {
+            col.addView(TextView(this@MainActivity).apply {
                 text = parts.firstOrNull().orEmpty()
                 textSize = 14f
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(Color.WHITE)
                 background = rounded(
-                    Color.argb(40, 255, 255, 255),
-                    Color.argb(30, 255, 255, 255),
-                    dp(10).toFloat()
+                    Color.argb(50, 255, 255, 255),
+                    Color.argb(28, 255, 255, 255),
+                    this@MainActivity.dp(10).toFloat()
                 )
-                setPadding(dp(12), dp(8), dp(12), dp(8))
+                setPadding(
+                    this@MainActivity.dp(12),
+                    this@MainActivity.dp(7),
+                    this@MainActivity.dp(12),
+                    this@MainActivity.dp(7)
+                )
+            }, LinearLayout.LayoutParams(wrap(), wrap()).apply {
+                topMargin = this@MainActivity.dp(10)
             })
-            if (parts.size > 1) {
-                priceRow.addView(text(parts.drop(1).joinToString(" · "), 11f, Color.argb(140, 255, 255, 255), Typeface.BOLD).apply {
-                    setPadding(dp(10), 0, 0, 0)
-                    maxLines = 1
-                })
-            }
-            col.addView(priceRow)
         }
 
-        col.addView(Button(this).apply {
-            text = "SHOP NOW  →"
-            textSize = 12f
-            isAllCaps = true
+        col.addView(Button(this@MainActivity).apply {
+            text = "Shop now"
+            textSize = 13f
+            isAllCaps = false
             typeface = Typeface.DEFAULT_BOLD
-            letterSpacing = 0.08f
             setTextColor(ColorStateList.valueOf(Color.WHITE))
             backgroundTintList = null
-            background = rounded(Color.TRANSPARENT, accent, dp(28).toFloat())
+            background = rounded(Color.TRANSPARENT, accent, this@MainActivity.dp(24).toFloat())
             stateListAnimator = null
-            minimumHeight = dp(48)
-            // Let horizontal swipes pass to the pager when the user starts on the button
-            setOnTouchListener { v, event ->
-                when (event.actionMasked) {
-                    MotionEvent.ACTION_DOWN -> v.parent?.requestDisallowInterceptTouchEvent(false)
-                }
-                false
-            }
+            minimumHeight = this@MainActivity.dp(44)
             setOnClickListener { onCta() }
-        }, LinearLayout.LayoutParams(wrap(), dp(48)).apply {
-            topMargin = dp(14)
-            gravity = Gravity.START
+        }, LinearLayout.LayoutParams(wrap(), this@MainActivity.dp(44)).apply {
+            topMargin = this@MainActivity.dp(12)
         })
 
-        // Do NOT set click on the whole slide — that blocks HorizontalScrollView paging.
-        // Only the Shop now button opens the product.
         frame.isClickable = false
         frame.isFocusable = false
         frame.addView(col, FrameLayout.LayoutParams(match(), match()))
@@ -1971,26 +2024,48 @@ class MainActivity : AppCompatActivity() {
         return frame
     }
 
-    /** Adorama-style blue product strip under the hero. */
+    /** Website category image path: /categories/{slug}.jpg */
+    private fun categoryImageUrl(category: String): String {
+        val slug = category.lowercase(Locale.US)
+            .replace("&", "")
+            .replace(Regex("\\s+"), "_")
+            .replace(Regex("_+"), "_")
+            .trim('_')
+        return "$apiBase/categories/$slug.jpg"
+    }
+
+    /**
+     * Website VisualCategoryRail / “Shop by category” strip under the hero.
+     * Uses the same /categories/*.jpg assets as supertech.africa.
+     */
     private fun blueCategoryRail(items: List<String>): View {
         val wrap = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(blueStart, blueMid, blueEnd)
+                intArrayOf(
+                    Color.rgb(204, 102, 0),
+                    Color.rgb(232, 119, 10),
+                    Color.rgb(179, 89, 0)
+                )
             )
-            setPadding(0, dp(10), 0, dp(10))
+            setPadding(0, dp(10), 0, dp(12))
         }
+        wrap.addView(text("SHOP BY CATEGORY", 12f, Color.WHITE, Typeface.BOLD).apply {
+            gravity = Gravity.CENTER
+            letterSpacing = 0.1f
+            setPadding(0, 0, 0, dp(8))
+        }, LinearLayout.LayoutParams(match(), wrap()))
+
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(8), 0, dp(8), 0)
+            setPadding(dp(6), 0, dp(6), 0)
         }
         items.forEach { category ->
-            val sample = products.firstOrNull { it.category.equals(category, true) }
             val cell = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER_HORIZONTAL
-                setPadding(dp(8), dp(4), dp(8), dp(4))
+                setPadding(dp(6), dp(4), dp(6), dp(4))
                 pressable()
                 setOnClickListener {
                     selectedCategory = category
@@ -2000,25 +2075,20 @@ class MainActivity : AppCompatActivity() {
             }
             val image = ImageView(this).apply {
                 scaleType = ImageView.ScaleType.CENTER_INSIDE
-                setImageResource(android.R.drawable.ic_menu_gallery)
-                setColorFilter(Color.WHITE)
-                setBackgroundColor(Color.argb(30, 255, 255, 255))
+                setBackgroundColor(Color.TRANSPARENT)
             }
-            if (sample != null) loadImage(image, sample.heroImage)
-            cell.addView(image, LinearLayout.LayoutParams(dp(72), dp(72)))
+            // Website category art first; fall back to a sample product image
+            loadImage(image, categoryImageUrl(category))
+            cell.addView(image, LinearLayout.LayoutParams(dp(88), dp(72)))
             cell.addView(text(category, 11f, Color.WHITE, Typeface.BOLD).apply {
                 gravity = Gravity.CENTER
                 maxLines = 2
                 minLines = 2
-                setPadding(0, dp(6), 0, 0)
-            }, LinearLayout.LayoutParams(dp(88), wrap()))
+                setPadding(0, dp(4), 0, 0)
+            }, LinearLayout.LayoutParams(dp(100), wrap()))
             row.addView(cell)
         }
-        wrap.addView(HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
-            overScrollMode = View.OVER_SCROLL_NEVER
-            addView(row)
-        })
+        wrap.addView(hScroll(row))
         return wrap
     }
 
@@ -2412,11 +2482,7 @@ class MainActivity : AppCompatActivity() {
             lp.rightMargin = dp(10)
             row.addView(vendorMiniCard(vendor).animateIn(i), lp)
         }
-        return HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
-            overScrollMode = View.OVER_SCROLL_NEVER
-            addView(row)
-        }.withMargins(bottom = 8)
+        return hScroll(row).withMargins(bottom = 8)
     }
 
     private fun vendorMiniCard(vendor: Vendor): View {
