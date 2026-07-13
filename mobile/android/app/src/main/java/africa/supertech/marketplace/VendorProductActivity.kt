@@ -5,11 +5,14 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
+import android.view.Gravity
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import org.json.JSONArray
@@ -19,16 +22,44 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
 
-/** Native "list a product" form for vendors → POST /api/product-submissions. */
+/**
+ * Native "Add a product for review" — layout/fields aligned with website
+ * [ProductSubmissionForm] (product details, availability, multi-image, AI copy).
+ */
 class VendorProductActivity : BaseActivity() {
     override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.DASHBOARD
     override fun dockHighlight(): DockTab = DockTab.ACCOUNT
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submit: Button
-    private lateinit var heroField: EditText
     private lateinit var uploadStatus: TextView
-    private lateinit var preview: ImageView
+    private lateinit var galleryHost: LinearLayout
+    private lateinit var errorText: TextView
+    private lateinit var successText: TextView
+    private lateinit var aiStatus: TextView
+
+    private lateinit var nameField: EditText
+    private lateinit var categorySpinner: Spinner
+    private lateinit var badgeSpinner: Spinner
+    private lateinit var priceField: EditText
+    private lateinit var compareField: EditText
+    private lateinit var stockSpinner: Spinner
+    private lateinit var shipSpinner: Spinner
+    private lateinit var descriptionField: EditText
+    private lateinit var featuresField: EditText
+
+    private val galleryUrls = ArrayList<String>()
+    private val maxImages = 4
+
+    private val badgeOptions = listOf(
+        "New listing", "Best seller", "Limited stock", "Editor's pick", "Sale", "Pre-order"
+    )
+    private val stockOptions = listOf(
+        "In stock", "Limited stock", "Only 3 left", "Pre-order", "Out of stock"
+    )
+    private val shipOptions = listOf(
+        "Ships within 24h", "Ships within 48h", "Ships within 3-5 days", "Ships within 1 week"
+    )
 
     private val pickImage = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) uploadImage(uri)
@@ -48,130 +79,307 @@ class VendorProductActivity : BaseActivity() {
         val editId = intent.getStringExtra("editId")
         val editing = !editId.isNullOrBlank()
 
-        val content = scaffold(if (editing) "Edit product" else "List a product", withBack = true)
-        content.block(text(if (editing) "Edit product" else "New product", 24f, ink, Typeface.BOLD), 4)
-        content.block(text(
-            if (editing) "Update your product. Changes go back through review."
-            else "Submit a product for review. Once approved it appears in the marketplace.",
-            14f, muted), 16)
+        val content = scaffold(if (editing) "Edit product" else "Add product", withBack = true)
 
-        val form = card()
-        form.block(fieldLabel("Product name"), 0)
-        val name = inputField("e.g. Dell XPS 13", Types.TEXT); form.block(name, 10)
-        form.block(fieldLabel("Category"), 0)
-        val category = categoryPicker(intent.getStringExtra("category")); form.block(category, 10)
-        form.block(fieldLabel("Price (RWF)"), 0)
-        val price = inputField("450000", InputType.TYPE_CLASS_NUMBER); form.block(price, 10)
-        form.block(fieldLabel("Badge (optional)"), 0)
-        val badge = inputField("e.g. Best seller", Types.TEXT); form.block(badge, 10)
-        form.block(fieldLabel("Stock label"), 0)
-        val stock = inputField("e.g. In stock", Types.TEXT); form.block(stock, 10)
-        form.block(fieldLabel("Ship window"), 0)
-        val ship = inputField("e.g. 2–3 days", Types.TEXT); form.block(ship, 10)
-        form.block(fieldLabel("Description"), 0)
-        val description = inputField("Describe the product", Types.TEXT).apply {
+        // —— Header card (website soft-card header)
+        val header = card()
+        header.setBackgroundColor(Color.rgb(248, 249, 251))
+        header.addView(text("PRODUCT LISTING", 11f, muted, Typeface.BOLD).apply {
+            letterSpacing = 0.12f
+        })
+        header.addView(text(
+            if (editing) "Edit product for review" else "Add a product for review",
+            22f, ink, Typeface.BOLD
+        ).apply { setPadding(0, dp(6), 0, 0) })
+        header.addView(text(
+            "Once submitted, an admin will review and publish it to the catalog.",
+            13f, muted
+        ).apply { setPadding(0, dp(4), 0, dp(12)) })
+        header.addView(text("SELLING AS", 10f, muted, Typeface.BOLD).apply { letterSpacing = 0.1f })
+        header.addView(
+            text(session.name.ifBlank { session.vendorSlug ?: "Your store" }, 15f, ink, Typeface.BOLD).apply {
+                setPadding(dp(12), dp(10), dp(12), dp(10))
+                background = rounded(line, Color.rgb(241, 243, 246), dp(12).toFloat())
+            }
+        )
+        content.block(header, 14)
+
+        // —— Product details
+        val details = card()
+        details.addView(sectionLabel("Product details"))
+        details.block(fieldLabel("Product name *"), 0)
+        nameField = inputField("e.g. Wireless Noise-Cancelling Headphones", Types.TEXT)
+        details.block(nameField, 10)
+
+        details.block(fieldLabel("Category *"), 0)
+        categorySpinner = categoryPicker(intent.getStringExtra("category"))
+        details.block(categorySpinner, 10)
+
+        details.block(fieldLabel("Badge label"), 0)
+        badgeSpinner = optionSpinner(badgeOptions, "New listing")
+        details.block(badgeSpinner, 10)
+
+        details.block(fieldLabel("Price (RWF) *"), 0)
+        priceField = inputField("e.g. 450000", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        details.block(priceField, 10)
+
+        details.block(fieldLabel("Compare-at price (strikethrough, optional)"), 0)
+        compareField = inputField("Optional original price", InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        details.block(compareField, 10)
+
+        val descHead = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        descHead.addView(
+            fieldLabel("Description *"),
+            LinearLayout.LayoutParams(0, wc(), 1f)
+        )
+        descHead.addView(
+            secondaryButton("Generate with AI") { generateAiCopy() }.apply {
+                minimumHeight = dp(40)
+                textSize = 12f
+            },
+            LinearLayout.LayoutParams(wc(), wc())
+        )
+        details.addView(descHead)
+        descriptionField = inputField("What does this product do? Who is it for?", Types.TEXT).apply {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             setSingleLine(false)
-            minLines = 3
+            minLines = 4
         }
-        form.block(description, 10)
-        form.block(fieldLabel("Features (one per line)"), 0)
-        val features = inputField("8GB RAM\n256GB SSD", Types.TEXT).apply {
+        details.block(descriptionField, 4)
+        aiStatus = text("Tip: enter the product name, then let AI draft description and bullets.", 12f, muted)
+        details.addView(aiStatus)
+
+        details.block(fieldLabel("Key features (one per line, up to 8)"), 0)
+        featuresField = inputField("Active noise cancellation\n40h battery life\nUSB-C fast charging", Types.TEXT).apply {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             setSingleLine(false)
-            minLines = 2
+            minLines = 4
+            typeface = Typeface.MONOSPACE
+            textSize = 12f
         }
-        form.block(features, 0)
-        content.block(form, 14)
+        details.block(featuresField, 0)
+        content.block(details, 14)
 
-        if (editing) {
-            name.setText(intent.getStringExtra("name").orEmpty())
-            val p = intent.getDoubleExtra("price", 0.0)
-            if (p > 0) price.setText(p.toLong().toString())
-            badge.setText(intent.getStringExtra("badge").orEmpty())
-            stock.setText(intent.getStringExtra("stockLabel").orEmpty())
-            ship.setText(intent.getStringExtra("shipWindow").orEmpty())
-            description.setText(intent.getStringExtra("description").orEmpty())
-            features.setText(intent.getStringArrayListExtra("features")?.joinToString("\n").orEmpty())
-        }
+        // —— Availability
+        val avail = card()
+        avail.addView(sectionLabel("Availability & shipping"))
+        avail.block(fieldLabel("Stock status"), 0)
+        stockSpinner = optionSpinner(stockOptions, "In stock")
+        avail.block(stockSpinner, 10)
+        avail.block(fieldLabel("Shipping window"), 0)
+        shipSpinner = optionSpinner(shipOptions, "Ships within 48h")
+        avail.block(shipSpinner, 0)
+        content.block(avail, 14)
 
-        // Image
-        val imageCard = card()
-        imageCard.addView(text("Product image", 15f, ink, Typeface.BOLD))
-        preview = ImageView(this).apply {
-            setBackgroundColor(Color.rgb(232, 237, 242))
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            visibility = View.GONE
+        // —— Images
+        val images = card()
+        images.addView(sectionLabel("Product images"))
+        images.addView(text("First image becomes the hero. Add up to 4 total.", 13f, muted).apply {
+            setPadding(0, dp(4), 0, dp(10))
+        })
+        galleryHost = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        images.addView(galleryHost)
+        uploadStatus = text("Upload from gallery or camera.", 13f, muted).apply {
+            setPadding(0, dp(8), 0, 0)
         }
-        imageCard.addView(preview, LinearLayout.LayoutParams(mp(), dp(160)).apply { topMargin = dp(10) })
-        uploadStatus = text("Upload an image, or paste an image URL below.", 13f, muted).apply { setPadding(0, dp(8), 0, 0) }
-        imageCard.addView(uploadStatus)
-        imageCard.addView(
-            secondaryButton("Upload from gallery") { pickImage.launch("image/*") },
+        images.addView(uploadStatus)
+        images.addView(
+            secondaryButton("Upload image") {
+                if (galleryUrls.size >= maxImages) {
+                    toast("Maximum $maxImages images")
+                    return@secondaryButton
+                }
+                pickImage.launch("image/*")
+            },
             LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(8) }
         )
-        heroField = inputField("https://…/image.jpg", InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT)
-        imageCard.addView(fieldLabel("Image URL"))
-        imageCard.addView(heroField, LinearLayout.LayoutParams(mp(), wc()))
-        content.block(imageCard, 14)
+        content.block(images, 14)
 
-        if (editing) intent.getStringExtra("heroImage")?.takeIf { it.isNotBlank() }?.let {
-            heroField.setText(it)
-            preview.visibility = View.VISIBLE
-            loadImage(preview, it)
+        // Prefill edit mode
+        if (editing) {
+            nameField.setText(intent.getStringExtra("name").orEmpty())
+            val p = intent.getDoubleExtra("price", 0.0)
+            if (p > 0) priceField.setText(p.toLong().toString())
+            val cmp = intent.getDoubleExtra("compareAt", 0.0)
+            if (cmp > 0) compareField.setText(cmp.toLong().toString())
+            selectSpinner(badgeSpinner, badgeOptions, intent.getStringExtra("badge") ?: "New listing")
+            selectSpinner(stockSpinner, stockOptions, intent.getStringExtra("stockLabel") ?: "In stock")
+            selectSpinner(shipSpinner, shipOptions, intent.getStringExtra("shipWindow") ?: "Ships within 48h")
+            descriptionField.setText(intent.getStringExtra("description").orEmpty())
+            featuresField.setText(intent.getStringArrayListExtra("features")?.joinToString("\n").orEmpty())
+            intent.getStringExtra("heroImage")?.takeIf { it.isNotBlank() }?.let {
+                galleryUrls.add(it)
+            }
+            intent.getStringArrayListExtra("gallery")?.forEach { u ->
+                if (u.isNotBlank() && !galleryUrls.contains(u)) galleryUrls.add(u)
+            }
+            renderGallery()
         }
 
-        val error = text("", 13f, danger).apply { visibility = View.GONE }
-        content.block(error, 6)
+        errorText = text("", 13f, danger).apply { visibility = View.GONE }
+        content.block(errorText, 6)
+        successText = text("", 13f, brand).apply { visibility = View.GONE }
+        content.block(successText, 6)
 
+        val foot = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(4), 0, dp(8))
+        }
+        foot.addView(text("Products go live after admin approval — usually within 24 hours.", 12f, muted))
         submit = primaryButton(if (editing) "Save changes" else "Submit for review") {
-            create(
-                editId,
-                name.text.toString().trim(),
-                selectedCategory(category),
-                price.text.toString().trim(),
-                badge.text.toString().trim(),
-                stock.text.toString().trim(),
-                ship.text.toString().trim(),
-                description.text.toString().trim(),
-                features.text.toString(),
-                session.vendorSlug.orEmpty(),
-                error
-            )
+            create(editId, session.vendorSlug.orEmpty())
         }
-        submit.minimumHeight = dp(52)
-        content.block(submit, 10)
+        submit.minimumHeight = dp(54)
+        foot.addView(submit, LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(12) })
+        content.block(foot, 16)
     }
 
-    private fun create(
-        editId: String?,
-        name: String, category: String, priceText: String, badge: String, stock: String,
-        ship: String, description: String, featuresText: String, vendorSlug: String, error: View
-    ) {
-        error as TextView
-        val price = priceText.replace(",", "").toDoubleOrNull()
-        if (name.isBlank() || category.isBlank() || price == null) {
-            show(error, "Name, category and a valid price are required.")
+    private fun sectionLabel(title: String): View {
+        return text(title.uppercase(), 12f, muted, Typeface.BOLD).apply {
+            letterSpacing = 0.08f
+            setPadding(0, 0, 0, dp(10))
+            setTextColor(brand)
+        }
+    }
+
+    private fun optionSpinner(options: List<String>, selected: String): Spinner {
+        val spinner = Spinner(this).apply {
+            background = rounded(line, page, dp(12).toFloat())
+            setPadding(dp(10), dp(8), dp(10), dp(8))
+            adapter = ArrayAdapter(this@VendorProductActivity, android.R.layout.simple_spinner_dropdown_item, options)
+        }
+        selectSpinner(spinner, options, selected)
+        return spinner
+    }
+
+    private fun selectSpinner(spinner: Spinner, options: List<String>, selected: String) {
+        val i = options.indexOfFirst { it.equals(selected, true) }
+        if (i >= 0) spinner.setSelection(i)
+    }
+
+    private fun spinnerValue(spinner: Spinner): String =
+        spinner.selectedItem?.toString()?.trim().orEmpty()
+
+    private fun renderGallery() {
+        galleryHost.removeAllViews()
+        galleryUrls.forEachIndexed { index, url ->
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                background = rounded(line, Color.WHITE, dp(14).toFloat())
+                setPadding(dp(10), dp(10), dp(10), dp(10))
+            }
+            val img = ImageView(this).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                setBackgroundColor(Color.rgb(232, 237, 242))
+            }
+            row.addView(img, LinearLayout.LayoutParams(mp(), dp(140)))
+            loadImage(img, url)
+            val meta = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(8), 0, 0)
+            }
+            meta.addView(
+                text(if (index == 0) "HERO IMAGE" else "GALLERY $index", 11f, muted, Typeface.BOLD),
+                LinearLayout.LayoutParams(0, wc(), 1f)
+            )
+            meta.addView(textButton("Remove") {
+                galleryUrls.removeAt(index)
+                renderGallery()
+            })
+            row.addView(meta)
+            galleryHost.addView(row, LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(10) })
+        }
+    }
+
+    private fun generateAiCopy() {
+        val name = nameField.text.toString().trim()
+        if (name.length < 3) {
+            aiStatus.text = "Enter a product name first, then generate."
+            aiStatus.setTextColor(danger)
             return
         }
-        val heroImage = heroField.text.toString().trim()
-        if (heroImage.isBlank()) {
-            show(error, "Add a product image (upload or paste a URL).")
+        aiStatus.text = "Writing with AI…"
+        aiStatus.setTextColor(muted)
+        executor.execute {
+            try {
+                val body = JSONObject()
+                    .put("name", name)
+                    .put("category", selectedCategory(categorySpinner))
+                    .put("keywords", featuresField.text.toString())
+                val price = priceField.text.toString().replace(",", "").toDoubleOrNull()
+                if (price != null) body.put("price", price)
+                val result = Net.post("/api/ai/product-copy", body)
+                runOnUiThread {
+                    if (!result.ok) {
+                        aiStatus.text = result.errorMessage("Unable to generate copy.")
+                        aiStatus.setTextColor(danger)
+                        return@runOnUiThread
+                    }
+                    val json = result.json()
+                    json.optString("description").takeIf { it.isNotBlank() }?.let {
+                        descriptionField.setText(it)
+                    }
+                    val feats = json.optJSONArray("features")
+                    if (feats != null && feats.length() > 0) {
+                        val lines = (0 until feats.length()).mapNotNull { feats.optString(it).takeIf { s -> s.isNotBlank() } }
+                        featuresField.setText(lines.joinToString("\n"))
+                    }
+                    aiStatus.text = "AI draft ready — edit before you submit."
+                    aiStatus.setTextColor(brand)
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    aiStatus.text = e.message ?: "Unable to generate copy."
+                    aiStatus.setTextColor(danger)
+                }
+            }
+        }
+    }
+
+    private fun create(editId: String?, vendorSlug: String) {
+        errorText.visibility = View.GONE
+        successText.visibility = View.GONE
+        val name = nameField.text.toString().trim()
+        val category = selectedCategory(categorySpinner)
+        val price = priceField.text.toString().replace(",", "").toDoubleOrNull()
+        val compareAt = compareField.text.toString().replace(",", "").toDoubleOrNull()
+        val description = descriptionField.text.toString().trim()
+        if (name.isBlank() || category.isBlank() || price == null || price <= 0) {
+            showError("Name, category and a valid price are required.")
             return
         }
-        val featureList = featuresText.split("\n", ",").map { it.trim() }.filter { it.isNotBlank() }
+        if (description.isBlank()) {
+            showError("Description is required.")
+            return
+        }
+        if (galleryUrls.isEmpty()) {
+            showError("Upload at least one product image before saving.")
+            return
+        }
+        val featureList = featuresField.text.toString()
+            .split("\n", ",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .take(8)
+        val heroImage = galleryUrls.first()
+        val gallery = galleryUrls.drop(1)
         val body = JSONObject()
             .put("vendorSlug", vendorSlug)
             .put("name", name)
             .put("category", category)
             .put("price", price)
-            .put("badge", badge)
-            .put("stockLabel", stock.ifBlank { "In stock" })
-            .put("shipWindow", ship.ifBlank { "2–4 days" })
+            .put("badge", spinnerValue(badgeSpinner).ifBlank { "New listing" })
+            .put("stockLabel", spinnerValue(stockSpinner).ifBlank { "In stock" })
+            .put("shipWindow", spinnerValue(shipSpinner).ifBlank { "Ships within 48h" })
             .put("description", description)
             .put("features", JSONArray(featureList))
             .put("heroImage", heroImage)
-            .put("gallery", JSONArray(listOf(heroImage)))
+            .put("gallery", JSONArray(gallery))
+        if (compareAt != null && compareAt > 0) body.put("compareAt", compareAt)
 
         setLoading(true)
         executor.execute {
@@ -184,16 +392,12 @@ class VendorProductActivity : BaseActivity() {
                         toast(if (!editId.isNullOrBlank()) "Product updated" else "Submitted for review")
                         finish()
                     }
-                    result.code == 0 -> show(error, "No connection. Try again.")
-                    else -> show(error, result.errorMessage("Could not save product."))
+                    result.code == 0 -> showError("No connection. Try again.")
+                    else -> showError(result.errorMessage("Could not save product."))
                 }
             }
         }
     }
-
-    private val editing: Boolean get() = !intent.getStringExtra("editId").isNullOrBlank()
-
-    // ---- Cloudinary upload ----
 
     private fun uploadImage(uri: Uri) {
         uploadStatus.text = "Uploading image…"
@@ -207,7 +411,10 @@ class VendorProductActivity : BaseActivity() {
                 }
                 val sign = Net.post("/api/cloudinary/sign", JSONObject().put("paramsToSign", JSONObject()))
                 if (!sign.ok) {
-                    runOnUiThread { uploadStatus.text = "Image upload unavailable. Paste an image URL instead." }
+                    runOnUiThread {
+                        uploadStatus.text = "Image upload unavailable right now."
+                        uploadStatus.setTextColor(danger)
+                    }
                     return@execute
                 }
                 val s = sign.json()
@@ -220,17 +427,22 @@ class VendorProductActivity : BaseActivity() {
                 )
                 runOnUiThread {
                     if (url != null) {
-                        heroField.setText(url)
-                        uploadStatus.text = "Image uploaded ✓"
+                        if (!galleryUrls.contains(url) && galleryUrls.size < maxImages) {
+                            galleryUrls.add(url)
+                            renderGallery()
+                        }
+                        uploadStatus.text = "Image uploaded"
                         uploadStatus.setTextColor(brand)
-                        preview.visibility = View.VISIBLE
-                        loadImage(preview, url)
                     } else {
-                        uploadStatus.text = "Upload failed. Paste an image URL instead."
+                        uploadStatus.text = "Upload failed. Try another image."
+                        uploadStatus.setTextColor(danger)
                     }
                 }
             } catch (_: Exception) {
-                runOnUiThread { uploadStatus.text = "Upload failed. Paste an image URL instead." }
+                runOnUiThread {
+                    uploadStatus.text = "Upload failed. Try another image."
+                    uploadStatus.setTextColor(danger)
+                }
             }
         }
     }
@@ -256,6 +468,7 @@ class VendorProductActivity : BaseActivity() {
             field("api_key", apiKey)
             field("timestamp", timestamp.toString())
             field("signature", signature)
+            field("folder", "supertech/products")
             out.writeBytes("--$boundary\r\n")
             out.writeBytes("Content-Disposition: form-data; name=\"file\"; filename=\"upload.jpg\"\r\n")
             out.writeBytes("Content-Type: image/jpeg\r\n\r\n")
@@ -276,6 +489,8 @@ class VendorProductActivity : BaseActivity() {
         }
     }
 
+    private val editing: Boolean get() = !intent.getStringExtra("editId").isNullOrBlank()
+
     private fun setLoading(loading: Boolean) {
         submit.isEnabled = !loading
         submit.text = when {
@@ -287,10 +502,10 @@ class VendorProductActivity : BaseActivity() {
         submit.alpha = if (loading) 0.6f else 1f
     }
 
-    private fun show(view: TextView, msg: String) {
-        view.text = msg
-        view.setTextColor(danger)
-        view.visibility = View.VISIBLE
+    private fun showError(msg: String) {
+        errorText.text = msg
+        errorText.setTextColor(danger)
+        errorText.visibility = View.VISIBLE
     }
 
     override fun onDestroy() {

@@ -1650,78 +1650,71 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Adorama-style full-bleed hero: dark overlay, gold accent word, gold CTA, feature chips.
+     * Website-parity hero (HeroSlider): featured product slides on brand dark background,
+     * floating product image card, label, brand, title, body, price line, Shop now CTA.
      */
     private fun heroCarousel(): View {
         val slideWidth = resources.displayMetrics.widthPixels
-        val slideHeight = dp(290)
+        val slideHeight = dp(420)
         val stride = slideWidth
 
-        data class HeroSpec(
+        data class ProductHero(
+            val label: String,
             val brand: String,
-            val accentWord: String,
             val title: String,
             val body: String,
-            val cta: String,
-            val onCta: () -> Unit,
-            val features: List<Pair<Int, String>>,
-            val bannerUrl: String?
+            val priceLine: String,
+            val imageUrl: String,
+            val product: Product?
         )
 
-        val slides = listOf(
-            HeroSpec(
-                "VIP", "Rewards",
-                "Earn more when you shop SuperTech.",
-                "Verified sellers, exclusive deals, and trackable orders.",
-                "Shop flash sale",
-                { render(Tab.Shop) },
-                listOf(
-                    R.drawable.ic_shield to "Verified sellers",
-                    R.drawable.ic_bolt to "Live deals",
-                    R.drawable.ic_truck to "Track orders",
-                    R.drawable.ic_store to "Official stores"
+        val featured = products.filter { it.featured }.ifEmpty { products }.take(4)
+        val slides: List<ProductHero> = if (featured.isNotEmpty()) {
+            featured.mapIndexed { idx, p ->
+                val brand = p.vendorName.ifBlank {
+                    p.vendorSlug.split("-").joinToString(" ") { w ->
+                        w.replaceFirstChar { c -> c.uppercase() }
+                    }
+                }
+                ProductHero(
+                    label = if (idx == 0) "Live now" else "Featured Deal",
+                    brand = brand,
+                    title = p.name,
+                    body = p.description.ifBlank { p.category },
+                    priceLine = "RWF ${money.format(p.price.toLong())} · Cart · MoMoPay",
+                    imageUrl = p.heroImage,
+                    product = p
+                )
+            }
+        } else {
+            // Fallback promo while catalog loads (same banner assets as web merch)
+            listOf(
+                ProductHero(
+                    "Live now", "SuperTech", "Verified marketplace deals",
+                    "Shop trusted sellers, track orders, and pay with MoMo.",
+                    "Cart · MoMoPay", "$apiBase/banners/hero-flash-sale.jpg", null
                 ),
-                "$apiBase/banners/hero-flash-sale.jpg"
-            ),
-            HeroSpec(
-                "Smart", "Gadgets",
-                "Phones, wearables, everyday gear.",
-                "Mobile essentials from verified marketplace sellers.",
-                "Shop gadgets",
-                {
-                    selectedCategory = "Mobile Essentials"
-                    displayedProducts = products.filter { it.category.contains("Mobile", true) || it.category.contains("Wear", true) }
-                        .ifEmpty { products }
-                    render(Tab.Shop)
-                },
-                listOf(
-                    R.drawable.ic_bolt to "Phones",
-                    R.drawable.ic_shield to "Verified stock",
-                    R.drawable.ic_person to "Seller support",
-                    R.drawable.ic_truck to "Track delivery"
+                ProductHero(
+                    "Featured Deal", "Gadgets", "Phones & everyday gear",
+                    "Mobile essentials from verified marketplace sellers.",
+                    "Shop · Verified stock", "$apiBase/banners/hero-gadgets.jpg", null
                 ),
-                "$apiBase/banners/hero-gadgets.jpg"
-            ),
-            HeroSpec(
-                "Request", "& Track",
-                "Missing a product? We help source it.",
-                "Send a request or follow any order status in-app.",
-                "Request a product",
-                { startActivity(Intent(this, RequestProductActivity::class.java)) },
-                listOf(
-                    R.drawable.ic_box to "Product requests",
-                    R.drawable.ic_truck to "Live tracking",
-                    R.drawable.ic_store to "Official stores",
-                    R.drawable.ic_shield to "Buyer protection"
-                ),
-                "$apiBase/banners/hero-request-track.jpg"
+                ProductHero(
+                    "Featured Deal", "Request & Track", "Missing a product? We source it.",
+                    "Send a request or follow any order status in-app.",
+                    "Request · Track", "$apiBase/banners/hero-request-track.jpg", null
+                )
             )
-        )
+        }
 
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         slides.forEach { spec ->
             row.addView(
-                adoramaHeroSlide(spec.brand, spec.accentWord, spec.title, spec.body, spec.cta, spec.onCta, spec.features, spec.bannerUrl),
+                websiteHeroSlide(spec.label, spec.brand, spec.title, spec.body, spec.priceLine, spec.imageUrl) {
+                    val p = spec.product
+                    if (p != null) openProduct(p)
+                    else render(Tab.Shop)
+                },
                 LinearLayout.LayoutParams(slideWidth, slideHeight)
             )
         }
@@ -1729,145 +1722,211 @@ class MainActivity : AppCompatActivity() {
         val dotsRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, dp(0), 0, dp(0))
         }
         val dots = slides.indices.map { i ->
             View(this).apply {
-                background = rounded(Color.TRANSPARENT, if (i == 0) Color.WHITE else Color.argb(90, 255, 255, 255), dp(5).toFloat())
+                background = rounded(
+                    Color.TRANSPARENT,
+                    if (i == 0) Color.WHITE else Color.argb(90, 255, 255, 255),
+                    dp(5).toFloat()
+                )
             }.also { dot ->
-                val lp = LinearLayout.LayoutParams(if (i == 0) dp(16) else dp(8), dp(8))
+                val lp = LinearLayout.LayoutParams(if (i == 0) dp(18) else dp(8), dp(8))
                 lp.setMargins(dp(3), 0, dp(3), 0)
                 dotsRow.addView(dot, lp)
             }
         }
 
         var activePage = 0
-        val pager = PagerScrollView(stride, slides.size) { page ->
-            if (page != activePage) {
-                activePage = page
-                dots.forEachIndexed { i, dot ->
-                    dot.background = rounded(
-                        Color.TRANSPARENT,
-                        if (i == page) Color.WHITE else Color.argb(90, 255, 255, 255),
-                        dp(5).toFloat()
-                    )
-                    val lp = dot.layoutParams as LinearLayout.LayoutParams
-                    lp.width = if (i == page) dp(16) else dp(8)
-                    dot.layoutParams = lp
-                }
+        fun paintDots(page: Int) {
+            if (page == activePage) return
+            activePage = page
+            dots.forEachIndexed { i, dot ->
+                dot.background = rounded(
+                    Color.TRANSPARENT,
+                    if (i == page) Color.WHITE else Color.argb(90, 255, 255, 255),
+                    dp(5).toFloat()
+                )
+                val lp = dot.layoutParams as LinearLayout.LayoutParams
+                lp.width = if (i == page) dp(18) else dp(8)
+                dot.layoutParams = lp
             }
         }
+
+        val pager = PagerScrollView(stride, slides.size) { page -> paintDots(page) }
         pager.addView(row)
+
+        // Autoplay ~7s like website Swiper
+        if (slides.size > 1) {
+            val auto = object : Runnable {
+                override fun run() {
+                    if (!pager.isAttachedToWindow) return
+                    val next = (activePage + 1) % slides.size
+                    pager.smoothScrollTo(next * stride, 0)
+                    paintDots(next)
+                    pager.postDelayed(this, 7000L)
+                }
+            }
+            pager.postDelayed(auto, 7000L)
+            pager.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {}
+                override fun onViewDetachedFromWindow(v: View) {
+                    pager.removeCallbacks(auto)
+                }
+            })
+        }
 
         val frame = FrameLayout(this)
         frame.addView(pager, FrameLayout.LayoutParams(match(), slideHeight))
-        frame.addView(dotsRow, FrameLayout.LayoutParams(match(), wrap(), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
-            bottomMargin = dp(10)
-        })
+        frame.addView(
+            dotsRow,
+            FrameLayout.LayoutParams(match(), wrap(), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
+                bottomMargin = dp(12)
+            }
+        )
         return frame
     }
 
-    private fun adoramaHeroSlide(
-        brandLine: String,
-        accentWord: String,
+    /** Website HeroSlider mobile layout: brand bg + product image card + copy + gold CTA. */
+    private fun websiteHeroSlide(
+        label: String,
+        brand: String,
         title: String,
         body: String,
-        cta: String,
-        onCta: () -> Unit,
-        features: List<Pair<Int, String>>,
-        bannerUrl: String?
+        priceLine: String,
+        imageUrl: String,
+        onCta: () -> Unit
     ): View {
-        val frame = FrameLayout(this).apply {
-            setBackgroundColor(backgroundStrong)
-        }
+        val frame = FrameLayout(this).apply { setBackgroundColor(Color.rgb(9, 9, 11)) }
 
-        val bgImage = ImageView(this).apply {
+        // Brand background (website hero-brand-bg-mobile)
+        val bg = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            alpha = 0.55f
+            alpha = 0.8f
         }
-        frame.addView(bgImage, FrameLayout.LayoutParams(match(), match()))
-        if (!bannerUrl.isNullOrBlank()) loadImage(bgImage, bannerUrl)
+        frame.addView(bg, FrameLayout.LayoutParams(match(), match()))
+        loadImage(bg, "$apiBase/banners/hero-brand-bg-mobile.jpg")
+        // Fallback dark if brand image fails — already dark bg
 
-        // Dark gradient overlay (left-heavy for copy)
         frame.addView(View(this).apply {
             background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
+                GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
-                    Color.argb(245, 6, 10, 18),
-                    Color.argb(200, 6, 10, 18),
-                    Color.argb(90, 6, 10, 18)
+                    Color.argb(40, 9, 9, 11),
+                    Color.argb(120, 9, 9, 11),
+                    Color.argb(230, 9, 9, 11)
                 )
             )
         }, FrameLayout.LayoutParams(match(), match()))
 
-        val panel = LinearLayout(this).apply {
+        val col = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(20), dp(18), dp(36))
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(18), dp(16), dp(18), dp(40))
         }
 
-        panel.addView(TextView(this).apply {
-            text = "LIVE NOW"
+        // Floating product image card (website mobile layer)
+        val imageCard = FrameLayout(this).apply {
+            background = rounded(Color.argb(40, 255, 255, 255), Color.rgb(24, 24, 27), dp(20).toFloat())
+            elevation = dp(10).toFloat()
+        }
+        val productImg = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setBackgroundColor(Color.rgb(39, 39, 42))
+        }
+        imageCard.addView(productImg, FrameLayout.LayoutParams(match(), match()))
+        if (imageUrl.isNotBlank()) loadImage(productImg, imageUrl)
+        col.addView(imageCard, LinearLayout.LayoutParams(dp(200), dp(160)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(14)
+        })
+
+        // Label pill
+        col.addView(TextView(this).apply {
+            text = "✦  ${label.uppercase(Locale.US)}"
             textSize = 10f
             typeface = Typeface.DEFAULT_BOLD
             letterSpacing = 0.12f
-            setTextColor(gold)
-            background = rounded(gold, Color.argb(30, 245, 166, 42), dp(4).toFloat())
-            setPadding(dp(10), dp(4), dp(10), dp(4))
-        }, LinearLayout.LayoutParams(wrap(), wrap()))
+            setTextColor(Color.WHITE)
+            background = rounded(
+                Color.argb(60, 255, 255, 255),
+                Color.argb(40, 255, 255, 255),
+                dp(20).toFloat()
+            )
+            setPadding(dp(12), dp(6), dp(12), dp(6))
+        }, LinearLayout.LayoutParams(wrap(), wrap()).apply {
+            gravity = Gravity.START
+            bottomMargin = dp(8)
+        })
 
-        panel.addView(text(brandLine, 28f, Color.WHITE, Typeface.BOLD).apply {
-            setPadding(0, dp(10), 0, 0)
-        })
-        panel.addView(text(accentWord, 28f, gold, Typeface.BOLD))
-        panel.addView(text(title, 15f, Color.WHITE, Typeface.BOLD).apply {
-            setPadding(0, dp(6), 0, 0)
-            maxLines = 2
-        })
-        panel.addView(text(body, 13f, Color.argb(200, 255, 255, 255), Typeface.NORMAL).apply {
+        val accent = this@MainActivity.brand
+        col.addView(text(brand.uppercase(Locale.US), 12f, accent, Typeface.BOLD).apply {
+            letterSpacing = 0.16f
+        }, LinearLayout.LayoutParams(match(), wrap()))
+
+        col.addView(text(title, 26f, Color.WHITE, Typeface.BOLD).apply {
             setPadding(0, dp(4), 0, 0)
             maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            setLineSpacing(0f, 1.05f)
         })
 
-        panel.addView(Button(this).apply {
-            text = cta
+        col.addView(text(body, 13f, Color.argb(180, 255, 255, 255), Typeface.NORMAL).apply {
+            setPadding(0, dp(6), 0, 0)
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+
+        if (priceLine.isNotBlank()) {
+            val priceRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(10), 0, 0)
+            }
+            val parts = priceLine.split(" · ")
+            priceRow.addView(TextView(this).apply {
+                text = parts.firstOrNull().orEmpty()
+                textSize = 14f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+                background = rounded(
+                    Color.argb(40, 255, 255, 255),
+                    Color.argb(30, 255, 255, 255),
+                    dp(10).toFloat()
+                )
+                setPadding(dp(12), dp(8), dp(12), dp(8))
+            })
+            if (parts.size > 1) {
+                priceRow.addView(text(parts.drop(1).joinToString(" · "), 11f, Color.argb(140, 255, 255, 255), Typeface.BOLD).apply {
+                    setPadding(dp(10), 0, 0, 0)
+                    maxLines = 1
+                })
+            }
+            col.addView(priceRow)
+        }
+
+        col.addView(Button(this).apply {
+            text = "SHOP NOW  →"
             textSize = 12f
             isAllCaps = true
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(ColorStateList.valueOf(Color.rgb(21, 17, 10)))
+            letterSpacing = 0.08f
+            setTextColor(ColorStateList.valueOf(Color.WHITE))
             backgroundTintList = null
-            background = rounded(Color.TRANSPARENT, gold, dp(8).toFloat())
+            background = rounded(Color.TRANSPARENT, accent, dp(28).toFloat())
             stateListAnimator = null
-            minimumHeight = dp(44)
+            minimumHeight = dp(48)
             pressable()
             setOnClickListener { onCta() }
-        }, LinearLayout.LayoutParams(wrap(), dp(44)).apply { topMargin = dp(12) })
+        }, LinearLayout.LayoutParams(wrap(), dp(48)).apply {
+            topMargin = dp(14)
+            gravity = Gravity.START
+        })
 
-        // Feature chips — non-scrolling so they never steal hero swipes
-        val chipRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(0, dp(12), 0, dp(4))
-        }
-        features.take(3).forEach { (iconRes, label) ->
-            val chip = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                background = rounded(gold, Color.argb(55, 0, 0, 0), dp(6).toFloat())
-                setPadding(dp(8), dp(6), dp(10), dp(6))
-            }
-            chip.addView(ImageView(this).apply {
-                setImageResource(iconRes)
-                setColorFilter(gold)
-            }, LinearLayout.LayoutParams(dp(14), dp(14)).apply { rightMargin = dp(6) })
-            chip.addView(text(label, 11f, Color.WHITE, Typeface.BOLD).apply {
-                maxLines = 1
-                ellipsize = android.text.TextUtils.TruncateAt.END
-            })
-            chipRow.addView(chip, LinearLayout.LayoutParams(wrap(), wrap()).apply { rightMargin = dp(6) })
-        }
-        panel.addView(chipRow)
-
-        frame.addView(panel, FrameLayout.LayoutParams(match(), match()))
-        frame.contentDescription = "Promo carousel slide"
+        frame.addView(col, FrameLayout.LayoutParams(match(), match()))
+        frame.pressable()
+        frame.setOnClickListener { onCta() }
+        frame.contentDescription = "Hero: $title"
         return frame
     }
 
