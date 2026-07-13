@@ -301,10 +301,11 @@ export async function getPublicFeaturedProducts() {
   return Array.from(featuredMap.values()).slice(0, 8);
 }
 
-export async function getPublicTopVendors() {
+/** Homepage/web teaser strip — full list lives on getPublicVendors / mobile marketplace. */
+export async function getPublicTopVendors(limit = 12) {
   const vendors = await getPublicVendors();
-
-  return vendors.slice(0, 4);
+  const n = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : 12;
+  return vendors.slice(0, n);
 }
 
 export type AdminVendorRecord = Vendor & {

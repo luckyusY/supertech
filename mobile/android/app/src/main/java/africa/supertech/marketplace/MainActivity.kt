@@ -715,21 +715,33 @@ class MainActivity : AppCompatActivity() {
             }
             stateBlock()?.let { addView(it) }
 
-            val featured = products.filter { it.featured }.ifEmpty { products }.take(8)
+            val featured = products.filter { it.featured }.ifEmpty { products.take(8) }
             if (featured.isNotEmpty()) {
-                addView(sectionHeader("Featured", "Hand-picked from the marketplace", "See all") { render(Tab.Shop) })
-                addView(featuredCarousel(featured))
+                addView(sectionHeader("Featured", "Hand-picked from the marketplace", "Shop") { render(Tab.Shop) })
+                addView(featuredCarousel(featured.take(12)))
             }
 
-            // 2-col grid for consistency with Shop (not horizontal list cards)
-            val fresh = products.filterNot { it.featured }.take(6).ifEmpty { products.take(6) }
-            if (fresh.isNotEmpty()) {
-                addView(sectionHeader("Fresh on the market", "Latest products from vendors", "See all") { render(Tab.Shop) })
-                addView(productGrid(fresh))
+            // Full product catalog on home (user request: see all products)
+            if (products.isNotEmpty()) {
+                addView(
+                    sectionHeader(
+                        "All products",
+                        "${products.size} listings from verified vendors",
+                        "Shop filters"
+                    ) { render(Tab.Shop) }
+                )
+                addView(productGrid(products))
             }
 
             if (vendors.isNotEmpty()) {
-                addView(sectionHeader("Top vendors", "Trusted sellers, fast response", "View all") { render(Tab.Stores) })
+                addView(
+                    sectionHeader(
+                        "All stores",
+                        "${vendors.size} verified sellers",
+                        "View all"
+                    ) { render(Tab.Stores) }
+                )
+                // Horizontal strip of every store (scroll), not a short top-4 API list
                 addView(vendorStrip(vendors))
             }
 
@@ -2074,7 +2086,7 @@ class MainActivity : AppCompatActivity() {
                     if (vendors.isEmpty()) {
                         sheetContent.addView(text("No stores yet.", 14f, muted, Typeface.NORMAL))
                     }
-                    vendors.take(30).forEach { vendor ->
+                    vendors.forEach { vendor ->
                         val row = LinearLayout(this).apply {
                             orientation = LinearLayout.HORIZONTAL
                             gravity = Gravity.CENTER_VERTICAL
@@ -2294,7 +2306,8 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(2), 0, dp(6))
         }
-        items.take(8).forEachIndexed { i, vendor ->
+        // Show every vendor in the strip (scrollable) — no artificial cap
+        items.forEachIndexed { i, vendor ->
             val lp = LinearLayout.LayoutParams(dp(150), wrap())
             lp.rightMargin = dp(10)
             row.addView(vendorMiniCard(vendor).animateIn(i), lp)

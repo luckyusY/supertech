@@ -23,7 +23,8 @@ export async function GET(request: Request) {
       ? authorization.session.vendorSlug
       : searchParams.get("vendorSlug") ?? undefined;
   const rawStatus = searchParams.get("status") ?? undefined;
-  const limit = Number(searchParams.get("limit") ?? "12");
+  // High default so vendor dashboards see the full catalog (was 12 — looked “missing”)
+  const limit = Number(searchParams.get("limit") ?? "500");
   const status =
     rawStatus === "pending_review" || rawStatus === "approved" || rawStatus === "rejected"
       ? rawStatus
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
     const submissions = await getProductSubmissions({
       vendorSlug,
       status,
-      limit: Number.isFinite(limit) ? limit : 12,
+      limit: Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 1000) : 500,
     });
 
     return NextResponse.json({

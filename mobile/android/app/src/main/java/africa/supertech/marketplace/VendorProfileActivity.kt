@@ -114,7 +114,8 @@ class VendorProfileActivity : BaseActivity() {
         val products = json.optJSONArray("products")
         for (i in 0 until (products?.length() ?: 0)) {
             val p = products?.optJSONObject(i) ?: continue
-            if (p.optString("vendorSlug") != slug) continue
+            // Case-insensitive match so vendor store pages don't drop listings
+            if (!p.optString("vendorSlug").equals(slug, ignoreCase = true)) continue
             catalog.add(
                 CatalogProduct(
                     slug = p.optString("slug"),

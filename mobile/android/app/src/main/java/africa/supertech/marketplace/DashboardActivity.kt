@@ -198,28 +198,31 @@ class DashboardActivity : BaseActivity() {
     // ---- Vendor ----
 
     private fun loadVendor(session: Net.Session) {
-        val submissions = Net.get("/api/product-submissions?limit=50")
-        val orders = Net.get("/api/order-requests?limit=10")
+        // Fetch full product list for this vendor (no short 12-item dashboard cap)
+        val submissions = Net.get("/api/product-submissions?limit=500")
+        val orders = Net.get("/api/order-requests?limit=50")
 
         runOnUiThread {
             body.removeAllViews()
             val subs = submissions.json().optJSONArray("submissions")
             val approved = countStatus(subs, "approved")
             val pending = countStatus(subs, "pending_review")
+            val rejected = countStatus(subs, "rejected")
+            val total = subs?.length() ?: 0
 
             body.addView(sectionTitle("Your store"))
             body.block(statGrid(listOf(
-                "Products" to (subs?.length() ?: 0).toString(),
+                "Products" to total.toString(),
                 "Approved" to approved.toString(),
                 "In review" to pending.toString(),
-                "Vendor" to (session.vendorSlug ?: "—")
+                "Rejected" to rejected.toString()
             )), 4)
 
             body.addView(actionCard("List a new product", "Submit a product for review", "Add product") {
                 navigateForward(Intent(this, VendorProductActivity::class.java))
             }.also { animateIn(it) })
 
-            body.addView(sectionTitle("Recent products"))
+            body.addView(sectionTitle("All your products ($total)"))
             if (subs == null || subs.length() == 0) {
                 body.addView(emptyState(
                     "No products yet",
@@ -227,9 +230,9 @@ class DashboardActivity : BaseActivity() {
                     "Add product"
                 ) { navigateForward(Intent(this, VendorProductActivity::class.java)) })
             } else {
-                for (i in 0 until minOf(subs.length(), 12)) {
+                for (i in 0 until subs.length()) {
                     val p = subs.optJSONObject(i) ?: continue
-                    body.addView(productRow(p, index = i + 1).also { animateIn(it, i) })
+                    body.addView(productRow(p, index = i + 1).also { animateIn(it, i.coerceAtMost(20)) })
                 }
             }
 

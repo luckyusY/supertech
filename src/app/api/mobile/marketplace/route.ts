@@ -3,16 +3,17 @@ import {
   getPublicCategories,
   getPublicFeaturedProducts,
   getPublicProducts,
-  getPublicTopVendors,
+  getPublicVendors,
 } from "@/lib/public-marketplace";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Full catalog for the native app — do not use getPublicTopVendors (only 4 stores).
   const [products, featuredProducts, vendors, categories] = await Promise.all([
     getPublicProducts(),
     getPublicFeaturedProducts(),
-    getPublicTopVendors(),
+    getPublicVendors(),
     getPublicCategories(),
   ]);
 
