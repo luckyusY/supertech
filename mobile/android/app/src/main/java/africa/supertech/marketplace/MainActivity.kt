@@ -1909,113 +1909,108 @@ class MainActivity : AppCompatActivity() {
         imageUrl: String,
         onCta: () -> Unit
     ): View {
-        val accent = this@MainActivity.brand
-        val frame = FrameLayout(this).apply { setBackgroundColor(Color.rgb(10, 15, 26)) }
+        val accentColor = Color.rgb(232, 119, 10) // brand orange — avoid name clash with `brand` string
+        val pad = dp(16)
+        val frame = FrameLayout(this)
+        frame.setBackgroundColor(Color.rgb(10, 15, 26))
 
-        val bg = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            alpha = 0.55f
-        }
+        val bg = ImageView(this)
+        bg.scaleType = ImageView.ScaleType.CENTER_CROP
+        bg.alpha = 0.55f
         frame.addView(bg, FrameLayout.LayoutParams(match(), match()))
         loadImage(bg, "$apiBase/banners/hero-brand-bg-mobile.jpg")
 
-        frame.addView(View(this).apply {
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(
-                    Color.argb(60, 10, 15, 26),
-                    Color.argb(180, 10, 15, 26),
-                    Color.argb(245, 10, 15, 26)
-                )
+        val scrim = View(this)
+        scrim.background = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            intArrayOf(
+                Color.argb(60, 10, 15, 26),
+                Color.argb(180, 10, 15, 26),
+                Color.argb(245, 10, 15, 26)
             )
-        }, FrameLayout.LayoutParams(match(), match()))
+        )
+        frame.addView(scrim, FrameLayout.LayoutParams(match(), match()))
 
-        val col = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(16), dp(14), dp(16), dp(28))
-        }
+        val col = LinearLayout(this)
+        col.orientation = LinearLayout.VERTICAL
+        col.setPadding(pad, dp(14), pad, dp(28))
 
-        // Product still — wide card like website mobile hero image
-        val imageCard = FrameLayout(this).apply {
-            background = rounded(Color.argb(50, 255, 255, 255), Color.rgb(24, 28, 36), dp(18).toFloat())
-            elevation = dp(8).toFloat()
-        }
-        val productImg = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            setBackgroundColor(Color.rgb(32, 36, 44))
-        }
+        val imageCard = FrameLayout(this)
+        imageCard.background = rounded(Color.argb(50, 255, 255, 255), Color.rgb(24, 28, 36), dp(18).toFloat())
+        imageCard.elevation = dp(8).toFloat()
+        val productImg = ImageView(this)
+        productImg.scaleType = ImageView.ScaleType.CENTER_CROP
+        productImg.setBackgroundColor(Color.rgb(32, 36, 44))
         imageCard.addView(productImg, FrameLayout.LayoutParams(match(), match()))
         if (imageUrl.isNotBlank()) loadImage(productImg, imageUrl)
-        col.addView(imageCard, LinearLayout.LayoutParams(match(), dp(150)).apply {
-            bottomMargin = dp(12)
-        })
+        val imageLp = LinearLayout.LayoutParams(match(), dp(150))
+        imageLp.bottomMargin = dp(12)
+        col.addView(imageCard, imageLp)
 
-        col.addView(TextView(this).apply {
-            text = label.uppercase(Locale.US)
-            textSize = 10f
-            typeface = Typeface.DEFAULT_BOLD
-            letterSpacing = 0.14f
-            setTextColor(Color.WHITE)
-            background = rounded(
-                Color.argb(70, 255, 255, 255),
-                Color.argb(35, 255, 255, 255),
-                dp(14).toFloat()
-            )
-            setPadding(dp(10), dp(5), dp(10), dp(5))
-        }, LinearLayout.LayoutParams(wrap(), wrap()).apply { bottomMargin = dp(8) })
+        val labelView = TextView(this)
+        labelView.text = label.uppercase(Locale.US)
+        labelView.textSize = 10f
+        labelView.typeface = Typeface.DEFAULT_BOLD
+        labelView.letterSpacing = 0.14f
+        labelView.setTextColor(Color.WHITE)
+        labelView.background = rounded(
+            Color.argb(70, 255, 255, 255),
+            Color.argb(35, 255, 255, 255),
+            dp(14).toFloat()
+        )
+        labelView.setPadding(dp(10), dp(5), dp(10), dp(5))
+        val labelLp = LinearLayout.LayoutParams(wrap(), wrap())
+        labelLp.bottomMargin = dp(8)
+        col.addView(labelView, labelLp)
 
-        col.addView(text(brand.uppercase(Locale.US), 11f, accent, Typeface.BOLD).apply {
-            letterSpacing = 0.14f
-        })
-        col.addView(text(title, 22f, Color.WHITE, Typeface.BOLD).apply {
-            setPadding(0, dp(4), 0, 0)
-            maxLines = 2
-            ellipsize = android.text.TextUtils.TruncateAt.END
-            setLineSpacing(0f, 1.05f)
-        })
-        col.addView(text(body, 12f, Color.argb(190, 255, 255, 255), Typeface.NORMAL).apply {
-            setPadding(0, dp(4), 0, 0)
-            maxLines = 2
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        })
+        val brandView = text(brand.uppercase(Locale.US), 11f, accentColor, Typeface.BOLD)
+        brandView.letterSpacing = 0.14f
+        col.addView(brandView)
+
+        val titleView = text(title, 22f, Color.WHITE, Typeface.BOLD)
+        titleView.setPadding(0, dp(4), 0, 0)
+        titleView.maxLines = 2
+        titleView.ellipsize = android.text.TextUtils.TruncateAt.END
+        titleView.setLineSpacing(0f, 1.05f)
+        col.addView(titleView)
+
+        val bodyView = text(body, 12f, Color.argb(190, 255, 255, 255), Typeface.NORMAL)
+        bodyView.setPadding(0, dp(4), 0, 0)
+        bodyView.maxLines = 2
+        bodyView.ellipsize = android.text.TextUtils.TruncateAt.END
+        col.addView(bodyView)
 
         if (priceLine.isNotBlank()) {
-            val parts = priceLine.split(" · ")
-            col.addView(TextView(this@MainActivity).apply {
-                text = parts.firstOrNull().orEmpty()
-                textSize = 14f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-                background = rounded(
-                    Color.argb(50, 255, 255, 255),
-                    Color.argb(28, 255, 255, 255),
-                    this@MainActivity.dp(10).toFloat()
-                )
-                setPadding(
-                    this@MainActivity.dp(12),
-                    this@MainActivity.dp(7),
-                    this@MainActivity.dp(12),
-                    this@MainActivity.dp(7)
-                )
-            }, LinearLayout.LayoutParams(wrap(), wrap()).apply {
-                topMargin = this@MainActivity.dp(10)
-            })
+            val priceView = TextView(this)
+            priceView.text = priceLine.split(" · ").firstOrNull().orEmpty()
+            priceView.textSize = 14f
+            priceView.typeface = Typeface.DEFAULT_BOLD
+            priceView.setTextColor(Color.WHITE)
+            priceView.background = rounded(
+                Color.argb(50, 255, 255, 255),
+                Color.argb(28, 255, 255, 255),
+                dp(10).toFloat()
+            )
+            priceView.setPadding(dp(12), dp(7), dp(12), dp(7))
+            val priceLp = LinearLayout.LayoutParams(wrap(), wrap())
+            priceLp.topMargin = dp(10)
+            col.addView(priceView, priceLp)
         }
 
-        col.addView(Button(this@MainActivity).apply {
-            text = "Shop now"
-            textSize = 13f
-            isAllCaps = false
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(ColorStateList.valueOf(Color.WHITE))
-            backgroundTintList = null
-            background = rounded(Color.TRANSPARENT, accent, this@MainActivity.dp(24).toFloat())
-            stateListAnimator = null
-            minimumHeight = this@MainActivity.dp(44)
-            setOnClickListener { onCta() }
-        }, LinearLayout.LayoutParams(wrap(), this@MainActivity.dp(44)).apply {
-            topMargin = this@MainActivity.dp(12)
-        })
+        val cta = Button(this)
+        cta.text = "Shop now"
+        cta.textSize = 13f
+        cta.isAllCaps = false
+        cta.typeface = Typeface.DEFAULT_BOLD
+        cta.setTextColor(ColorStateList.valueOf(Color.WHITE))
+        cta.backgroundTintList = null
+        cta.background = rounded(Color.TRANSPARENT, accentColor, dp(24).toFloat())
+        cta.stateListAnimator = null
+        cta.minimumHeight = dp(44)
+        cta.setOnClickListener { onCta() }
+        val ctaLp = LinearLayout.LayoutParams(wrap(), dp(44))
+        ctaLp.topMargin = dp(12)
+        col.addView(cta, ctaLp)
 
         frame.isClickable = false
         frame.isFocusable = false

@@ -1,10 +1,12 @@
 package africa.supertech.marketplace
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
 import org.json.JSONObject
 import java.text.NumberFormat
@@ -78,11 +80,27 @@ class DashboardActivity : BaseActivity() {
         })
         cardView.addView(text(session.email, 13f, android.graphics.Color.argb(215, 255, 255, 255)))
 
-        val signOut = secondaryButton("Sign out") { signOut() }
-        signOut.setTextColor(android.graphics.Color.WHITE)
-        signOut.background = rounded(android.graphics.Color.argb(100, 255, 255, 255), android.graphics.Color.TRANSPARENT, dp(12).toFloat())
-        val lp = LinearLayout.LayoutParams(wc(), wc()).apply { topMargin = dp(12) }
-        cardView.addView(signOut, lp)
+        // Clear sign-out control on the gradient header (easy to find for admin & vendor)
+        val signOut = Button(this).apply {
+            text = "Sign out"
+            textSize = 14f
+            isAllCaps = false
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(android.graphics.Color.WHITE)
+            backgroundTintList = null
+            background = rounded(
+                android.graphics.Color.WHITE,
+                android.graphics.Color.argb(40, 255, 255, 255),
+                dp(12).toFloat()
+            )
+            minimumHeight = dp(46)
+            pressable()
+            setOnClickListener { confirmSignOut() }
+        }
+        cardView.addView(
+            signOut,
+            LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(14) }
+        )
         return cardView
     }
 
@@ -180,6 +198,19 @@ class DashboardActivity : BaseActivity() {
             body.addView(linkRow(R.drawable.ic_lock, "Account recovery", "Help users regain access") { navigateForward(Intent(this, AdminRecoveryActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_person, "Profile", "Edit your admin account details") { navigateForward(Intent(this, VendorProfileActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_home, "Open marketplace", "Shop as a customer") { openMainTab("Home") })
+            body.addView(sectionTitle("Session"))
+            body.addView(linkRow(R.drawable.ic_lock, "Sign out", "End this admin session on this phone") {
+                confirmSignOut()
+            })
+            body.addView(
+                dangerButton("Sign out of SuperTech") { confirmSignOut() }.also {
+                    it.minimumHeight = dp(52)
+                },
+                LinearLayout.LayoutParams(mp(), wc()).apply {
+                    topMargin = dp(8)
+                    bottomMargin = dp(24)
+                }
+            )
             animateContentIn(body)
         }
     }
@@ -298,6 +329,19 @@ class DashboardActivity : BaseActivity() {
             body.addView(linkRow(R.drawable.ic_receipt, "Blogs", "View and manage your published blogs") { navigateForward(Intent(this, VendorBlogsActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_person, "Profile", "Edit your vendor account details") { navigateForward(Intent(this, VendorProfileActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_home, "View marketplace", "See SuperTech as shoppers do") { openMainTab("Home") })
+            body.addView(sectionTitle("Session"))
+            body.addView(linkRow(R.drawable.ic_lock, "Sign out", "End this vendor session on this phone") {
+                confirmSignOut()
+            })
+            body.addView(
+                dangerButton("Sign out of SuperTech") { confirmSignOut() }.also {
+                    it.minimumHeight = dp(52)
+                },
+                LinearLayout.LayoutParams(mp(), wc()).apply {
+                    topMargin = dp(8)
+                    bottomMargin = dp(24)
+                }
+            )
             animateContentIn(body)
         }
     }
@@ -372,6 +416,19 @@ class DashboardActivity : BaseActivity() {
         body.addView(linkRow(R.drawable.ic_shop, "Browse the marketplace", "Discover products and trusted vendors") {
             navigateToMain()
         })
+        body.addView(sectionTitle("Session"))
+        body.addView(linkRow(R.drawable.ic_lock, "Sign out", "End this session on this phone") {
+            confirmSignOut()
+        })
+        body.addView(
+            dangerButton("Sign out of SuperTech") { confirmSignOut() }.also {
+                it.minimumHeight = dp(52)
+            },
+            LinearLayout.LayoutParams(mp(), wc()).apply {
+                topMargin = dp(8)
+                bottomMargin = dp(24)
+            }
+        )
         animateContentIn(body)
     }
 
@@ -470,13 +527,31 @@ class DashboardActivity : BaseActivity() {
         return n
     }
 
-    private fun signOut() {
-        executor.execute { Net.get("/api/auth/sign-out") }
-        Net.signOut()
-        startActivity(Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        })
-        finish()
+    private fun confirmSignOut() {
+        AlertDialog.Builder(this)
+            .setTitle("Sign out?")
+            .setMessage("You will need to sign in again to open your dashboard.")
+            .setPositiveButton("Sign out") { _, _ -> performSignOut() }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performSignOut() {
+        toast("Signing out…")
+        executor.execute {
+            try {
+                Net.get("/api/auth/sign-out")
+            } catch (_: Exception) {
+            }
+            Net.signOut()
+            runOnUiThread {
+                startActivity(Intent(this, WelcomeActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("force_show", true)
+                })
+                finish()
+            }
+        }
     }
 
     override fun onDestroy() {
