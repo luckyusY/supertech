@@ -1546,7 +1546,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Snapping page scroller for the hero.
-     * Claims horizontal gestures so parent ScrollView / SwipeRefresh do not steal them.
+     * Strongly claims horizontal gestures so vertical ScrollView / SwipeRefresh never steal them.
      */
     private inner class PagerScrollView(
         private val pageStride: Int,
@@ -1561,87 +1561,116 @@ class MainActivity : AppCompatActivity() {
         init {
             isHorizontalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
-            isFillViewport = true
+            // false: do not squeeze multi-page content into one viewport width
+            isFillViewport = false
+            isNestedScrollingEnabled = true
+            isClickable = true
+            isFocusable = true
+            descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
             viewTreeObserver.addOnScrollChangedListener {
-                if (pageStride > 0) {
+                if (pageStride > 0 && pageCount > 0) {
                     onPage(((scrollX + pageStride / 2) / pageStride).coerceIn(0, pageCount - 1))
                 }
             }
         }
 
+        private fun disallowParents(disallow: Boolean) {
+            var p: android.view.ViewParent? = parent
+            while (p != null) {
+                p.requestDisallowInterceptTouchEvent(disallow)
+                p = p.parent
+            }
+            try {
+                swipe.isEnabled = !disallow
+            } catch (_: Exception) {
+            }
+        }
+
         private fun snap() {
-            if (pageStride <= 0) return
+            if (pageStride <= 0 || pageCount <= 0) return
             val page = ((scrollX + pageStride / 2) / pageStride).coerceIn(0, pageCount - 1)
             post { smoothScrollTo(page * pageStride, 0) }
+            onPage(page)
         }
 
         override fun fling(velocityX: Int) {
-            if (pageStride <= 0) return
+            if (pageStride <= 0 || pageCount <= 0) return
             val current = (scrollX + pageStride / 2) / pageStride
             val target = when {
-                velocityX > 400 -> current + 1
-                velocityX < -400 -> current - 1
+                velocityX > 300 -> current + 1
+                velocityX < -300 -> current - 1
                 else -> current
             }.coerceIn(0, pageCount - 1)
-            post { smoothScrollTo(target * pageStride, 0) }
+            post {
+                smoothScrollTo(target * pageStride, 0)
+                onPage(target)
+            }
         }
 
         override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+            if (pageCount <= 1) return false
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     downX = ev.x
                     downY = ev.y
                     draggingHorizontal = false
-                    parent?.requestDisallowInterceptTouchEvent(true)
-                    swipe.isEnabled = false
+                    // Keep parent from eating the stream while we decide direction
+                    disallowParents(true)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = kotlin.math.abs(ev.x - downX)
                     val dy = kotlin.math.abs(ev.y - downY)
-                    if (dx > touchSlop || dy > touchSlop) {
+                    if (!draggingHorizontal && (dx > touchSlop || dy > touchSlop)) {
                         if (dx > dy) {
                             draggingHorizontal = true
-                            parent?.requestDisallowInterceptTouchEvent(true)
-                            swipe.isEnabled = false
+                            disallowParents(true)
+                            return true
                         } else {
-                            parent?.requestDisallowInterceptTouchEvent(false)
-                            swipe.isEnabled = true
+                            // Vertical — let home ScrollView / pull-to-refresh work
+                            disallowParents(false)
                             return false
                         }
                     }
+                    if (draggingHorizontal) {
+                        disallowParents(true)
+                        return true
+                    }
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    parent?.requestDisallowInterceptTouchEvent(false)
-                    swipe.isEnabled = true
+                    if (!draggingHorizontal) disallowParents(false)
                 }
             }
-            return super.onInterceptTouchEvent(ev)
+            return super.onInterceptTouchEvent(ev) || draggingHorizontal
         }
 
+        @SuppressLint("ClickableViewAccessibility")
         override fun onTouchEvent(ev: MotionEvent): Boolean {
+            if (pageCount <= 1) return super.onTouchEvent(ev)
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     downX = ev.x
                     downY = ev.y
-                    parent?.requestDisallowInterceptTouchEvent(true)
-                    swipe.isEnabled = false
+                    draggingHorizontal = false
+                    disallowParents(true)
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = kotlin.math.abs(ev.x - downX)
                     val dy = kotlin.math.abs(ev.y - downY)
                     if (dx > dy) {
-                        parent?.requestDisallowInterceptTouchEvent(true)
-                        swipe.isEnabled = false
-                    } else if (dy > touchSlop && dy > dx) {
-                        parent?.requestDisallowInterceptTouchEvent(false)
-                        swipe.isEnabled = true
+                        draggingHorizontal = true
+                        disallowParents(true)
+                    } else if (dy > touchSlop && dy > dx * 1.2f && !draggingHorizontal) {
+                        disallowParents(false)
+                        return false
                     }
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     val handled = super.onTouchEvent(ev)
-                    snap()
-                    parent?.requestDisallowInterceptTouchEvent(false)
-                    swipe.isEnabled = true
+                    if (draggingHorizontal || kotlin.math.abs(ev.x - downX) > touchSlop) {
+                        snap()
+                    }
+                    draggingHorizontal = false
+                    disallowParents(false)
                     return handled
                 }
             }
@@ -1707,7 +1736,11 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            // Exact width so HorizontalScrollView can page by screen width
+            layoutParams = ViewGroup.LayoutParams(slideWidth * slides.size, slideHeight)
+        }
         slides.forEach { spec ->
             row.addView(
                 websiteHeroSlide(spec.label, spec.brand, spec.title, spec.body, spec.priceLine, spec.imageUrl) {
@@ -1916,16 +1949,24 @@ class MainActivity : AppCompatActivity() {
             background = rounded(Color.TRANSPARENT, accent, dp(28).toFloat())
             stateListAnimator = null
             minimumHeight = dp(48)
-            pressable()
+            // Let horizontal swipes pass to the pager when the user starts on the button
+            setOnTouchListener { v, event ->
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> v.parent?.requestDisallowInterceptTouchEvent(false)
+                }
+                false
+            }
             setOnClickListener { onCta() }
         }, LinearLayout.LayoutParams(wrap(), dp(48)).apply {
             topMargin = dp(14)
             gravity = Gravity.START
         })
 
+        // Do NOT set click on the whole slide — that blocks HorizontalScrollView paging.
+        // Only the Shop now button opens the product.
+        frame.isClickable = false
+        frame.isFocusable = false
         frame.addView(col, FrameLayout.LayoutParams(match(), match()))
-        frame.pressable()
-        frame.setOnClickListener { onCta() }
         frame.contentDescription = "Hero: $title"
         return frame
     }
