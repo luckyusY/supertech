@@ -95,7 +95,7 @@ export function DataTableRow({
   return (
     <tr
       className={cn(
-        "border-b border-[var(--line)] last:border-0 even:bg-[var(--neutral-50)]/60",
+        "border-b border-[var(--line)] last:border-0 even:bg-[var(--neutral-50)]/60 whitespace-nowrap",
         muted && "opacity-55",
         className,
       )}

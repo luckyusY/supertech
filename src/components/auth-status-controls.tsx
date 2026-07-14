@@ -81,6 +81,11 @@ export function AuthStatusControls() {
   }, []);
 
   function handleSignOut() {
+    // @ts-ignore
+    if (typeof window !== "undefined" && window.google?.accounts?.id) {
+      // @ts-ignore
+      window.google.accounts.id.disableAutoSelect();
+    }
     startTransition(async () => {
       await fetch("/api/auth/sign-out", {
         method: "POST",

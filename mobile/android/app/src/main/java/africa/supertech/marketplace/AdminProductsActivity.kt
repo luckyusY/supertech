@@ -193,14 +193,36 @@ class AdminProductsActivity : BaseActivity() {
             orientation = LinearLayout.HORIZONTAL
             setPadding(dp(4), 0, dp(4), dp(4))
         }
+        if (status == "pending_review" || status == "pending") {
+            val approveRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(dp(4), 0, dp(4), dp(4))
+            }
+            approveRow.addView(
+                successButton("Approve") {
+                    update(JSONObject().put("id", id).put("action", "approve"))
+                },
+                LinearLayout.LayoutParams(0, dp(48), 1f).apply { rightMargin = dp(6) }
+            )
+            approveRow.addView(
+                dangerButton("Reject") {
+                    update(JSONObject().put("id", id).put("action", "reject"))
+                },
+                LinearLayout.LayoutParams(0, dp(48), 1f).apply { leftMargin = dp(6) }
+            )
+            col.addView(approveRow, LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(6) })
+        }
+
         row.addView(
             primaryButton("Edit") { openEdit(item) },
             LinearLayout.LayoutParams(0, dp(48), 1f).apply { rightMargin = dp(6) }
         )
-        row.addView(
-            secondaryButton("Blog") { openBlogStudio(slug) },
-            LinearLayout.LayoutParams(0, dp(48), 1f).apply { rightMargin = dp(6); leftMargin = dp(6) }
-        )
+        if (status == "approved") {
+            row.addView(
+                secondaryButton("Blog") { openBlogStudio(slug) },
+                LinearLayout.LayoutParams(0, dp(48), 1f).apply { rightMargin = dp(6); leftMargin = dp(6) }
+            )
+        }
         row.addView(
             dangerButton("Delete") { confirmProductDelete(id, false, slug) },
             LinearLayout.LayoutParams(0, dp(48), 1f).apply { leftMargin = dp(6) }

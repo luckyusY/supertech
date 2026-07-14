@@ -15,10 +15,10 @@ export function CartStatusLink({ compact = false }: CartStatusLinkProps) {
     return (
       <Link
         href="/cart"
-        className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/55 bg-white text-[var(--foreground)] shadow-sm"
+        className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-black/10 bg-white text-zinc-950 shadow-sm"
         aria-label={`Cart with ${itemCount} item${itemCount === 1 ? "" : "s"}`}
       >
-        <ShoppingBag className="h-4 w-4" />
+        <ShoppingBag className="h-4 w-4 text-zinc-950" />
         <span className="absolute -right-1.5 -top-1.5 rounded-full bg-[var(--red)] px-1.5 py-0.5 text-[10px] font-bold text-white">
           {itemCount > 99 ? "99+" : itemCount}
         </span>
@@ -29,9 +29,9 @@ export function CartStatusLink({ compact = false }: CartStatusLinkProps) {
   return (
     <Link
       href="/cart"
-      className="inline-flex items-center gap-2 rounded-md border border-white/55 bg-white px-3 py-2.5 text-sm font-semibold text-[var(--foreground)] shadow-sm"
+      className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-2.5 text-sm font-semibold text-zinc-950 shadow-sm"
     >
-      <ShoppingBag className="h-4 w-4" />
+      <ShoppingBag className="h-4 w-4 text-zinc-950" />
       Cart
       <span className="rounded-full bg-[var(--red)] px-2 py-0.5 text-[11px] text-white">
         {itemCount > 99 ? "99+" : itemCount}

@@ -21,8 +21,9 @@ class RequestProductActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         val content = scaffold("Request a product", withBack = true)
 
-        content.block(text("Can't find it?", 24f, ink, Typeface.BOLD), 4)
-        content.block(text("Tell us what you need and our vendors will source it and send you a quote.", 14f, muted), 16)
+        val hero = gradientHeroCard("Can't find it?", "Tell us what you need — vendors will source it", "Get a quote fast")
+        content.block(hero, 0)
+        content.block(text("Tell us what you need and our vendors will source it and send you a quote.", 14f, muted), 12)
 
         val form = card()
         form.block(fieldLabel("What product do you need?"), 0)
@@ -44,10 +45,7 @@ class RequestProductActivity : BaseActivity() {
         form.block(fieldLabel("Reference link (optional)"), 0)
         val link = inputField("https://…", InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT); form.block(link, 10)
         form.block(fieldLabel("Notes (optional)"), 0)
-        val notes = inputField("Colour, specs, anything else", Types.TEXT).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            setSingleLine(false); minLines = 2
-        }
+        val notes = multiLineInputField("Colour, specs, anything else", lines = 3)
         form.block(notes, 0)
         content.block(form, 14)
 

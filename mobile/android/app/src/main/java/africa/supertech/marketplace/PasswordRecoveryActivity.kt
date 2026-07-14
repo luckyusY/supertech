@@ -32,9 +32,7 @@ class PasswordRecoveryActivity : BaseActivity() {
         val phone = inputField("07...", Types.PHONE)
         form.block(phone, 8)
         form.block(fieldLabel("Notes"), 0)
-        val notes = inputField("What happened?", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
-        notes.setSingleLine(false)
-        notes.minLines = 3
+        val notes = multiLineInputField("What happened?", lines = 3)
         form.block(notes, 0)
         content.block(form, 12)
 

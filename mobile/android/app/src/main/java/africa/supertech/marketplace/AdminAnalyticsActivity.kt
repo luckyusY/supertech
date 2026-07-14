@@ -23,6 +23,8 @@ class AdminAnalyticsActivity : BaseActivity() {
             return
         }
         val content = scaffold("Analytics", withBack = true)
+        val hero = gradientHeroCard("Platform analytics", "Live overview of all vendors, products and orders", "Admin only")
+        content.block(hero, 0)
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.block(body, 0)
         load()
@@ -30,7 +32,8 @@ class AdminAnalyticsActivity : BaseActivity() {
 
     private fun load() {
         body.removeAllViews()
-        body.addView(text("Loading analytics...", 14f, muted))
+        body.addView(skeletonList(6))
+        animateContentIn(body)
         executor.execute {
             val result = Net.get("/api/analytics")
             runOnUiThread { render(result) }
@@ -83,9 +86,23 @@ class AdminAnalyticsActivity : BaseActivity() {
 
     private fun vendorCard(row: JSONObject): View {
         val c = card()
-        c.addView(text(row.optString("vendorName", "Vendor"), 16f, ink, Typeface.BOLD))
-        c.addView(text("Gross RWF ${money.format(row.optLong("grossSales"))} · Net RWF ${money.format(row.optLong("netPayout"))}", 13f, muted))
-        c.addView(text("${row.optInt("activeProducts")} products · fulfillment ${row.optString("fulfillmentRate", "—")}", 13f, brand, Typeface.BOLD))
+        val headerRow = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        headerRow.addView(text(row.optString("vendorName", "Vendor"), 16f, ink, Typeface.BOLD),
+            android.widget.LinearLayout.LayoutParams(0, wc(), 1f))
+        val rate = row.optString("fulfillmentRate", "")
+        if (rate.isNotBlank()) {
+            headerRow.addView(chip(rate, softGreen, brandDark))
+        }
+        c.addView(headerRow)
+        c.addView(text("Gross RWF ${money.format(row.optLong("grossSales"))} · Net RWF ${money.format(row.optLong("netPayout"))}", 13f, muted).apply {
+            setPadding(0, dp(4), 0, 0)
+        })
+        c.addView(text("${row.optInt("activeProducts")} active products", 12f, brand, Typeface.BOLD).apply {
+            setPadding(0, dp(2), 0, 0)
+        })
         return margin(c)
     }
 

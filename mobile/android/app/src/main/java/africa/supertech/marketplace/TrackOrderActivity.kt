@@ -21,8 +21,9 @@ class TrackOrderActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         val content = scaffold("Track order", withBack = true)
 
-        content.block(text("Track your order", 24f, ink, Typeface.BOLD), 4)
-        content.block(text("Enter your request ID and the email you used to order.", 14f, muted), 16)
+        val hero = gradientHeroCard("Track your order", "Enter your order ID to get live status", "Real-time updates")
+        content.block(hero, 0)
+        content.block(text("Enter your request ID and the email you used to order.", 14f, muted), 12)
 
         val form = card()
         form.block(fieldLabel("Request ID"), 0)

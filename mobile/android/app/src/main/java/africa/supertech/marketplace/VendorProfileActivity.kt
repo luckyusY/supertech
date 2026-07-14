@@ -33,9 +33,14 @@ class VendorProfileActivity : BaseActivity() {
             return
         }
         val content = scaffold("Store", withBack = true)
+        try {
+            val topBar = (content.parent.parent as LinearLayout).getChildAt(0)
+            topBar.visibility = View.GONE
+        } catch (_: Exception) {}
+        content.setPadding(0, 0, 0, dp(32))
+
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.block(body, 0)
-        // Paint cached catalog immediately when available
         MarketplaceCache.init(this)
         MarketplaceCache.get()?.let { cached ->
             renderFromJson(cached, fromCache = true)
@@ -203,9 +208,22 @@ class VendorProfileActivity : BaseActivity() {
             topMargin = dp(12); rightMargin = dp(12)
         })
 
+        // Floating circular back button on top-left of the cover
+        cover.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_chevron)
+            setColorFilter(Color.WHITE)
+            rotation = 180f
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            background = rounded(Color.TRANSPARENT, Color.argb(140, 0, 0, 0), dp(20).toFloat())
+            pressable()
+            setOnClickListener { finishSmart() }
+        }, FrameLayout.LayoutParams(dp(40), dp(40)).apply {
+            topMargin = dp(12); leftMargin = dp(12)
+        })
+
         col.addView(cover, LinearLayout.LayoutParams(mp(), coverH))
 
-        // Identity card overlapping cover
+        // Overlapping Identity card
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = rounded(line, Color.WHITE, dp(18).toFloat())
@@ -221,16 +239,15 @@ class VendorProfileActivity : BaseActivity() {
             background = rounded(line, softGreen, dp(16).toFloat())
             elevation = dp(2).toFloat()
         }
-        if (coverUrl.isNotBlank()) {
+        val logoUrl = vendor.optString("logoMark")
+        if (logoUrl.isNotBlank()) {
             logo.addView(ImageView(this).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                loadImage(this, coverUrl)
+                loadImage(this, logoUrl)
             }, FrameLayout.LayoutParams(dp(64), dp(64)))
         } else {
             logo.addView(TextView(this).apply {
-                text = vendor.optString("logoMark").ifBlank {
-                    vendor.optString("name", "ST").trim().take(2).uppercase(Locale.US)
-                }
+                text = vendor.optString("name", "ST").trim().take(2).uppercase(Locale.US)
                 textSize = 18f
                 gravity = Gravity.CENTER
                 setTextColor(Color.WHITE)
@@ -278,37 +295,25 @@ class VendorProfileActivity : BaseActivity() {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(12), 0, 0)
         }
-        fun chip(label: String) = TextView(this).apply {
+        fun makeChip(label: String, fill: Int, textClr: Int) = TextView(this).apply {
             text = label
             textSize = 11f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(brandDark)
-            background = rounded(Color.TRANSPARENT, softGreen, dp(10).toFloat())
+            setTextColor(textClr)
+            background = rounded(fill, fill, dp(10).toFloat())
             setPadding(dp(10), dp(6), dp(10), dp(6))
         }
-        chips.addView(chip("$productCount products"))
+        chips.addView(makeChip("$productCount products", Color.rgb(243, 244, 246), ink))
         chips.addView(
-            chip(vendor.optString("responseTime", "Fast response")),
+            makeChip(vendor.optString("responseTime", "Fast response"), Color.rgb(254, 243, 199), Color.rgb(180, 83, 9)),
             LinearLayout.LayoutParams(wc(), wc()).apply { leftMargin = dp(6) }
         )
         chips.addView(
-            chip("Verified"),
+            makeChip("✓ Verified", Color.rgb(220, 252, 231), Color.rgb(21, 128, 61)),
             LinearLayout.LayoutParams(wc(), wc()).apply { leftMargin = dp(6) }
         )
         card.addView(chips)
 
-        card.addView(
-            primaryButton("Browse products") {
-                // Already on page — scroll is natural; soft toast
-                toast("Scroll for products from this store")
-            }.apply {
-                minimumHeight = dp(48)
-            }.also { btn ->
-                // Just visual primary CTA; products are below
-            }
-        )
-        // Replace dead CTA with Request product for this vendor
-        card.removeViewAt(card.childCount - 1)
         val actions = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(14), 0, 0)
@@ -332,10 +337,10 @@ class VendorProfileActivity : BaseActivity() {
         col.addView(
             card,
             LinearLayout.LayoutParams(mp(), wc()).apply {
-                topMargin = -dp(28)
-                leftMargin = dp(2)
-                rightMargin = dp(2)
-                bottomMargin = dp(4)
+                topMargin = -dp(36)
+                leftMargin = dp(16)
+                rightMargin = dp(16)
+                bottomMargin = dp(12)
             }
         )
         return col

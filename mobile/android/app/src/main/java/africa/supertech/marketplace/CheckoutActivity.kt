@@ -31,6 +31,7 @@ class CheckoutActivity : BaseActivity() {
     private lateinit var submit: Button
     private lateinit var stickyTotal: TextView
     private lateinit var errorText: TextView
+    private lateinit var progressSpinner: android.widget.ProgressBar
 
     private var contactPref = "whatsapp"
     private var paymentPref = "mobile_money"
@@ -186,12 +187,14 @@ class CheckoutActivity : BaseActivity() {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.WHITE)
             elevation = dp(16).toFloat()
-            setPadding(dp(14), dp(12), dp(14), dp(12))
-            background = GradientDrawable().apply {
-                setColor(Color.WHITE)
-                setStroke(dp(1), line)
-            }
         }
+        sticky.addView(View(this).apply { setBackgroundColor(line) }, LinearLayout.LayoutParams(mp(), dp(1)))
+
+        val stickyPadding = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+        }
+
         val stickyTop = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -205,12 +208,20 @@ class CheckoutActivity : BaseActivity() {
         stickyTotal = text("RWF ${money.format(Cart.total())}", 17f, brand, Typeface.BOLD)
         stickyCopy.addView(stickyTotal)
         stickyTop.addView(stickyCopy, LinearLayout.LayoutParams(0, wc(), 1f))
-        sticky.addView(stickyTop)
+        stickyPadding.addView(stickyTop)
 
+        val buttonFrame = FrameLayout(this)
         submit = primaryButton("Place order request") {
             place()
         }.apply { minimumHeight = dp(54) }
-        sticky.addView(submit, LinearLayout.LayoutParams(mp(), dp(54)).apply { topMargin = dp(10) })
+        progressSpinner = android.widget.ProgressBar(this, null, android.R.attr.progressBarStyle).apply {
+            visibility = View.GONE
+            indeterminateTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
+        }
+        buttonFrame.addView(submit, FrameLayout.LayoutParams(mp(), mp()))
+        buttonFrame.addView(progressSpinner, FrameLayout.LayoutParams(dp(24), dp(24), Gravity.CENTER))
+        stickyPadding.addView(buttonFrame, LinearLayout.LayoutParams(mp(), dp(54)).apply { topMargin = dp(10) })
+        sticky.addView(stickyPadding)
 
         // Sticky sits above global dock
         root.addView(
@@ -254,6 +265,11 @@ class CheckoutActivity : BaseActivity() {
         titles.addView(text("Checkout", 18f, Color.WHITE, Typeface.BOLD))
         titles.addView(text("SuperTech · Secure request", 11f, Color.argb(200, 255, 255, 255)))
         bar.addView(titles, LinearLayout.LayoutParams(0, wc(), 1f))
+        bar.addView(android.widget.ImageView(this).apply {
+            setImageResource(R.drawable.ic_shield)
+            setColorFilter(Color.WHITE)
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+        }, LinearLayout.LayoutParams(dp(40), dp(40)))
         return bar
     }
 
@@ -316,6 +332,12 @@ class CheckoutActivity : BaseActivity() {
             setColorFilter(Color.WHITE)
             setBackgroundColor(softGreen)
             setPadding(if (line.heroImage.isBlank()) dp(12) else 0, if (line.heroImage.isBlank()) dp(12) else 0, if (line.heroImage.isBlank()) dp(12) else 0, if (line.heroImage.isBlank()) dp(12) else 0)
+            clipToOutline = true
+            outlineProvider = object : android.view.ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: android.graphics.Outline) {
+                    outline.setRoundRect(0, 0, view.width, view.height, dp(10).toFloat())
+                }
+            }
         }
         if (line.heroImage.isNotBlank()) loadImage(thumb, line.heroImage)
         row.addView(thumb, LinearLayout.LayoutParams(dp(64), dp(64)).apply { rightMargin = dp(12) })
@@ -389,8 +411,27 @@ class CheckoutActivity : BaseActivity() {
         val address = addressField.text.toString().trim()
         val notes = notesField.text.toString().trim()
 
-        if (name.isBlank() || email.isBlank() || phone.isBlank() || city.isBlank() || address.isBlank()) {
-            showError("Please fill in name, email, phone, city and address.")
+        var hasError = false
+        val fields = listOf(
+            nameField to name,
+            emailField to email,
+            phoneField to phone,
+            cityField to city,
+            addressField to address
+        )
+
+        fields.forEach { (field, value) ->
+            if (value.isBlank()) {
+                field.setErrorState(true)
+                shake(field)
+                hasError = true
+            } else {
+                field.setErrorState(false)
+            }
+        }
+
+        if (hasError) {
+            showError("Please fill in all required fields.")
             return
         }
         setLoading(true)
@@ -474,8 +515,9 @@ class CheckoutActivity : BaseActivity() {
     private fun setLoading(loading: Boolean) {
         if (!::submit.isInitialized) return
         submit.isEnabled = !loading
-        submit.text = if (loading) "Placing request…" else "Place order request"
-        submit.alpha = if (loading) 0.65f else 1f
+        submit.text = if (loading) "" else "Place order request"
+        progressSpinner.visibility = if (loading) View.VISIBLE else View.GONE
+        submit.alpha = if (loading) 0.8f else 1f
     }
 
     private fun showError(message: String) {

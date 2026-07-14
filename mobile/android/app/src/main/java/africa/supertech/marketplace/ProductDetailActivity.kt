@@ -1,5 +1,6 @@
 package africa.supertech.marketplace
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -7,6 +8,7 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -73,7 +75,7 @@ class ProductDetailActivity : BaseActivity() {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.TRANSPARENT)
         }
-        column.addView(topBar(name.take(28), withBack = true), LinearLayout.LayoutParams(mp(), dp(56)))
+        column.addView(topBar(name.take(28), withBack = false), LinearLayout.LayoutParams(mp(), dp(56)))
 
         val scrollContent = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -108,8 +110,37 @@ class ProductDetailActivity : BaseActivity() {
             setPadding(dp(36), dp(36), dp(36), dp(36))
         }
         roundView(mainImage, dp(16).toFloat())
+
+        val screenW = resources.displayMetrics.widthPixels
+        val galleryH = (screenW * 0.75).toInt()
         val galleryFrame = FrameLayout(this)
-        galleryFrame.addView(mainImage, FrameLayout.LayoutParams(mp(), dp(280)))
+        galleryFrame.addView(mainImage, FrameLayout.LayoutParams(mp(), galleryH))
+
+        // Floating Back Button
+        val floatBack = FrameLayout(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.argb(140, 0, 0, 0), dp(20).toFloat())
+            elevation = dp(4).toFloat()
+            pressable()
+            setOnClickListener { finishSmart() }
+        }
+        floatBack.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_chevron)
+            rotation = 180f
+            setColorFilter(Color.WHITE)
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+        }, FrameLayout.LayoutParams(dp(40), dp(40)))
+        galleryFrame.addView(floatBack, FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.START).apply {
+            setMargins(dp(12), dp(12), 0, 0)
+        })
+
+        // Floating Wishlist Button
+        if (slug.isNotBlank()) {
+            val floatWish = likeButton(slug, onImage = true, sizeDp = 40)
+            galleryFrame.addView(floatWish, FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.END).apply {
+                setMargins(0, dp(12), dp(12), 0)
+            })
+        }
+
         val counter = TextView(this).apply {
             text = "1/${images.size.coerceAtLeast(1)}"
             textSize = 11f
@@ -128,6 +159,67 @@ class ProductDetailActivity : BaseActivity() {
         scrollContent.block(galleryFrame, 10)
         loadImage(mainImage, images.firstOrNull().orEmpty())
 
+        // Swipe Gesture for Gallery Navigation
+        val thumbViews = ArrayList<ImageView>()
+        fun refreshThumbHighlight() {
+            thumbViews.forEachIndexed { idx, thumb ->
+                if (idx == activeImage) {
+                    thumb.background = rounded(brand, softGreen, dp(10).toFloat())
+                    thumb.setPadding(dp(2), dp(2), dp(2), dp(2))
+                } else {
+                    thumb.background = rounded(Color.TRANSPARENT, softGreen, dp(10).toFloat())
+                    thumb.setPadding(0, 0, 0, 0)
+                }
+            }
+        }
+
+        if (images.size > 1) {
+            mainImage.setOnTouchListener(object : View.OnTouchListener {
+                private var downX = 0f
+                @SuppressLint("ClickableViewAccessibility")
+                override fun onTouch(v: View, event: MotionEvent): Boolean {
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            downX = event.x
+                            return true
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            val deltaX = event.x - downX
+                            val minSwipe = dp(50)
+                            if (Math.abs(deltaX) > minSwipe) {
+                                if (deltaX < 0) {
+                                    if (activeImage < images.size - 1) {
+                                        activeImage++
+                                        val nextUrl = images[activeImage]
+                                        mainImage.animate().alpha(0f).setDuration(120).withEndAction {
+                                            loadImage(mainImage, nextUrl)
+                                            mainImage.animate().alpha(1f).setDuration(150).start()
+                                        }.start()
+                                        counter.text = "${activeImage + 1}/${images.size}"
+                                        refreshThumbHighlight()
+                                    }
+                                } else {
+                                    if (activeImage > 0) {
+                                        activeImage--
+                                        val nextUrl = images[activeImage]
+                                        mainImage.animate().alpha(0f).setDuration(120).withEndAction {
+                                            loadImage(mainImage, nextUrl)
+                                            mainImage.animate().alpha(1f).setDuration(150).start()
+                                        }.start()
+                                        counter.text = "${activeImage + 1}/${images.size}"
+                                        refreshThumbHighlight()
+                                    }
+                                }
+                            }
+                            v.performClick()
+                            return true
+                        }
+                    }
+                    return false
+                }
+            })
+        }
+
         if (images.size > 1) {
             val thumbs = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             images.forEachIndexed { index, url ->
@@ -137,8 +229,12 @@ class ProductDetailActivity : BaseActivity() {
                     pressable()
                     setOnClickListener {
                         activeImage = index
-                        loadImage(mainImage, url)
+                        mainImage.animate().alpha(0f).setDuration(120).withEndAction {
+                            loadImage(mainImage, url)
+                            mainImage.animate().alpha(1f).setDuration(150).start()
+                        }.start()
                         counter.text = "${index + 1}/${images.size}"
+                        refreshThumbHighlight()
                     }
                 }
                 roundView(thumb, dp(10).toFloat())
@@ -146,7 +242,9 @@ class ProductDetailActivity : BaseActivity() {
                     rightMargin = dp(8)
                 })
                 loadImage(thumb, url)
+                thumbViews.add(thumb)
             }
+            refreshThumbHighlight()
             scrollContent.block(
                 HorizontalScrollView(this).apply {
                     isHorizontalScrollBarEnabled = false
@@ -162,12 +260,17 @@ class ProductDetailActivity : BaseActivity() {
 
         val priceRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = Gravity.BOTTOM or Gravity.CENTER_VERTICAL
         }
-        val priceLabel = if (plan.priceEnquiry) "From RWF ${money.format(price)}" else "RWF ${money.format(price)}"
-        priceRow.addView(text(priceLabel, 22f, brand, Typeface.BOLD), LinearLayout.LayoutParams(0, wc(), 1f))
+        val prefix = if (plan.priceEnquiry) "From RWF " else "RWF "
+        priceRow.addView(text(prefix, 12f, muted, Typeface.BOLD).apply { setPadding(0, 0, 0, dp(2)) })
+        priceRow.addView(text(money.format(price), 24f, brand, Typeface.BOLD))
+        priceRow.addView(View(this), LinearLayout.LayoutParams(0, dp(1), 1f))
+
         val tag = stockLabel.ifBlank { badge }
-        if (tag.isNotBlank()) priceRow.addView(chip(tag, softGreen, brand))
+        if (tag.isNotBlank()) {
+            priceRow.addView(statusChip(tag, if (isOutOfStock(tag)) ChipStyle.REJECTED else ChipStyle.APPROVED))
+        }
         scrollContent.block(priceRow, 8)
 
         scrollContent.block(
@@ -191,25 +294,39 @@ class ProductDetailActivity : BaseActivity() {
         // —— Vendor
         if (vendorSlug.isNotBlank() || vendorName.isNotBlank()) {
             val vendorCard = card()
-            vendorCard.addView(text("Sold by", 11f, muted, Typeface.BOLD))
-            vendorCard.addView(
-                text(vendorName.ifBlank { vendorSlug }, 17f, ink, Typeface.BOLD).apply {
-                    setPadding(0, dp(4), 0, dp(4))
-                }
-            )
-            vendorCard.addView(
-                text("Verified SuperTech seller", 12f, brand, Typeface.BOLD)
-            )
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            val initial = (vendorName.ifBlank { vendorSlug }).take(1).uppercase(Locale.US)
+            val bubble = FrameLayout(this).apply {
+                background = rounded(Color.TRANSPARENT, softGreen, dp(22).toFloat())
+            }
+            bubble.addView(text(initial, 16f, brand, Typeface.BOLD).apply {
+                gravity = Gravity.CENTER
+            }, FrameLayout.LayoutParams(dp(44), dp(44)))
+            row.addView(bubble, LinearLayout.LayoutParams(dp(44), dp(44)))
+
+            val details = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(12), 0, 0, 0)
+            }
+            details.addView(text("SOLD BY", 10f, muted, Typeface.BOLD).apply { letterSpacing = 0.08f })
+            details.addView(text(vendorName.ifBlank { vendorSlug }, 17f, ink, Typeface.BOLD))
+            details.addView(text("Verified SuperTech Seller", 12f, brand, Typeface.BOLD))
+            row.addView(details, LinearLayout.LayoutParams(0, wc(), 1f))
+            vendorCard.addView(row)
+
             if (vendorSlug.isNotBlank()) {
                 vendorCard.addView(
-                    secondaryButton("Visit store") {
+                    secondaryButton("Visit Store") {
                         startActivity(
                             Intent(this, VendorProfileActivity::class.java)
                                 .putExtra("slug", vendorSlug)
                         )
                     }.apply {
                         minimumHeight = dp(44)
-                        setPadding(0, dp(10), 0, 0)
+                        layoutParams = LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(14) }
                     }
                 )
             }
@@ -229,10 +346,21 @@ class ProductDetailActivity : BaseActivity() {
         }
 
         if (features.isNotEmpty()) {
-            val feat = card()
-            feat.addView(text("Key features", 15f, ink, Typeface.BOLD))
+            val feat = card(accentBorder = true)
+            feat.addView(text("Key features", 16f, ink, Typeface.BOLD).apply {
+                setPadding(0, 0, 0, dp(4))
+            })
             features.forEach { f ->
-                feat.addView(text("•  $f", 14f, ink).apply { setPadding(0, dp(6), 0, 0) })
+                val row = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, dp(6), 0, dp(6))
+                }
+                row.addView(text("✓", 14f, brand, Typeface.BOLD).apply {
+                    setPadding(0, 0, dp(8), 0)
+                })
+                row.addView(text(f, 14f, ink), LinearLayout.LayoutParams(0, wc(), 1f))
+                feat.addView(row)
             }
             scrollContent.block(feat, 12)
         }
@@ -259,35 +387,31 @@ class ProductDetailActivity : BaseActivity() {
 
         // —— Sticky buy bar
         val sticky = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.WHITE)
             elevation = dp(16).toFloat()
-            setPadding(dp(14), dp(12), dp(14), dp(12))
         }
-        sticky.background = GradientDrawable().apply {
-            setColor(Color.WHITE)
-            setStroke(dp(1), line)
+        sticky.addView(View(this).apply { setBackgroundColor(line) }, LinearLayout.LayoutParams(mp(), dp(1)))
+
+        val buyBar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(12))
         }
         val stickyCopy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         stickyCopy.addView(text(name, 12f, muted, Typeface.NORMAL).apply {
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
-        stickyCopy.addView(text("RWF ${money.format(price)}", 16f, brand, Typeface.BOLD))
-        sticky.addView(stickyCopy, LinearLayout.LayoutParams(0, wc(), 1f))
-        if (slug.isNotBlank()) {
-            sticky.addView(
-                likeButton(slug, onImage = false, sizeDp = 44),
-                LinearLayout.LayoutParams(dp(44), dp(44)).apply { rightMargin = dp(8) }
-            )
-        }
-        sticky.addView(
+        stickyCopy.addView(text("RWF ${money.format(price)}", 18f, brand, Typeface.BOLD))
+        buyBar.addView(stickyCopy, LinearLayout.LayoutParams(0, wc(), 1f))
+
+        buyBar.addView(
             primaryButton(plan.primaryLabel) {
                 when (plan.primaryAction) {
                     "cart" -> {
                         Cart.add(slug, name, price, heroImage = heroImage)
-                        startActivity(Intent(this, CheckoutActivity::class.java))
+                        startActivity(Intent(this@ProductDetailActivity, CheckoutActivity::class.java))
                     }
                     "request" -> openRequest(name, category)
                     "enquire" -> openRequest(name, category)
@@ -298,6 +422,7 @@ class ProductDetailActivity : BaseActivity() {
                 minimumWidth = dp(140)
             }
         )
+        sticky.addView(buyBar)
 
         root.addView(
             sticky,

@@ -120,6 +120,11 @@ export function MobileNav({ categories, categoryImages = {} }: MobileNavProps) {
   }, [open]);
 
   function handleSignOut() {
+    // @ts-ignore
+    if (typeof window !== "undefined" && window.google?.accounts?.id) {
+      // @ts-ignore
+      window.google.accounts.id.disableAutoSelect();
+    }
     startTransition(async () => {
       await fetch("/api/auth/sign-out", { method: "POST" });
       setSession(null);
@@ -268,8 +273,17 @@ export function MobileNav({ categories, categoryImages = {} }: MobileNavProps) {
                           onClick={handleSignOut}
                           className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm font-medium hover:bg-[var(--accent-soft)] disabled:opacity-60"
                         >
-                          {isPending ? "Signing out..." : "Sign out"}
+                          Switch account
                           <ChevronRight className="h-4 w-4 text-[var(--muted)]" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={handleSignOut}
+                          className="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60"
+                        >
+                          {isPending ? "Signing out..." : "Sign out"}
+                          <ChevronRight className="h-4 w-4 text-red-400" />
                         </button>
                       </>
                     ) : (

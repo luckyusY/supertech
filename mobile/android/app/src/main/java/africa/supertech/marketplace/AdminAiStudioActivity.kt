@@ -28,7 +28,8 @@ class AdminAiStudioActivity : BaseActivity() {
         }
         productSlug = intent.getStringExtra("productSlug").orEmpty()
         val content = scaffold("AI Studio", withBack = true)
-        content.block(text("Generate content", 24f, ink, Typeface.BOLD), 6)
+        val hero = gradientHeroCard("AI Content Studio", "Generate articles, product copy, social posts and more", "Powered by AI")
+        content.block(hero, 0)
         content.block(text("Create articles, product copy, captions, emails, or SEO product blogs inside the app.", 14f, muted), 12)
 
         val form = card()
@@ -55,21 +56,32 @@ class AdminAiStudioActivity : BaseActivity() {
         tone.setText("clear, trustworthy, and conversion-focused")
         form.block(tone, 8)
         form.block(fieldLabel("Extra details"), 0)
-        val details = inputField("Optional details", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE)
-        details.setSingleLine(false)
-        details.minLines = 3
+        val details = multiLineInputField("Optional details", lines = 3)
         form.block(details, 0)
         content.block(form, 12)
 
         generate = primaryButton("Generate draft") {
             submit(mode.selectedItem.toString(), topic.text.toString(), audience.text.toString(), tone.text.toString(), details.text.toString())
         }
+        generate.minimumHeight = dp(50)
         content.block(generate, 12)
 
         output = text("Generated content will appear here.", 14f, muted)
         val outCard = card()
         outCard.addView(output)
         content.block(outCard, 0)
+
+        val copyBtn = secondaryButton("📋  Copy to clipboard") {
+            val txt = output.text.toString()
+            if (txt.isBlank() || txt == "Generated content will appear here.") {
+                toast("Generate content first")
+            } else {
+                val cm = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("ai-content", txt))
+                toast("Copied to clipboard")
+            }
+        }
+        content.block(copyBtn, 6)
     }
 
     private fun submit(mode: String, topic: String, audience: String, tone: String, details: String) {

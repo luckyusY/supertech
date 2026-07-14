@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PenLine, Search } from "lucide-react";
 import { AdminDeleteButton } from "@/components/admin-delete-button";
 import { AdminToggleButton } from "@/components/admin-toggle-button";
 import {
+  approveProductAction,
   deleteProductAction,
+  rejectProductAction,
   toggleProductAction,
 } from "@/app/dashboard/admin/products/actions";
 import {
@@ -68,6 +70,7 @@ export function AdminProductsTable({
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -172,6 +175,24 @@ export function AdminProductsTable({
                     {row.kind === "submission" ? (
                       <>
                         {row.status === "approved" ? <WriteBlogLink slug={row.slug} /> : null}
+                        {row.status === "pending_review" ? (
+                          <>
+                            <button
+                              disabled={isPending}
+                              onClick={() => startTransition(async () => { await approveProductAction(row.submissionId!); })}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              disabled={isPending}
+                              onClick={() => startTransition(async () => { await rejectProductAction(row.submissionId!); })}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        ) : null}
                         <AdminDeleteButton
                           onDelete={deleteProductAction.bind(null, row.id, false)}
                         />

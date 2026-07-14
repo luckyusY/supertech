@@ -23,7 +23,9 @@ class AdminCategoriesActivity : BaseActivity() {
             return
         }
         val content = scaffold("Categories", withBack = true)
-        content.block(primaryButton("Add category") { categoryDialog(null) }, 12)
+        val hero = gradientHeroCard("Category manager", "Control which categories are visible in the marketplace", "Admin only")
+        content.block(hero, 0)
+        content.block(primaryButton("Add category") { categoryDialog(null) }.apply { minimumHeight = dp(48) }, 12)
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.block(body, 0)
         load()
@@ -31,7 +33,8 @@ class AdminCategoriesActivity : BaseActivity() {
 
     private fun load() {
         body.removeAllViews()
-        body.addView(text("Loading categories...", 14f, muted))
+        body.addView(skeletonList(4))
+        animateContentIn(body)
         executor.execute {
             val result = Net.get("/api/admin/categories")
             runOnUiThread { render(result) }

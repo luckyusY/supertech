@@ -8,34 +8,28 @@ import android.view.Gravity
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 import java.util.concurrent.Executors
 
 /**
  * Native AI Support chat. Streams replies from /api/ai/support so customers get
  * the same assistant the website offers, but as a first-class mobile screen.
  */
-class AiSupportActivity : AppCompatActivity() {
+class AiSupportActivity : BaseActivity() {
 
     private val executor = Executors.newSingleThreadExecutor()
-
-    private val ink = Color.rgb(49, 49, 51)
-    private val muted = Color.rgb(117, 117, 122)
-    private val line = Color.rgb(220, 221, 225)
-    private val page = Color.rgb(241, 241, 242)
-    private val brand = Color.rgb(246, 139, 30)
-    private val brandDark = Color.rgb(224, 126, 23)
-    private val softGreen = Color.rgb(255, 244, 229)
 
     private lateinit var messagesView: LinearLayout
     private lateinit var scroll: ScrollView
     private lateinit var input: EditText
-    private lateinit var sendButton: TextView
+    private lateinit var sendButton: ImageView
 
     private val history = ArrayList<Msg>()
     private var sending = false
@@ -43,20 +37,30 @@ class AiSupportActivity : AppCompatActivity() {
     private val suggestions = listOf(
         "Find me a laptop under 500,000 RWF",
         "How do I track my order?",
-        "How do I pay with MoMoPay?",
+        "How do I pay with MoMo?",
         "How do I become a vendor?"
     )
 
+    override fun canvasZone(): AppCanvasView.Zone = AppCanvasView.Zone.APP
+    override fun dockHighlight(): DockTab = DockTab.ACCOUNT
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = brand
-        window.navigationBarColor = Color.WHITE
 
-        val root = LinearLayout(this).apply {
+        val content = scaffold("SuperTech AI", withBack = true)
+        // Hide standard header for custom chat top bar
+        try {
+            val topBar = (content.parent.parent as LinearLayout).getChildAt(0)
+            topBar.visibility = View.GONE
+        } catch (_: Exception) {}
+        content.setPadding(0, 0, 0, 0)
+
+        val frame = FrameLayout(this)
+        val outerCol = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(page)
         }
-        root.addView(topBar(), LinearLayout.LayoutParams(match(), dp(58)))
+        outerCol.addView(topBarChat(), LinearLayout.LayoutParams(mp(), dp(58)))
 
         messagesView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -67,10 +71,43 @@ class AiSupportActivity : AppCompatActivity() {
             overScrollMode = View.OVER_SCROLL_NEVER
             addView(messagesView)
         }
-        root.addView(scroll, LinearLayout.LayoutParams(match(), 0, 1f))
-        root.addView(composer(), LinearLayout.LayoutParams(match(), wrap()))
+        outerCol.addView(scroll, LinearLayout.LayoutParams(mp(), 0, 1f))
+        outerCol.addView(composer(), LinearLayout.LayoutParams(mp(), wc()))
 
-        setContentView(root)
+        frame.addView(outerCol, FrameLayout.LayoutParams(mp(), mp()))
+
+        // Scroll to bottom FAB
+        val fab = ImageView(this).apply {
+            setImageResource(R.drawable.ic_chevron)
+            rotation = 90f // points down
+            setColorFilter(Color.WHITE)
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            background = rounded(Color.TRANSPARENT, brand, dp(18).toFloat())
+            pressable()
+            elevation = dp(6).toFloat()
+            visibility = View.GONE
+            setOnClickListener {
+                scrollToBottom()
+                visibility = View.GONE
+            }
+        }
+        val fabLp = FrameLayout.LayoutParams(dp(36), dp(36), Gravity.BOTTOM or Gravity.END).apply {
+            bottomMargin = dp(76)
+            rightMargin = dp(16)
+        }
+        frame.addView(fab, fabLp)
+
+        // Show FAB when scrolled up
+        scroll.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            val diff = messagesView.height - scroll.height
+            if (diff > 0 && scrollY < diff - dp(100)) {
+                fab.visibility = View.VISIBLE
+            } else {
+                fab.visibility = View.GONE
+            }
+        }
+
+        setContentView(frame)
 
         addAssistant("Hi, I am **SuperTech AI Support**. Ask me about products, orders, requests, or becoming a vendor.")
         addSuggestions()
@@ -81,20 +118,21 @@ class AiSupportActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    private fun topBar(): View {
+    private fun topBarChat(): View {
         val bar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            background = gradient(brand, brandDark)
+            background = gradient(brand, brandDark, 0f)
             setPadding(dp(8), 0, dp(10), 0)
         }
-        val back = android.widget.ImageView(this).apply {
+        val back = ImageView(this).apply {
             setImageResource(R.drawable.ic_chevron)
             setColorFilter(Color.WHITE)
             rotation = 180f
             setPadding(dp(10), dp(10), dp(10), dp(10))
             contentDescription = "Back"
-            setOnClickListener { finish() }
+            pressable()
+            setOnClickListener { finishSmart() }
         }
         val copy = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -112,13 +150,13 @@ class AiSupportActivity : AppCompatActivity() {
             setTextColor(Color.argb(215, 255, 255, 255))
         })
         bar.addView(back, LinearLayout.LayoutParams(dp(40), dp(46)))
-        bar.addView(android.widget.ImageView(this).apply {
+        bar.addView(ImageView(this).apply {
             setImageResource(R.mipmap.ic_launcher)
-            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.CENTER_CROP
             background = rounded(Color.TRANSPARENT, Color.WHITE, dp(9).toFloat())
             clipToOutline = true
         }, LinearLayout.LayoutParams(dp(36), dp(36)))
-        bar.addView(copy, LinearLayout.LayoutParams(0, wrap(), 1f))
+        bar.addView(copy, LinearLayout.LayoutParams(0, wc(), 1f))
         return bar
     }
 
@@ -145,12 +183,12 @@ class AiSupportActivity : AppCompatActivity() {
                 } else false
             }
         }
-        sendButton = TextView(this).apply {
-            text = "➤"
-            textSize = 18f
-            gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
+        sendButton = ImageView(this).apply {
+            setImageResource(R.drawable.ic_chevron) // chevron points right
+            setColorFilter(Color.WHITE)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
             background = rounded(Color.TRANSPARENT, brand, dp(22).toFloat())
+            pressable()
             setOnClickListener { submit() }
         }
         wrap.addView(input, LinearLayout.LayoutParams(0, dp(44), 1f))
@@ -225,8 +263,6 @@ class AiSupportActivity : AppCompatActivity() {
         sendButton.alpha = 1f
     }
 
-    // ---- Bubbles ----
-
     private fun addUser(text: String) {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -241,7 +277,7 @@ class AiSupportActivity : AppCompatActivity() {
             setPadding(dp(14), dp(10), dp(14), dp(10))
             background = rounded(Color.TRANSPARENT, brand, dp(16).toFloat())
         }
-        row.addView(bubble, LinearLayout.LayoutParams(wrap(), wrap()).apply {
+        row.addView(bubble, LinearLayout.LayoutParams(wc(), wc()).apply {
             marginStart = dp(48)
         })
         messagesView.addView(row)
@@ -249,7 +285,6 @@ class AiSupportActivity : AppCompatActivity() {
         scrollToBottom()
     }
 
-    /** Returns the inner container so streaming text can be updated in place. */
     private fun addAssistant(markdown: String): LinearLayout {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -270,14 +305,13 @@ class AiSupportActivity : AppCompatActivity() {
             background = rounded(line, Color.WHITE, dp(16).toFloat())
         }
         row.addView(avatar, LinearLayout.LayoutParams(dp(28), dp(28)).apply { marginEnd = dp(8); topMargin = dp(2) })
-        row.addView(bubble, LinearLayout.LayoutParams(wrap(), wrap()).apply { marginEnd = dp(40) })
+        row.addView(bubble, LinearLayout.LayoutParams(wc(), wc()).apply { marginEnd = dp(40) })
         messagesView.addView(row)
         if (markdown.isNotBlank()) renderBubbleText(bubble, markdown)
         animateIn(row)
         return bubble
     }
 
-    /** Lightweight markdown: **bold**, bullet lines, and bare /paths as links. */
     private fun renderBubbleText(bubble: LinearLayout, markdown: String) {
         bubble.removeAllViews()
         markdown.trim().split("\n").forEach { rawLine ->
@@ -303,41 +337,37 @@ class AiSupportActivity : AppCompatActivity() {
     }
 
     private fun stripMarkdown(value: String): String {
-        // Drop bold markers and leftover markdown link syntax for clean plain text.
         return value.replace("**", "").replace(Regex("\\[(.*?)]\\((.*?)\\)"), "$1")
     }
 
     private fun addSuggestions() {
-        val wrap = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            tag = SUGGESTION_TAG
-            setPadding(dp(36), dp(6), 0, 0)
+        val rail = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp(16), dp(8), dp(16), dp(8))
         }
-        wrap.addView(TextView(this).apply {
-            text = "TRY ASKING"
-            textSize = 11f
-            setTextColor(muted)
-            typeface = Typeface.DEFAULT_BOLD
-            letterSpacing = 0.12f
-            setPadding(dp(2), dp(4), 0, dp(6))
-        })
         suggestions.forEach { suggestion ->
-            wrap.addView(TextView(this).apply {
-                text = "✦  $suggestion"
-                textSize = 14f
-                setTextColor(ink)
-                setPadding(dp(14), dp(11), dp(14), dp(11))
-                background = rounded(line, softGreen, dp(14).toFloat())
+            val item = TextView(this).apply {
+                text = suggestion
+                textSize = 13f
+                setTextColor(brandDark)
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(dp(14), dp(8), dp(14), dp(8))
+                background = rounded(brand, Color.rgb(255, 244, 229), dp(16).toFloat())
+                pressable()
                 setOnClickListener {
                     input.setText(suggestion)
                     submit()
                 }
-                val lp = LinearLayout.LayoutParams(match(), wrap())
-                lp.bottomMargin = dp(8)
-                layoutParams = lp
-            })
+            }
+            rail.addView(item, LinearLayout.LayoutParams(wc(), wc()).apply { marginEnd = dp(8) })
         }
-        messagesView.addView(wrap)
+        val scrollContainer = android.widget.HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
+            tag = SUGGESTION_TAG
+            addView(rail)
+        }
+        messagesView.addView(scrollContainer)
     }
 
     private fun clearSuggestions() {
@@ -353,24 +383,6 @@ class AiSupportActivity : AppCompatActivity() {
     private fun scrollToBottom() {
         scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
     }
-
-    // ---- helpers ----
-
-    private fun rounded(stroke: Int, fill: Int, radius: Float): GradientDrawable {
-        return GradientDrawable().apply {
-            setColor(fill)
-            cornerRadius = radius
-            if (stroke != Color.TRANSPARENT) setStroke(dp(1), stroke)
-        }
-    }
-
-    private fun gradient(start: Int, end: Int): GradientDrawable {
-        return GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(start, end))
-    }
-
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
-    private fun match() = LinearLayout.LayoutParams.MATCH_PARENT
-    private fun wrap() = LinearLayout.LayoutParams.WRAP_CONTENT
 
     private data class Msg(val role: String, val content: String)
 

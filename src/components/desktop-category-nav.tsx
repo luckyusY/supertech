@@ -126,7 +126,7 @@ export function DesktopCategoryNav({ categories }: DesktopCategoryNavProps) {
                       "mb-0.5 flex items-center gap-2.5 rounded-[var(--radius-sm)] px-3 py-2.5 text-sm transition-colors",
                       isActive
                         ? "bg-[var(--background-strong)] font-bold text-[var(--gold)]"
-                        : "font-medium hover:bg-white",
+                        : "font-medium text-[var(--foreground)] hover:bg-white",
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0 opacity-80" />
@@ -161,7 +161,7 @@ export function DesktopCategoryNav({ categories }: DesktopCategoryNavProps) {
                     key={category}
                     href={`/catalog?category=${encodeURIComponent(category)}`}
                     onClick={() => setOpen(false)}
-                    className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--neutral-50)] px-3 py-2.5 text-sm font-semibold hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]"
+                    className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--neutral-50)] px-3 py-2.5 text-sm font-semibold text-[var(--foreground)] hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] hover:text-zinc-950"
                   >
                     {category}
                   </Link>

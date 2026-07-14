@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import org.json.JSONObject
 import java.util.concurrent.Executors
@@ -29,23 +32,121 @@ class StorefrontActivity : BaseActivity() {
         content.block(text("Update how your shop looks and where payouts are collected.", 14f, muted), 16)
 
         val store = card()
-        store.addView(text("Branding", 15f, ink, Typeface.BOLD))
+        val brandingHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(12))
+        }
+        brandingHeader.addView(iconBubble(R.drawable.ic_edit, brand, softGreen, 36))
+        brandingHeader.addView(text("Branding", 16f, ink, Typeface.BOLD).apply {
+            setPadding(dp(10), 0, 0, 0)
+        })
+        store.addView(brandingHeader)
+
         store.block(fieldLabel("Headline"), 0)
         val headline = inputField("e.g. Trusted laptops in Kigali", Types.TEXT); store.block(headline, 10)
         store.block(fieldLabel("Cover image URL"), 0)
-        val cover = inputField("https://…/cover.jpg", InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT); store.block(cover, 10)
+        val cover = inputField("https://…/cover.jpg", android.text.InputType.TYPE_TEXT_VARIATION_URI or android.text.InputType.TYPE_CLASS_TEXT); store.block(cover, 10)
+        
+        val coverPreview = ImageView(this).apply {
+            visibility = View.GONE
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        store.addView(coverPreview, LinearLayout.LayoutParams(mp(), dp(120)).apply { topMargin = dp(4); bottomMargin = dp(12) })
+        roundViewLocal(coverPreview, dp(12).toFloat())
+
+        cover.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val url = cover.text.toString().trim()
+                if (url.isNotBlank() && url.startsWith("http")) {
+                    coverPreview.visibility = View.VISIBLE
+                    loadImage(coverPreview, url)
+                } else {
+                    coverPreview.visibility = View.GONE
+                }
+            }
+        }
+
         store.block(fieldLabel("Logo image URL"), 0)
-        val logo = inputField("https://…/logo.png", InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT); store.block(logo, 0)
+        val logo = inputField("https://…/logo.png", android.text.InputType.TYPE_TEXT_VARIATION_URI or android.text.InputType.TYPE_CLASS_TEXT); store.block(logo, 10)
+
+        val logoPreview = ImageView(this).apply {
+            visibility = View.GONE
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        store.addView(logoPreview, LinearLayout.LayoutParams(dp(64), dp(64)).apply { topMargin = dp(4); bottomMargin = dp(12) })
+        roundViewLocal(logoPreview, dp(32).toFloat())
+
+        logo.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val url = logo.text.toString().trim()
+                if (url.isNotBlank() && url.startsWith("http")) {
+                    logoPreview.visibility = View.VISIBLE
+                    loadImage(logoPreview, url)
+                } else {
+                    logoPreview.visibility = View.GONE
+                }
+            }
+        }
+
         content.block(store, 14)
 
         val pay = card()
-        pay.addView(text("MoMo payments", 15f, ink, Typeface.BOLD))
-        pay.addView(text("Used to collect payments from customers.", 13f, muted).apply { setPadding(0, dp(4), 0, dp(8)) })
+        val payHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(8))
+        }
+        payHeader.addView(iconBubble(R.drawable.ic_wallet, brand, softGreen, 36))
+        payHeader.addView(text("MoMo payments", 16f, ink, Typeface.BOLD).apply {
+            setPadding(dp(10), 0, 0, 0)
+        })
+        pay.addView(payHeader)
+
+        val mtnColor = android.graphics.Color.rgb(250, 204, 21) // MTN Yellow
+        val mtnSoft = android.graphics.Color.rgb(254, 252, 232) // Soft MTN Yellow
+        val mtnText = android.graphics.Color.rgb(161, 98, 7) // MTN Amber Ink
+        val momoInfo = infoCard(R.drawable.ic_wallet, "MTN MoMo Integration", "Payments from customers will go directly to your merchant code or registered business MoMo account.", mtnText).apply {
+            background = rounded(mtnColor, mtnSoft, dp(14).toFloat())
+        }
+        pay.block(momoInfo, 10)
+
         pay.block(fieldLabel("MoMo merchant code"), 0)
-        val momoCode = inputField("e.g. 123456", InputType.TYPE_CLASS_NUMBER); pay.block(momoCode, 10)
+        val momoCode = inputField("e.g. 123456", android.text.InputType.TYPE_CLASS_NUMBER); pay.block(momoCode, 10)
         pay.block(fieldLabel("MoMo business name"), 0)
         val momoName = inputField("Registered business name", Types.TEXT); pay.block(momoName, 0)
         content.block(pay, 14)
+
+        // Pre-fill fields from local marketplace cache if existing vendor
+        val slugVal = session.vendorSlug.orEmpty()
+        if (slugVal.isNotBlank()) {
+            MarketplaceCache.init(this)
+            MarketplaceCache.get()?.let { cached ->
+                val vendors = cached.optJSONArray("vendors")
+                val vendor = (0 until (vendors?.length() ?: 0))
+                    .mapNotNull { vendors?.optJSONObject(it) }
+                    .firstOrNull { it.optString("slug") == slugVal }
+                vendor?.let {
+                    headline.setText(it.optString("headline"))
+                    cover.setText(it.optString("coverImage"))
+                    logo.setText(it.optString("logoMark"))
+                    momoCode.setText(it.optString("momoMerchantCode"))
+                    momoName.setText(it.optString("momoBusinessName"))
+
+                    // Trigger initial previews if data is already there
+                    val coverUrl = it.optString("coverImage")
+                    if (coverUrl.isNotBlank() && coverUrl.startsWith("http")) {
+                        coverPreview.visibility = View.VISIBLE
+                        loadImage(coverPreview, coverUrl)
+                    }
+                    val logoUrl = it.optString("logoMark")
+                    if (logoUrl.isNotBlank() && logoUrl.startsWith("http")) {
+                        logoPreview.visibility = View.VISIBLE
+                        loadImage(logoPreview, logoUrl)
+                    }
+                }
+            }
+        }
 
         val message = text("", 13f, danger).apply { visibility = View.GONE }
         content.block(message, 6)
@@ -101,5 +202,14 @@ class StorefrontActivity : BaseActivity() {
     override fun onDestroy() {
         executor.shutdownNow()
         super.onDestroy()
+    }
+
+    private fun roundViewLocal(view: View, radius: Float) {
+        view.clipToOutline = true
+        view.outlineProvider = object : android.view.ViewOutlineProvider() {
+            override fun getOutline(v: View, outline: android.graphics.Outline) {
+                outline.setRoundRect(0, 0, v.width, v.height, radius)
+            }
+        }
     }
 }

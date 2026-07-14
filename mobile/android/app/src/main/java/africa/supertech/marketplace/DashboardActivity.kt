@@ -2,12 +2,16 @@ package africa.supertech.marketplace
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.text.NumberFormat
 import java.util.Locale
@@ -32,12 +36,18 @@ class DashboardActivity : BaseActivity() {
 
         val session = Net.session()
         if (session == null || !Net.isLoggedIn()) {
-            startActivity(Intent(this, SignInActivity::class.java))
+            startActivity(
+                SignInActivity.intent(
+                    this,
+                    reason = "Sign in to open your SuperTech dashboard.",
+                    promptGoogle = true
+                )
+            )
             finish()
             return
         }
 
-        val content = scaffold("Dashboard")
+        val content = scaffold("Dashboard", onRefresh = { load(session) })
         content.block(headerCard(session), 14)
 
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -50,35 +60,45 @@ class DashboardActivity : BaseActivity() {
         val cardView = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(18), dp(18), dp(18), dp(18))
-            background = gradient(brand, brandDark, dp(18).toFloat())
+            background = gradient(backgroundStrong, brandDark, dp(18).toFloat())
             elevation = dp(4).toFloat()
         }
+
+        val topRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+
+        val initial = session.name.take(1).uppercase(Locale.US)
+        val avatar = FrameLayout(this).apply {
+            background = rounded(android.graphics.Color.TRANSPARENT, Color_white_a(), dp(20).toFloat())
+        }
+        avatar.addView(text(initial, 16f, brandDark, Typeface.BOLD).apply {
+            gravity = Gravity.CENTER
+        }, FrameLayout.LayoutParams(dp(40), dp(40)))
+        topRow.addView(avatar, LinearLayout.LayoutParams(dp(40), dp(40)))
+
+        val infoCol = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), 0, 0, 0)
+        }
+        infoCol.addView(text("Hi, ${session.name}", 20f, android.graphics.Color.WHITE, Typeface.BOLD))
+        infoCol.addView(text(session.email, 12f, android.graphics.Color.argb(190, 255, 255, 255)))
+        topRow.addView(infoCol, LinearLayout.LayoutParams(0, wc(), 1f))
+
         val roleLabel = when (session.role) {
             "admin" -> "Administrator"
             "vendor" -> "Vendor"
             else -> "Customer"
         }
-        cardView.addView(chip("● $roleLabel", Color_white_a(), brand).apply {
-            // pill on the gradient
-            background = rounded(android.graphics.Color.TRANSPARENT, android.graphics.Color.WHITE, dp(12).toFloat())
-        })
-        val brandRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(4), 0, dp(4))
+        val roleChip = chip("● $roleLabel", Color_white_a(), android.graphics.Color.WHITE).apply {
+            background = rounded(android.graphics.Color.TRANSPARENT, android.graphics.Color.argb(60, 255, 255, 255), dp(12).toFloat())
+            setPadding(dp(10), dp(4), dp(10), dp(4))
         }
-        brandRow.addView(android.widget.ImageView(this).apply {
-            setImageResource(R.mipmap.ic_launcher)
-            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-            background = rounded(android.graphics.Color.TRANSPARENT, android.graphics.Color.WHITE, dp(10).toFloat())
-        }, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(10) })
-        brandRow.addView(text("SuperTech", 14f, android.graphics.Color.WHITE, Typeface.BOLD))
-        cardView.addView(brandRow)
+        topRow.addView(roleChip)
+        cardView.addView(topRow)
 
-        cardView.addView(text("Hi, ${session.name}", 22f, android.graphics.Color.WHITE, Typeface.BOLD).apply {
-            setPadding(0, dp(10), 0, 0)
-        })
-        cardView.addView(text(session.email, 13f, android.graphics.Color.argb(215, 255, 255, 255)))
+        cardView.addView(View(this), LinearLayout.LayoutParams(mp(), dp(16)))
 
         // Clear sign-out control on the gradient header (easy to find for admin & vendor)
         val signOut = Button(this).apply {
@@ -97,10 +117,7 @@ class DashboardActivity : BaseActivity() {
             pressable()
             setOnClickListener { confirmSignOut() }
         }
-        cardView.addView(
-            signOut,
-            LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(14) }
-        )
+        cardView.addView(signOut)
         return cardView
     }
 
@@ -132,6 +149,7 @@ class DashboardActivity : BaseActivity() {
             body.removeAllViews()
             if (!analytics.ok) {
                 renderError(if (analytics.code == 0) "No connection." else analytics.errorMessage("Could not load analytics."))
+                stopRefreshing()
                 return@runOnUiThread
             }
             val a = analytics.json()
@@ -198,20 +216,10 @@ class DashboardActivity : BaseActivity() {
             body.addView(linkRow(R.drawable.ic_lock, "Account recovery", "Help users regain access") { navigateForward(Intent(this, AdminRecoveryActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_person, "Profile", "Edit your admin account details") { navigateForward(Intent(this, VendorProfileActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_home, "Open marketplace", "Shop as a customer") { openMainTab("Home") })
-            body.addView(sectionTitle("Session"))
-            body.addView(linkRow(R.drawable.ic_lock, "Sign out", "End this admin session on this phone") {
-                confirmSignOut()
-            })
-            body.addView(
-                dangerButton("Sign out of SuperTech") { confirmSignOut() }.also {
-                    it.minimumHeight = dp(52)
-                },
-                LinearLayout.LayoutParams(mp(), wc()).apply {
-                    topMargin = dp(8)
-                    bottomMargin = dp(24)
-                }
-            )
+            appendSessionSection(role = "admin")
+            android.transition.TransitionManager.beginDelayedTransition(body)
             animateContentIn(body)
+            stopRefreshing()
         }
     }
 
@@ -329,20 +337,10 @@ class DashboardActivity : BaseActivity() {
             body.addView(linkRow(R.drawable.ic_receipt, "Blogs", "View and manage your published blogs") { navigateForward(Intent(this, VendorBlogsActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_person, "Profile", "Edit your vendor account details") { navigateForward(Intent(this, VendorProfileActivity::class.java)) })
             body.addView(linkRow(R.drawable.ic_home, "View marketplace", "See SuperTech as shoppers do") { openMainTab("Home") })
-            body.addView(sectionTitle("Session"))
-            body.addView(linkRow(R.drawable.ic_lock, "Sign out", "End this vendor session on this phone") {
-                confirmSignOut()
-            })
-            body.addView(
-                dangerButton("Sign out of SuperTech") { confirmSignOut() }.also {
-                    it.minimumHeight = dp(52)
-                },
-                LinearLayout.LayoutParams(mp(), wc()).apply {
-                    topMargin = dp(8)
-                    bottomMargin = dp(24)
-                }
-            )
+            appendSessionSection(role = "vendor")
+            android.transition.TransitionManager.beginDelayedTransition(body)
             animateContentIn(body)
+            stopRefreshing()
         }
     }
 
@@ -412,14 +410,76 @@ class DashboardActivity : BaseActivity() {
         body.addView(actionCard("Request a product", "Ask vendors to source any item", "Request product") {
             navigateForward(Intent(this, RequestProductActivity::class.java))
         })
+        body.addView(sectionTitle("Grow with SuperTech"))
+        val becomeVendorCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(18), dp(18), dp(18))
+            background = gradient(backgroundStrong, brand, dp(16).toFloat())
+            elevation = dp(4).toFloat()
+        }
+        val becomeVendorTop = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        becomeVendorTop.addView(iconBubble(R.drawable.ic_store, brand, Color.argb(45, 255, 255, 255), 44))
+        val becomeVendorCopy = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), 0, 0, 0)
+        }
+        becomeVendorCopy.addView(text("Become a vendor", 17f, Color.WHITE, Typeface.BOLD))
+        becomeVendorCopy.addView(text("Sell products under your own storefront. Same Google/email login — role upgrades after approval.", 13f, Color.argb(220, 255, 255, 255)))
+        becomeVendorTop.addView(becomeVendorCopy, LinearLayout.LayoutParams(0, wc(), 1f))
+        becomeVendorCard.addView(becomeVendorTop)
+
+        becomeVendorCard.addView(Button(this).apply {
+            text = "Apply to sell"
+            textSize = 14f
+            isAllCaps = false
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(brandDark)
+            backgroundTintList = null
+            background = rounded(Color.TRANSPARENT, Color.WHITE, dp(12).toFloat())
+            minimumHeight = dp(44)
+            pressable()
+            setOnClickListener { navigateForward(Intent(this@DashboardActivity, BecomeVendorActivity::class.java)) }
+        }, LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(14) })
+        body.addView(marginBottom(becomeVendorCard))
         body.addView(sectionTitle("Shop"))
         body.addView(linkRow(R.drawable.ic_shop, "Browse the marketplace", "Discover products and trusted vendors") {
             navigateToMain()
         })
+        appendSessionSection(role = "customer")
+        android.transition.TransitionManager.beginDelayedTransition(body)
+        animateContentIn(body)
+        stopRefreshing()
+    }
+
+    /**
+     * Session controls for every role:
+     * - Switch account (Google/email) without leaving the phone stuck on one Google user
+     * - Sign out
+     */
+    private fun appendSessionSection(role: String) {
+        val who = when (role) {
+            "admin" -> "admin"
+            "vendor" -> "vendor"
+            else -> "customer"
+        }
         body.addView(sectionTitle("Session"))
-        body.addView(linkRow(R.drawable.ic_lock, "Sign out", "End this session on this phone") {
-            confirmSignOut()
-        })
+        body.addView(
+            linkRow(
+                R.drawable.ic_person,
+                "Switch account",
+                "Sign out and choose another Google or email login"
+            ) { confirmSwitchAccount() }
+        )
+        body.addView(
+            linkRow(
+                R.drawable.ic_lock,
+                "Sign out",
+                "End this $who session on this phone"
+            ) { confirmSignOut() }
+        )
         body.addView(
             dangerButton("Sign out of SuperTech") { confirmSignOut() }.also {
                 it.minimumHeight = dp(52)
@@ -429,7 +489,6 @@ class DashboardActivity : BaseActivity() {
                 bottomMargin = dp(24)
             }
         )
-        animateContentIn(body)
     }
 
     // ---- Shared pieces ----
@@ -453,20 +512,26 @@ class DashboardActivity : BaseActivity() {
     }
 
     private fun actionCard(title: String, subtitle: String, button: String, onClick: () -> Unit): View {
+        val isApprovals = title.contains("approval", ignoreCase = true)
         val cardView = card()
+        if (isApprovals) {
+            cardView.background = rounded(Color.rgb(248, 180, 180), Color.rgb(253, 242, 242), dp(16).toFloat())
+        }
         val iconRes = when {
-            title.contains("approval", ignoreCase = true) -> R.drawable.ic_shield
+            isApprovals -> R.drawable.ic_shield
             title.contains("track", ignoreCase = true) -> R.drawable.ic_truck
             else -> R.drawable.ic_box
         }
         val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        top.addView(iconBubble(iconRes, brand, softGreen, 44))
+        val bubbleColor = if (isApprovals) Color.rgb(254, 226, 226) else softGreen
+        val iconColor = if (isApprovals) danger else brand
+        top.addView(iconBubble(iconRes, iconColor, bubbleColor, 44))
         val copy = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(12), 0, 0, 0)
         }
-        copy.addView(text(title, 17f, ink, Typeface.BOLD))
-        copy.addView(text(subtitle, 13f, muted))
+        copy.addView(text(title, 17f, if (isApprovals) Color.rgb(153, 27, 27) else ink, Typeface.BOLD))
+        copy.addView(text(subtitle, 13f, if (isApprovals) Color.rgb(185, 28, 28) else muted))
         top.addView(copy, LinearLayout.LayoutParams(0, wc(), 1f))
         cardView.addView(top)
         val b = secondaryButton(button, onClick)
@@ -510,10 +575,7 @@ class DashboardActivity : BaseActivity() {
         ))
     }
 
-    private fun marginBottom(view: View, bottom: Int = 12): View {
-        view.layoutParams = LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(bottom) }
-        return view
-    }
+
 
     private fun countOf(result: Net.Result, key: String): Int =
         result.json().optJSONArray(key)?.length() ?: 0
@@ -531,25 +593,59 @@ class DashboardActivity : BaseActivity() {
         AlertDialog.Builder(this)
             .setTitle("Sign out?")
             .setMessage("You will need to sign in again to open your dashboard.")
-            .setPositiveButton("Sign out") { _, _ -> performSignOut() }
+            .setPositiveButton("Sign out") { _, _ -> performSignOut(switchAccount = false) }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    private fun performSignOut() {
-        toast("Signing out…")
-        executor.execute {
-            try {
-                Net.get("/api/auth/sign-out")
-            } catch (_: Exception) {
-            }
-            Net.signOut()
-            runOnUiThread {
-                startActivity(Intent(this, WelcomeActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    putExtra("force_show", true)
-                })
-                finish()
+    private fun confirmSwitchAccount() {
+        val email = Net.session()?.email.orEmpty()
+        AlertDialog.Builder(this)
+            .setTitle("Switch account?")
+            .setMessage(
+                buildString {
+                    if (email.isNotBlank()) append("Signed in as $email.\n\n")
+                    append(
+                        "This ends your SuperTech session and opens the Google/email picker " +
+                            "so you can log in as a different person (e.g. another Google account, or a vendor account)."
+                    )
+                }
+            )
+            .setPositiveButton("Switch account") { _, _ -> performSignOut(switchAccount = true) }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun performSignOut(switchAccount: Boolean) {
+        toast(if (switchAccount) "Switching account…" else "Signing out…")
+        lifecycleScope.launch {
+            // Clear Google Credential Manager so the next login can pick a different account
+            GoogleSignInHelper.clearGoogleState(this@DashboardActivity)
+            executor.execute {
+                try {
+                    Net.get("/api/auth/sign-out")
+                } catch (_: Exception) {
+                }
+                Net.signOut()
+                runOnUiThread {
+                    startActivity(
+                        SignInActivity.intent(
+                            this@DashboardActivity,
+                            reason = if (switchAccount) {
+                                "Choose another Google or email account."
+                            } else {
+                                "You're signed out. Sign in again to open your dashboard."
+                            },
+                            signedOut = true,
+                            promptGoogle = true,
+                            switchAccount = switchAccount,
+                            next = "main"
+                        ).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                    )
+                    finish()
+                }
             }
         }
     }

@@ -20,15 +20,57 @@ class BecomeVendorActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val content = scaffold("Become a vendor", withBack = true)
+        val session = Net.session()
 
-        content.block(text("Sell on SuperTech", 24f, ink, Typeface.BOLD), 4)
-        content.block(text("Tell us about your business. Our team reviews applications and sets up approved vendors.", 14f, muted), 16)
+        val subtitle = if (session != null && Net.isLoggedIn()) {
+            "Apply with the account you're signed in as (${session.email}). " +
+                "After approval, the same login becomes your vendor dashboard — no need for a second password."
+        } else {
+            "Tell us about your business. Our team reviews applications and sets up approved vendors."
+        }
+        content.block(gradientHeroCard("Sell on SuperTech", subtitle, "VENDOR PROGRAM"), 14)
+
+        if (session?.role == "vendor") {
+            content.block(
+                infoCard(
+                    R.drawable.ic_store,
+                    "Already a Vendor",
+                    "You're already registered as a vendor. Open your dashboard to list products and track payouts."
+                ),
+                14
+            )
+            content.block(primaryButton("Open vendor dashboard") {
+                startActivity(android.content.Intent(this, DashboardActivity::class.java))
+                finish()
+            }, 8)
+            return
+        }
+        if (session?.role == "admin") {
+            content.block(
+                infoCard(
+                    R.drawable.ic_shield,
+                    "Admin Access",
+                    "Admins already have full access. Use the admin dashboard to moderate sellers and products."
+                ),
+                14
+            )
+            content.block(primaryButton("Open admin dashboard") {
+                startActivity(android.content.Intent(this, DashboardActivity::class.java))
+                finish()
+            }, 8)
+            return
+        }
 
         val form = card()
         form.block(fieldLabel("Your name"), 0)
         val name = inputField("Full name", Types.TEXT); form.block(name, 10)
         form.block(fieldLabel("Email"), 0)
         val email = inputField("you@example.com", Types.EMAIL); form.block(email, 10)
+        // Prefill from the signed-in SuperTech session (Google or email)
+        session?.let {
+            if (it.name.isNotBlank()) name.setText(it.name)
+            if (it.email.isNotBlank()) email.setText(it.email)
+        }
         form.block(fieldLabel("WhatsApp number"), 0)
         val phone = inputField("+250…", Types.PHONE); form.block(phone, 10)
         form.block(fieldLabel("Business name"), 0)
@@ -41,8 +83,13 @@ class BecomeVendorActivity : BaseActivity() {
         val website = inputField("https://…", InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT); form.block(website, 10)
         form.block(fieldLabel("About your business"), 0)
         val description = inputField("What you sell and why customers trust you", Types.TEXT).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            setSingleLine(false); minLines = 3
+            // multi-line: top-aligned so typing starts at the top, not the middle
+            gravity = android.view.Gravity.TOP or android.view.Gravity.START
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+                InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            setSingleLine(false)
+            minLines = 3
+            minimumHeight = dp(86)
         }
         form.block(description, 0)
         content.block(form, 14)

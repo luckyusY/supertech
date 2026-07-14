@@ -6,8 +6,10 @@ import { products as seedProducts } from "@/lib/marketplace";
 import {
   deleteProductSubmission,
   getProductSubmissions,
+  updateProductSubmissionStatus,
 } from "@/lib/product-submissions";
 import { getAdminProductHiddenSlugs } from "@/lib/public-marketplace";
+import { notifyProductModeration } from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +54,7 @@ export async function PATCH(request: Request) {
     const body = (await request.json()) as {
       slug?: string;
       id?: string;
-      action?: "enable" | "disable" | "delete";
+      action?: "enable" | "disable" | "delete" | "approve" | "reject";
       isSeed?: boolean;
     };
 
@@ -80,6 +82,20 @@ export async function PATCH(request: Request) {
         }
         await deleteProductSubmission(id);
       }
+    } else if (body.action === "approve" || body.action === "reject") {
+      const id = body.id?.trim();
+      if (!id) {
+        return NextResponse.json({ error: "Product id is required." }, { status: 400 });
+      }
+      const newStatus = body.action === "approve" ? "approved" : "rejected";
+      const submission = await updateProductSubmissionStatus(id, newStatus);
+      
+      await notifyProductModeration({
+        vendorSlug: submission.vendorSlug,
+        productName: submission.name,
+        approved: newStatus === "approved",
+        refId: submission.slug,
+      }).catch(() => {});
     } else {
       return NextResponse.json({ error: "Unsupported product action." }, { status: 400 });
     }

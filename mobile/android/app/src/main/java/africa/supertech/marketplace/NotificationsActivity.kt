@@ -25,25 +25,42 @@ class NotificationsActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         NotificationsStore.init(this)
         val role = Net.session()?.role ?: "guest"
-        val content = scaffold("Notifications", withBack = true)
+        val content = scaffold("Notifications", withBack = true, onRefresh = { refresh() })
 
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(12))
+        }
         subtitle = text(subtitleForRole(role), 13f, muted)
-        content.block(subtitle, 8)
+        headerRow.addView(subtitle, LinearLayout.LayoutParams(0, wc(), 1f))
 
-        markAllBtn = secondaryButton("Mark all as read") {
-            markEverythingRead()
-        }.apply { minimumHeight = dp(48) }
-        content.block(markAllBtn, 12)
+        val markBtn = TextView(this).apply {
+            text = "Mark all read"
+            textSize = 12f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(brand)
+            setPadding(dp(8), dp(4), dp(8), dp(4))
+            pressable()
+            setOnClickListener { markEverythingRead() }
+        }
+        markAllBtn = markBtn
+        headerRow.addView(markBtn)
+        content.block(headerRow, 8)
 
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.block(body, 0)
         body.addView(text("Loading…", 14f, muted))
 
-        // Local list first so Mark all works even before network returns
         renderList()
+        refresh()
+    }
+
+    private fun refresh() {
         executor.execute {
             NotificationsStore.refreshRemote(this)
             runOnUiThread {
+                stopRefreshing()
                 if (!isFinishing) renderList()
             }
         }
@@ -110,19 +127,30 @@ class NotificationsActivity : BaseActivity() {
     private fun notifCard(item: NotificationsStore.Item): View {
         val card = card()
         if (!item.read) {
-            card.background = rounded(brand, Color.WHITE, dp(16).toFloat())
+            card.background = rounded(Color.rgb(219, 234, 254), Color.rgb(243, 248, 255), dp(16).toFloat())
         }
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
+        
+        val iconRes = when (item.kind) {
+            "order_received", "order" -> R.drawable.ic_box
+            "order_confirmed", "order_shipped", "shipping" -> R.drawable.ic_truck
+            "product_approved", "product_rejected" -> R.drawable.ic_shield
+            "payout_scheduled", "payout_sent" -> R.drawable.ic_wallet
+            else -> R.drawable.ic_sparkle
+        }
         val thumb = android.widget.ImageView(this).apply {
-            scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-            setImageResource(R.mipmap.ic_launcher)
+            scaleType = android.widget.ImageView.ScaleType.CENTER
+            setImageResource(iconRes)
+            setColorFilter(brand)
             background = rounded(line, softGreen, dp(12).toFloat())
         }
         row.addView(thumb, LinearLayout.LayoutParams(dp(48), dp(48)).apply { rightMargin = dp(12) })
-        if (item.imageUrl.isNotBlank()) loadImage(thumb, item.imageUrl)
+        if (item.imageUrl.isNotBlank()) {
+            loadImage(thumb, item.imageUrl)
+        }
 
         val copy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val top = LinearLayout(this).apply {
@@ -140,7 +168,6 @@ class NotificationsActivity : BaseActivity() {
         }
         copy.addView(top)
 
-        // Kind / audience context chip row
         val meta = kindLabel(item.kind)
         if (meta.isNotBlank()) {
             copy.addView(

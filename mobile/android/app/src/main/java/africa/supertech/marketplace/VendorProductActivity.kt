@@ -2,8 +2,10 @@ package africa.supertech.marketplace
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,8 +15,11 @@ import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +30,7 @@ import java.io.DataOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Native "Add a product for review" — layout/fields aligned with website
@@ -36,7 +42,9 @@ class VendorProductActivity : BaseActivity() {
 
     private val executor = Executors.newSingleThreadExecutor()
     private lateinit var submit: Button
+    private lateinit var uploadButton: Button
     private lateinit var uploadStatus: TextView
+    private lateinit var uploadProgress: ProgressBar
     private lateinit var galleryHost: LinearLayout
     private lateinit var errorText: TextView
     private lateinit var successText: TextView
@@ -54,6 +62,10 @@ class VendorProductActivity : BaseActivity() {
 
     private val galleryUrls = ArrayList<String>()
     private val maxImages = 4
+    /** Local preview while a Cloudinary upload is in flight. */
+    private var pendingLocalUri: Uri? = null
+    private var uploadPercent: Int = 0
+    private val isUploading = AtomicBoolean(false)
 
     private val badgeOptions = listOf(
         "New listing", "Best seller", "Limited stock", "Editor's pick", "Sale", "Pre-order"
@@ -87,9 +99,19 @@ class VendorProductActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         val session = Net.session()
-        if (session == null || (session.role != "vendor" && session.role != "admin")) {
-            toast("Sign in as a vendor or admin to manage products")
-            startActivity(android.content.Intent(this, SignInActivity::class.java))
+        if (session == null || !Net.isLoggedIn()) {
+            startActivity(
+                SignInActivity.intent(
+                    this,
+                    reason = "Sign in as a vendor to add or edit products.",
+                    promptGoogle = true
+                )
+            )
+            finish()
+            return
+        }
+        if (session.role != "vendor" && session.role != "admin") {
+            toast("Only vendors and admins can manage products")
             finish()
             return
         }
@@ -161,22 +183,21 @@ class VendorProductActivity : BaseActivity() {
             LinearLayout.LayoutParams(wc(), wc())
         )
         details.addView(descHead)
-        descriptionField = inputField("What does this product do? Who is it for?", Types.TEXT).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            setSingleLine(false)
-            minLines = 4
-        }
+        descriptionField = multiLineInputField(
+            "What does this product do? Who is it for?",
+            lines = 5
+        )
         details.block(descriptionField, 4)
         aiStatus = text("Tip: enter the product name, then let AI draft description and bullets.", 12f, muted)
         details.addView(aiStatus)
 
         details.block(fieldLabel("Key features (one per line, up to 8)"), 0)
-        featuresField = inputField("Active noise cancellation\n40h battery life\nUSB-C fast charging", Types.TEXT).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-            setSingleLine(false)
-            minLines = 4
+        featuresField = multiLineInputField(
+            "Active noise cancellation\n40h battery life\nUSB-C fast charging",
+            lines = 4
+        ).apply {
             typeface = Typeface.MONOSPACE
-            textSize = 12f
+            textSize = 13f
         }
         details.block(featuresField, 0)
         content.block(details, 14)
@@ -195,26 +216,53 @@ class VendorProductActivity : BaseActivity() {
         // —— Images
         val images = card()
         images.addView(sectionLabel("Product images"))
-        images.addView(text("First image becomes the hero. Add up to 4 total.", 13f, muted).apply {
+        images.addView(text("First image is the hero. Tap a thumbnail to remove. Up to $maxImages.", 13f, muted).apply {
             setPadding(0, dp(4), 0, dp(10))
         })
-        galleryHost = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        images.addView(galleryHost)
-        uploadStatus = text("Upload from gallery or camera.", 13f, muted).apply {
+        galleryHost = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val galleryScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
+            clipToPadding = false
+            addView(galleryHost)
+        }
+        images.addView(galleryScroll, LinearLayout.LayoutParams(mp(), wc()))
+
+        uploadProgress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progress = 0
+            visibility = View.GONE
+            progressTintList = android.content.res.ColorStateList.valueOf(brand)
+            progressBackgroundTintList = android.content.res.ColorStateList.valueOf(line)
+        }
+        images.addView(
+            uploadProgress,
+            LinearLayout.LayoutParams(mp(), dp(6)).apply { topMargin = dp(12) }
+        )
+        uploadStatus = text("Choose clear product photos — first becomes the storefront hero.", 13f, muted).apply {
             setPadding(0, dp(8), 0, 0)
         }
         images.addView(uploadStatus)
+        uploadButton = secondaryButton("Add photo") {
+            if (isUploading.get()) {
+                toast("Wait for the current upload to finish")
+                return@secondaryButton
+            }
+            if (galleryUrls.size >= maxImages) {
+                toast("Maximum $maxImages images")
+                return@secondaryButton
+            }
+            ensureMediaPermissionThenPick()
+        }.apply { minimumHeight = dp(48) }
         images.addView(
-            secondaryButton("Upload image") {
-                if (galleryUrls.size >= maxImages) {
-                    toast("Maximum $maxImages images")
-                    return@secondaryButton
-                }
-                ensureMediaPermissionThenPick()
-            },
-            LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(8) }
+            uploadButton,
+            LinearLayout.LayoutParams(mp(), wc()).apply { topMargin = dp(10) }
         )
         content.block(images, 14)
+        renderGallery()
 
         // Prefill edit mode
         if (editing) {
@@ -283,34 +331,225 @@ class VendorProductActivity : BaseActivity() {
 
     private fun renderGallery() {
         galleryHost.removeAllViews()
+        val thumb = dp(108)
+        val radius = dp(14).toFloat()
+
+        // Uploaded images as square thumbnails
         galleryUrls.forEachIndexed { index, url ->
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                background = rounded(line, Color.WHITE, dp(14).toFloat())
-                setPadding(dp(10), dp(10), dp(10), dp(10))
-            }
-            val img = ImageView(this).apply {
-                scaleType = ImageView.ScaleType.CENTER_CROP
-                setBackgroundColor(Color.rgb(232, 237, 242))
-            }
-            row.addView(img, LinearLayout.LayoutParams(mp(), dp(140)))
-            loadImage(img, url)
-            val meta = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(0, dp(8), 0, 0)
-            }
-            meta.addView(
-                text(if (index == 0) "HERO IMAGE" else "GALLERY $index", 11f, muted, Typeface.BOLD),
-                LinearLayout.LayoutParams(0, wc(), 1f)
+            galleryHost.addView(
+                thumbnailCard(
+                    size = thumb,
+                    radius = radius,
+                    badge = if (index == 0) "HERO" else "${index + 1}",
+                    onRemove = {
+                        if (isUploading.get()) {
+                            toast("Wait for upload to finish")
+                            return@thumbnailCard
+                        }
+                        galleryUrls.removeAt(index)
+                        renderGallery()
+                        uploadStatus.text = when {
+                            galleryUrls.isEmpty() -> "No photos yet — add at least one for the hero."
+                            else -> "${galleryUrls.size}/$maxImages photos · first is hero"
+                        }
+                        uploadStatus.setTextColor(muted)
+                    },
+                    bindImage = { img -> loadImage(img, url) }
+                ),
+                LinearLayout.LayoutParams(thumb, thumb).apply {
+                    rightMargin = dp(10)
+                }
             )
-            meta.addView(textButton("Remove") {
-                galleryUrls.removeAt(index)
-                renderGallery()
-            })
-            row.addView(meta)
-            galleryHost.addView(row, LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(10) })
         }
+
+        // In-progress local preview with progress overlay
+        pendingLocalUri?.let { uri ->
+            galleryHost.addView(
+                thumbnailCard(
+                    size = thumb,
+                    radius = radius,
+                    badge = "…",
+                    onRemove = null,
+                    bindImage = { img -> loadLocalThumb(img, uri) },
+                    uploading = true,
+                    progress = uploadPercent
+                ),
+                LinearLayout.LayoutParams(thumb, thumb).apply {
+                    rightMargin = dp(10)
+                }
+            )
+        }
+
+        // Empty state tile
+        if (galleryUrls.isEmpty() && pendingLocalUri == null) {
+            val empty = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                background = rounded(line, Color.rgb(248, 249, 251), radius)
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+            }
+            empty.addView(
+                text("No photos", 12f, muted, Typeface.BOLD).apply { gravity = Gravity.CENTER }
+            )
+            empty.addView(
+                text("Tap Add photo", 11f, muted).apply {
+                    gravity = Gravity.CENTER
+                    setPadding(0, dp(4), 0, 0)
+                }
+            )
+            galleryHost.addView(empty, LinearLayout.LayoutParams(thumb, thumb))
+        }
+    }
+
+    private fun thumbnailCard(
+        size: Int,
+        radius: Float,
+        badge: String,
+        onRemove: (() -> Unit)?,
+        bindImage: (ImageView) -> Unit,
+        uploading: Boolean = false,
+        progress: Int = 0
+    ): View {
+        val frame = FrameLayout(this)
+        frame.background = rounded(line, Color.rgb(232, 237, 242), radius)
+        frame.clipToOutline = true
+        frame.outlineProvider = object : android.view.ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: android.graphics.Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, radius)
+            }
+        }
+
+        val img = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setBackgroundColor(Color.rgb(232, 237, 242))
+        }
+        frame.addView(img, FrameLayout.LayoutParams(size, size))
+        bindImage(img)
+
+        // Badge (HERO / index)
+        val badgeView = TextView(this).apply {
+            text = badge
+            textSize = 10f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+            setPadding(dp(8), dp(3), dp(8), dp(3))
+            background = GradientDrawable().apply {
+                setColor(if (badge == "HERO") brand else Color.argb(180, 20, 24, 32))
+                cornerRadius = dp(8).toFloat()
+            }
+        }
+        frame.addView(
+            badgeView,
+            FrameLayout.LayoutParams(wc(), wc(), Gravity.TOP or Gravity.START).apply {
+                leftMargin = dp(6)
+                topMargin = dp(6)
+            }
+        )
+
+        if (onRemove != null) {
+            val remove = TextView(this).apply {
+                text = "×"
+                textSize = 16f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+                gravity = Gravity.CENTER
+                setPadding(dp(6), dp(2), dp(6), dp(2))
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(Color.argb(200, 30, 30, 34))
+                }
+                setOnClickListener { onRemove() }
+            }
+            frame.addView(
+                remove,
+                FrameLayout.LayoutParams(dp(28), dp(28), Gravity.TOP or Gravity.END).apply {
+                    topMargin = dp(4)
+                    rightMargin = dp(4)
+                }
+            )
+        }
+
+        if (uploading) {
+            val dim = View(this).apply {
+                setBackgroundColor(Color.argb(120, 10, 15, 26))
+            }
+            frame.addView(dim, FrameLayout.LayoutParams(size, size))
+            val col = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+            }
+            col.addView(ProgressBar(this).apply {
+                isIndeterminate = progress <= 0
+                if (progress > 0) {
+                    isIndeterminate = false
+                    max = 100
+                    this.progress = progress
+                }
+            }, LinearLayout.LayoutParams(dp(36), dp(36)))
+            col.addView(
+                text(if (progress > 0) "$progress%" else "Uploading", 11f, Color.WHITE, Typeface.BOLD).apply {
+                    gravity = Gravity.CENTER
+                    setPadding(0, dp(6), 0, 0)
+                }
+            )
+            frame.addView(col, FrameLayout.LayoutParams(size, size, Gravity.CENTER))
+        }
+
+        return frame
+    }
+
+    private fun loadLocalThumb(target: ImageView, uri: Uri) {
+        try {
+            contentResolver.openInputStream(uri)?.use { stream ->
+                val opts = BitmapFactory.Options().apply { inSampleSize = 4 }
+                val bmp = BitmapFactory.decodeStream(stream, null, opts)
+                if (bmp != null) {
+                    target.setImageBitmap(bmp)
+                    target.scaleType = ImageView.ScaleType.CENTER_CROP
+                }
+            }
+        } catch (_: Exception) {
+            target.setImageResource(android.R.drawable.ic_menu_gallery)
+        }
+    }
+
+    private fun setUploadUi(
+        progress: Int,
+        message: String,
+        error: Boolean = false,
+        rebuildGallery: Boolean = false
+    ) {
+        uploadPercent = progress.coerceIn(0, 100)
+        uploadProgress.visibility = View.VISIBLE
+        if (progress <= 0) {
+            uploadProgress.isIndeterminate = true
+        } else {
+            uploadProgress.isIndeterminate = false
+            uploadProgress.progress = uploadPercent
+        }
+        uploadStatus.text = message
+        uploadStatus.setTextColor(if (error) danger else muted)
+        uploadButton.isEnabled = !isUploading.get()
+        uploadButton.alpha = if (isUploading.get()) 0.55f else 1f
+        uploadButton.text = if (isUploading.get()) "Uploading…" else "Add photo"
+        // Rebuild thumbs only when starting / finishing — avoids flicker on every % tick
+        if (rebuildGallery) renderGallery()
+    }
+
+    private fun clearUploadUi(successMessage: String? = null, error: Boolean = false) {
+        pendingLocalUri = null
+        uploadPercent = 0
+        isUploading.set(false)
+        uploadProgress.visibility = View.GONE
+        uploadProgress.progress = 0
+        uploadButton.isEnabled = true
+        uploadButton.alpha = 1f
+        uploadButton.text = "Add photo"
+        if (successMessage != null) {
+            uploadStatus.text = successMessage
+            uploadStatus.setTextColor(if (error) danger else brand)
+        }
+        renderGallery()
     }
 
     private fun generateAiCopy() {
@@ -472,23 +711,35 @@ class VendorProductActivity : BaseActivity() {
             return
         }
         if (!Net.isLoggedIn()) {
-            uploadStatus.text = "Sign in as a vendor to upload images."
-            uploadStatus.setTextColor(danger)
+            clearUploadUi("Sign in as a vendor to upload images.", error = true)
             return
         }
-        uploadStatus.text = "Uploading image…"
-        uploadStatus.setTextColor(muted)
+        if (!isUploading.compareAndSet(false, true)) {
+            toast("Already uploading a photo")
+            return
+        }
+        pendingLocalUri = uri
+        uploadPercent = 0
+        setUploadUi(0, "Reading photo…", rebuildGallery = true)
+
         executor.execute {
             try {
                 val mime = contentResolver.getType(uri).orEmpty()
+                runOnUiThread { setUploadUi(5, "Reading photo…") }
                 val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() }
                 if (bytes == null || bytes.isEmpty()) {
+                    runOnUiThread { clearUploadUi("Could not read that image.", error = true) }
+                    return@execute
+                }
+                // Cap very large camera photos to avoid OOM / slow uploads
+                if (bytes.size > 12 * 1024 * 1024) {
                     runOnUiThread {
-                        uploadStatus.text = "Could not read that image."
-                        uploadStatus.setTextColor(danger)
+                        clearUploadUi("Image is too large (max ~12 MB). Try a smaller photo.", error = true)
                     }
                     return@execute
                 }
+                runOnUiThread { setUploadUi(12, "Preparing secure upload…") }
+
                 // Must sign the same params we send to Cloudinary (folder is required)
                 val folder = "supertech/products"
                 val paramsToSign = JSONObject().put("folder", folder)
@@ -505,10 +756,7 @@ class VendorProductActivity : BaseActivity() {
                         else ->
                             sign.errorMessage("Image upload unavailable (${sign.code}).")
                     }
-                    runOnUiThread {
-                        uploadStatus.text = msg
-                        uploadStatus.setTextColor(danger)
-                    }
+                    runOnUiThread { clearUploadUi(msg, error = true) }
                     return@execute
                 }
                 val s = sign.json()
@@ -518,8 +766,7 @@ class VendorProductActivity : BaseActivity() {
                 val signature = s.optString("signature")
                 if (cloudName.isBlank() || apiKey.isBlank() || signature.isBlank()) {
                     runOnUiThread {
-                        uploadStatus.text = "Cloudinary is not configured on the server."
-                        uploadStatus.setTextColor(danger)
+                        clearUploadUi("Cloudinary is not configured on the server.", error = true)
                     }
                     return@execute
                 }
@@ -534,6 +781,7 @@ class VendorProductActivity : BaseActivity() {
                     mime.isNotBlank() -> mime
                     else -> "image/jpeg"
                 }
+                runOnUiThread { setUploadUi(18, "Uploading photo… 0%") }
                 val upload = uploadToCloudinary(
                     bytes = bytes,
                     cloudName = cloudName,
@@ -542,25 +790,37 @@ class VendorProductActivity : BaseActivity() {
                     signature = signature,
                     folder = folder,
                     filename = filename,
-                    contentType = contentType
+                    contentType = contentType,
+                    onProgress = { pct ->
+                        // Map stream progress into 18–95% of overall bar
+                        val overall = 18 + ((pct * 77) / 100)
+                        runOnUiThread {
+                            if (isUploading.get()) {
+                                setUploadUi(overall, "Uploading photo… $pct%")
+                            }
+                        }
+                    }
                 )
                 runOnUiThread {
                     if (upload.url != null) {
                         if (!galleryUrls.contains(upload.url) && galleryUrls.size < maxImages) {
                             galleryUrls.add(upload.url)
-                            renderGallery()
                         }
-                        uploadStatus.text = "Image uploaded"
-                        uploadStatus.setTextColor(brand)
+                        val n = galleryUrls.size
+                        clearUploadUi(
+                            if (n >= maxImages) "All $maxImages photos ready · first is hero"
+                            else "Photo $n of $maxImages uploaded · first is hero"
+                        )
                     } else {
-                        uploadStatus.text = upload.error.ifBlank { "Upload failed. Try another image." }
-                        uploadStatus.setTextColor(danger)
+                        clearUploadUi(
+                            upload.error.ifBlank { "Upload failed. Try another image." },
+                            error = true
+                        )
                     }
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    uploadStatus.text = e.message?.take(120) ?: "Upload failed. Try another image."
-                    uploadStatus.setTextColor(danger)
+                    clearUploadUi(e.message?.take(120) ?: "Upload failed. Try another image.", error = true)
                 }
             }
         }
@@ -576,7 +836,8 @@ class VendorProductActivity : BaseActivity() {
         signature: String,
         folder: String,
         filename: String,
-        contentType: String
+        contentType: String,
+        onProgress: (Int) -> Unit = {}
     ): UploadResult {
         if (cloudName.isBlank() || apiKey.isBlank() || signature.isBlank()) {
             return UploadResult(null, "Missing Cloudinary credentials.")
@@ -588,7 +849,7 @@ class VendorProductActivity : BaseActivity() {
         connection.doOutput = true
         connection.doInput = true
         connection.connectTimeout = 30000
-        connection.readTimeout = 60000
+        connection.readTimeout = 90000
         connection.useCaches = false
         connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
         connection.setRequestProperty("Accept", "application/json")
@@ -611,12 +872,27 @@ class VendorProductActivity : BaseActivity() {
                     "Content-Disposition: form-data; name=\"file\"; filename=\"$filename\"\r\n"
                 )
                 out.writeBytes("Content-Type: $contentType\r\n\r\n")
-                out.write(bytes)
+                // Chunked write so progress tracks the image body only
+                var offset = 0
+                val chunk = 16 * 1024
+                var lastPct = -1
+                val total = bytes.size.coerceAtLeast(1)
+                while (offset < bytes.size) {
+                    val len = minOf(chunk, bytes.size - offset)
+                    out.write(bytes, offset, len)
+                    offset += len
+                    val pct = ((offset * 100) / total).coerceIn(0, 100)
+                    if (pct != lastPct && (pct == 100 || pct - lastPct >= 3)) {
+                        lastPct = pct
+                        onProgress(pct)
+                    }
+                }
                 out.writeBytes("\r\n")
                 out.writeBytes("--$boundary--\r\n")
                 out.flush()
             }
 
+            onProgress(100)
             val code = connection.responseCode
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()

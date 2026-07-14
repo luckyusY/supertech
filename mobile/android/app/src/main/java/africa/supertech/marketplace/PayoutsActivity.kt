@@ -5,6 +5,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import org.json.JSONObject
 import java.text.NumberFormat
@@ -60,7 +61,37 @@ class PayoutsActivity : BaseActivity() {
             val net = p.optDouble("netPayout", 0.0)
             if (p.optString("status") == "paid") paid += net else pending += net
         }
-        body.block(statRow("Paid out", "RWF ${money.format(paid)}", "Pending", "RWF ${money.format(pending)}"), 6)
+        
+        val total = paid + pending
+        val ratio = if (total > 0) (paid / total * 100).toInt() else 100
+
+        val hero = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(18), dp(18), dp(18))
+            background = gradient(backgroundStrong, brandDark, dp(16).toFloat())
+            elevation = dp(4).toFloat()
+        }
+        hero.addView(text("Payout summary", 13f, Color.argb(190, 255, 255, 255), Typeface.BOLD))
+        hero.addView(text("RWF ${money.format(paid)}", 26f, Color.WHITE, Typeface.BOLD).apply {
+            setPadding(0, dp(4), 0, dp(2))
+        })
+        hero.addView(text("Total earned · RWF ${money.format(pending)} pending", 12f, Color.argb(190, 255, 255, 255)))
+
+        val barContainer = FrameLayout(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.argb(40, 255, 255, 255), dp(4).toFloat())
+        }
+        val barFill = View(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.WHITE, dp(4).toFloat())
+        }
+        val widthPixels = resources.displayMetrics.widthPixels
+        val fillWidth = (widthPixels * 0.7 * (ratio / 100f)).toInt().coerceAtLeast(dp(8))
+        barContainer.addView(barFill, FrameLayout.LayoutParams(fillWidth, dp(8)))
+        hero.addView(barContainer, LinearLayout.LayoutParams(mp(), dp(8)).apply { topMargin = dp(14) })
+        hero.addView(text("$ratio% processed", 11f, Color.WHITE).apply {
+            setPadding(0, dp(6), 0, 0)
+        })
+
+        body.block(hero, 16)
 
         body.addView(sectionTitle("Payout history"))
         for (i in 0 until payouts.length()) {

@@ -27,6 +27,8 @@ class AdminModerationActivity : BaseActivity() {
             return
         }
         val content = scaffold("Approvals", withBack = true)
+        val hero = gradientHeroCard("Approval queue", "Review and approve pending vendor applications and product submissions", "Admin only")
+        content.block(hero, 0)
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         content.block(body, 0)
         load()
@@ -46,23 +48,25 @@ class AdminModerationActivity : BaseActivity() {
     private fun render(applications: Net.Result, submissions: Net.Result) {
         body.removeAllViews()
 
-        body.addView(sectionTitle("Vendor applications"))
         val apps = applications.json().optJSONArray("applications")
-        if (apps == null || apps.length() == 0) {
+        val appsCount = apps?.length() ?: 0
+        body.addView(sectionTitle("Vendor applications${if (appsCount > 0) " ($appsCount pending)" else ""}"))
+        if (appsCount == 0) {
             body.addView(emptyCard("No pending applications"))
         } else {
-            for (i in 0 until apps.length()) {
+            for (i in 0 until apps!!.length()) {
                 val a = apps.optJSONObject(i) ?: continue
                 body.addView(applicationCard(a).also { animateIn(it, i) })
             }
         }
 
-        body.addView(sectionTitle("Product submissions"))
         val subs = submissions.json().optJSONArray("submissions")
-        if (subs == null || subs.length() == 0) {
+        val subsCount = subs?.length() ?: 0
+        body.addView(sectionTitle("Product submissions${if (subsCount > 0) " ($subsCount pending)" else ""}"))
+        if (subsCount == 0) {
             body.addView(emptyCard("No products awaiting review"))
         } else {
-            for (i in 0 until subs.length()) {
+            for (i in 0 until subs!!.length()) {
                 val p = subs.optJSONObject(i) ?: continue
                 body.addView(submissionCard(p, i + 1).also { animateIn(it, i) })
             }

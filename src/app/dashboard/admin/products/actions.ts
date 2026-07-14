@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { requirePageSession } from "@/lib/auth";
-import { deleteProductSubmission } from "@/lib/product-submissions";
+import { deleteProductSubmission, updateProductSubmissionStatus } from "@/lib/product-submissions";
 import { hideItem, unhideItem } from "@/lib/hidden-items";
+import { notifyProductModeration } from "@/lib/notifications";
 
 export async function deleteProductAction(id: string, isSeed: boolean) {
   await requirePageSession({ roles: ["admin"], nextPath: "/dashboard/admin/products" });
@@ -24,6 +25,38 @@ export async function toggleProductAction(slug: string, currentlyDisabled: boole
   } else {
     await hideItem("product", slug);
   }
+  revalidatePath("/dashboard/admin/products");
+  revalidatePath("/catalog");
+  revalidatePath("/");
+}
+
+export async function approveProductAction(id: string) {
+  await requirePageSession({ roles: ["admin"], nextPath: "/dashboard/admin/products" });
+  const submission = await updateProductSubmissionStatus(id, "approved");
+  
+  await notifyProductModeration({
+    vendorSlug: submission.vendorSlug,
+    productName: submission.name,
+    approved: true,
+    refId: submission.slug,
+  }).catch(() => {}); // Ignore notification failures
+
+  revalidatePath("/dashboard/admin/products");
+  revalidatePath("/catalog");
+  revalidatePath("/");
+}
+
+export async function rejectProductAction(id: string) {
+  await requirePageSession({ roles: ["admin"], nextPath: "/dashboard/admin/products" });
+  const submission = await updateProductSubmissionStatus(id, "rejected");
+
+  await notifyProductModeration({
+    vendorSlug: submission.vendorSlug,
+    productName: submission.name,
+    approved: false,
+    refId: submission.slug,
+  }).catch(() => {}); // Ignore notification failures
+
   revalidatePath("/dashboard/admin/products");
   revalidatePath("/catalog");
   revalidatePath("/");

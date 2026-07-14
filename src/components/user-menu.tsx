@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BarChart3, ChevronDown, LayoutDashboard, LogOut, Store, User } from "lucide-react";
+import { ArrowRightLeft, BarChart3, ChevronDown, LayoutDashboard, LogOut, Store, User } from "lucide-react";
 
 type Props = {
   name: string;
@@ -27,6 +27,11 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
 
   async function signOut() {
     setOpen(false);
+    // @ts-ignore
+    if (typeof window !== "undefined" && window.google?.accounts?.id) {
+      // @ts-ignore
+      window.google.accounts.id.disableAutoSelect();
+    }
     await fetch("/api/auth/sign-out", { method: "POST" });
     // Hard navigation so the server-rendered header drops the session immediately.
     window.location.assign("/sign-in");
@@ -85,6 +90,17 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
               </Link>
             )}
 
+            {role === "customer" && (
+              <Link
+                href="/become-vendor"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--accent)] hover:text-white group"
+              >
+                <Store className="h-4 w-4 text-[var(--muted)] group-hover:text-white" />
+                Sell on SuperTech
+              </Link>
+            )}
+
             <Link
               href="/account"
               onClick={() => setOpen(false)}
@@ -140,6 +156,14 @@ export function UserMenu({ name, role, dashboardPath }: Props) {
             </Link>
 
             <div className="my-1 border-t border-[var(--line)]" />
+
+            <button
+              onClick={signOut}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 group"
+            >
+              <ArrowRightLeft className="h-4 w-4 text-[var(--muted)]" />
+              Switch account
+            </button>
 
             <button
               onClick={signOut}

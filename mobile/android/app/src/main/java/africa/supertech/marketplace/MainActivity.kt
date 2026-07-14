@@ -104,6 +104,9 @@ class MainActivity : AppCompatActivity() {
     /** Live badge on header bell — updated without rebuilding the whole header. */
     private var notifBadgeView: TextView? = null
     private val notifListener: () -> Unit = { refreshNotifBadge() }
+    /** Refresh dock/home auth chrome when login state changes (e.g. return from SignIn). */
+    private var lastLoggedIn: Boolean? = null
+    private var currentSort = Sort.DEFAULT
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -287,6 +290,15 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         refreshNotifBadge()
+        val loggedIn = Net.isLoggedIn()
+        if (lastLoggedIn != null && lastLoggedIn != loggedIn) {
+            // Auth changed while away — refresh dock glyph + home banner
+            if (::bottomTabs.isInitialized) renderTabs()
+            if (currentTab == Tab.Home && ::content.isInitialized) {
+                render(Tab.Home)
+            }
+        }
+        lastLoggedIn = loggedIn
     }
 
     private fun loadMarketplace(fromSwipe: Boolean = false) {
@@ -703,6 +715,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderHome() {
         content.addView(heroCarousel())
+        // Guest / signed-out login prompt — always visible path back to Google + email
+        if (!Net.isLoggedIn()) {
+            content.addView(guestLoginBanner())
+        } else {
+            content.addView(signedInHomeChip())
+        }
         // Always show shop-by-category strip (website parity images + label)
         if (!isLoading && categories.size > 1) {
             content.addView(blueCategoryRail(categories.filterNot { it == "All" }))
@@ -780,10 +798,39 @@ class MainActivity : AppCompatActivity() {
                 return@paddedSection
             }
             if (loadError == null) {
-                val countLabel = if (selectedCategory == "All") "${displayedProducts.size} products"
-                else "${displayedProducts.size} in $selectedCategory"
+                val sorted = sortProducts(displayedProducts)
+                val countLabel = if (selectedCategory == "All") "${sorted.size} products"
+                else "${sorted.size} in $selectedCategory"
+
+                val sortRow = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, 0, 0, dp(10))
+                }
+                val sortLabel = text("Sort: " + when (currentSort) {
+                    Sort.DEFAULT -> "Featured"
+                    Sort.PRICE_LOW_HIGH -> "Price: Low to High"
+                    Sort.PRICE_HIGH_LOW -> "Price: High to Low"
+                    Sort.NAME_AZ -> "Name: A to Z"
+                }, 12f, brand, Typeface.BOLD)
+                val sortBtn = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    background = rounded(line, Color.WHITE, dp(12).toFloat())
+                    setPadding(dp(12), dp(6), dp(12), dp(6))
+                    pressable()
+                    setOnClickListener { showSortDialog() }
+                }
+                sortBtn.addView(ImageView(this@MainActivity).apply {
+                    setImageResource(R.drawable.ic_menu)
+                    setColorFilter(brand)
+                }, LinearLayout.LayoutParams(dp(14), dp(14)).apply { rightMargin = dp(6) })
+                sortBtn.addView(sortLabel)
+                sortRow.addView(sortBtn)
+                addView(sortRow)
+
                 addView(text(countLabel, 12f, muted, Typeface.BOLD).withMargins(bottom = 8))
-                addView(productGrid(displayedProducts))
+                addView(productGrid(sorted))
             }
         })
     }
@@ -946,23 +993,24 @@ class MainActivity : AppCompatActivity() {
         // Price block
         val priceRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = Gravity.BOTTOM or Gravity.CENTER_VERTICAL
         }
-        priceRow.addView(text("RWF ${money.format(product.price)}", 15f, brand, Typeface.BOLD).apply {
+        priceRow.addView(text("RWF ", 10f, muted, Typeface.BOLD).apply { setPadding(0, 0, 0, dp(1)) })
+        priceRow.addView(text(money.format(product.price), 15f, brand, Typeface.BOLD).apply {
             maxLines = 1
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
         if (mode != "shop") {
             priceRow.addView(text(" asking", 10f, muted, Typeface.BOLD).apply {
-                setPadding(dp(4), 0, 0, 0)
+                setPadding(dp(4), 0, 0, dp(1))
             })
         } else if (product.compareAt > product.price) {
             priceRow.addView(TextView(this).apply {
                 text = "RWF ${money.format(product.compareAt)}"
-                textSize = 11f
+                textSize = 10f
                 setTextColor(muted)
                 paintFlags = paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
-                setPadding(dp(6), 0, 0, 0)
+                setPadding(dp(6), 0, 0, dp(1))
             })
         }
         body.addView(priceRow)
@@ -974,15 +1022,15 @@ class MainActivity : AppCompatActivity() {
         }
         card.addView(body)
 
+        // Top separator line
+        card.addView(View(this).apply { setBackgroundColor(line) }, LinearLayout.LayoutParams(match(), dp(1)))
+
         // Footer: full Add/Enquire + WhatsApp (website parity)
         val footer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(8), dp(8), dp(8), dp(8))
-            background = GradientDrawable().apply {
-                setColor(Color.WHITE)
-                setStroke(dp(1), line)
-            }
+            setBackgroundColor(Color.WHITE)
         }
 
         val primaryLabel = when (mode) {
@@ -1176,9 +1224,9 @@ class MainActivity : AppCompatActivity() {
             copy.addView(text(session.email, 12f, Color.argb(210, 255, 255, 255), Typeface.NORMAL).apply { maxLines = 1 })
             copy.addView(TextView(this).apply {
                 text = when (session.role) {
-                    "admin" -> "Administrator"
-                    "vendor" -> "Vendor"
-                    else -> "Customer"
+                    "admin" -> "Administrator · Signed in"
+                    "vendor" -> "Vendor · Signed in"
+                    else -> "Customer · Signed in"
                 }
                 textSize = 10f
                 typeface = Typeface.DEFAULT_BOLD
@@ -1187,8 +1235,8 @@ class MainActivity : AppCompatActivity() {
                 setPadding(dp(8), dp(3), dp(8), dp(3))
             }, LinearLayout.LayoutParams(wrap(), wrap()).apply { topMargin = dp(5) })
         } else {
-            copy.addView(text("Welcome to SuperTech", 17f, Color.WHITE, Typeface.BOLD))
-            copy.addView(text("Sign in to track orders, sell, and manage your account.", 12f, Color.argb(210, 255, 255, 255), Typeface.NORMAL))
+            copy.addView(text("You're signed out", 17f, Color.WHITE, Typeface.BOLD))
+            copy.addView(text("Tap for Google or email sign-in", 12f, Color.argb(210, 255, 255, 255), Typeface.NORMAL))
         }
         card.addView(copy, LinearLayout.LayoutParams(0, wrap(), 1f))
 
@@ -1459,6 +1507,17 @@ class MainActivity : AppCompatActivity() {
         }, FrameLayout.LayoutParams(dp(40), dp(40)))
         row.addView(logoWrap, LinearLayout.LayoutParams(dp(40), dp(40)).apply { rightMargin = dp(8) })
 
+        val searchWrap = FrameLayout(this)
+
+        val clearBtn = ImageView(this).apply {
+            setImageResource(R.drawable.ic_close)
+            setColorFilter(muted)
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            contentDescription = "Clear search"
+            visibility = View.GONE
+            pressable()
+        }
+
         val search = EditText(this).apply {
             setSingleLine(true)
             hint = "Search products, stores…"
@@ -1466,7 +1525,7 @@ class MainActivity : AppCompatActivity() {
             setTextColor(ink)
             setHintTextColor(muted)
             imeOptions = EditorInfo.IME_ACTION_SEARCH
-            setPadding(dp(14), 0, dp(40), 0)
+            setPadding(dp(38), 0, dp(38), 0)
             background = rounded(Color.TRANSPARENT, Color.WHITE, dp(20).toFloat())
             setOnEditorActionListener { view, actionId, _ ->
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -1483,24 +1542,33 @@ class MainActivity : AppCompatActivity() {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     scheduleSearchSuggest(s?.toString().orEmpty())
+                    clearBtn.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
                 }
                 override fun afterTextChanged(s: android.text.Editable?) {}
             })
         }
         headerSearch = search
-        val searchWrap = FrameLayout(this)
+
+        clearBtn.setOnClickListener {
+            search.text.clear()
+            hideSearchSuggestions()
+            if (currentTab == Tab.Shop) {
+                selectedCategory = "All"
+                displayedProducts = products
+                render(Tab.Shop)
+            }
+        }
+
         searchWrap.addView(search, FrameLayout.LayoutParams(match(), dp(42)))
-        searchWrap.addView(ImageButton(this).apply {
+
+        searchWrap.addView(ImageView(this).apply {
             setImageResource(R.drawable.ic_search)
             setColorFilter(brand)
-            setBackgroundColor(Color.TRANSPARENT)
-            setPadding(dp(8), dp(8), dp(8), dp(8))
-            contentDescription = "Search"
-            setOnClickListener {
-                hideSearchSuggestions()
-                searchProducts(search.text.toString())
-            }
-        }, FrameLayout.LayoutParams(dp(42), dp(42), Gravity.END or Gravity.CENTER_VERTICAL))
+            setPadding(dp(11), dp(11), dp(11), dp(11))
+        }, FrameLayout.LayoutParams(dp(38), dp(42), Gravity.START or Gravity.CENTER_VERTICAL))
+
+        searchWrap.addView(clearBtn, FrameLayout.LayoutParams(dp(38), dp(42), Gravity.END or Gravity.CENTER_VERTICAL))
+
         row.addView(searchWrap, LinearLayout.LayoutParams(0, dp(42), 1f))
 
         // Notifications — live badge updates via NotificationsStore listener (no app restart)
@@ -1562,6 +1630,8 @@ class MainActivity : AppCompatActivity() {
                 isFillViewport = false
                 isNestedScrollingEnabled = true
                 clipToPadding = false
+                isHorizontalFadingEdgeEnabled = true
+                setFadingEdgeLength(dp(24))
             }
 
             private fun setParentsDisallow(disallow: Boolean) {
@@ -1761,96 +1831,66 @@ class MainActivity : AppCompatActivity() {
      */
     private fun heroCarousel(): View {
         val slideWidth = resources.displayMetrics.widthPixels
-        // Compact website-style mobile hero (image + copy without huge empty space)
         val slideHeight = dp(360)
         val stride = slideWidth
 
-        data class ProductHero(
-            val label: String,
-            val brand: String,
-            val title: String,
-            val body: String,
-            val priceLine: String,
-            val imageUrl: String,
-            val product: Product?
-        )
+        val featuredList = products.filter { p -> p.featured }.ifEmpty { products }.take(4)
+        val slideCount = if (featuredList.isNotEmpty()) featuredList.size else 3
 
-        val featured = products.filter { it.featured }.ifEmpty { products }.take(4)
-        val slides: List<ProductHero> = if (featured.isNotEmpty()) {
-            featured.mapIndexed { idx, p ->
-                val brand = p.vendorName.ifBlank {
-                    p.vendorSlug.split("-").joinToString(" ") { w ->
-                        w.replaceFirstChar { c -> c.uppercase() }
-                    }
-                }
-                ProductHero(
-                    label = if (idx == 0) "Live now" else "Featured Deal",
-                    brand = brand,
-                    title = p.name,
-                    body = p.description.ifBlank { p.category },
-                    priceLine = "RWF ${money.format(p.price.toLong())} · Cart · MoMoPay",
-                    imageUrl = p.heroImage,
-                    product = p
-                )
+        val row = LinearLayout(this)
+        row.orientation = LinearLayout.HORIZONTAL
+
+        if (featuredList.isNotEmpty()) {
+            for (idx in featuredList.indices) {
+                val p = featuredList[idx]
+                val brandName = if (p.vendorName.isNotBlank()) p.vendorName else p.vendorSlug
+                val slide = websiteHeroSlide(
+                    if (idx == 0) "Live now" else "Featured Deal",
+                    brandName,
+                    p.name,
+                    if (p.description.isNotBlank()) p.description else p.category,
+                    "RWF ${money.format(p.price.toLong())} · Cart · MoMoPay",
+                    p.heroImage
+                ) { openProduct(p) }
+                row.addView(slide, LinearLayout.LayoutParams(slideWidth, slideHeight))
             }
         } else {
-            listOf(
-                ProductHero(
-                    "Live now", "SuperTech", "Verified marketplace deals",
-                    "Shop trusted sellers, track orders, and pay with MoMo.",
-                    "Cart · MoMoPay", "$apiBase/banners/hero-flash-sale.jpg", null
-                ),
-                ProductHero(
-                    "Featured Deal", "Gadgets", "Phones & everyday gear",
-                    "Mobile essentials from verified marketplace sellers.",
-                    "Shop · Verified stock", "$apiBase/banners/hero-gadgets.jpg", null
-                ),
-                ProductHero(
-                    "Featured Deal", "Request & Track", "Missing a product? We source it.",
-                    "Send a request or follow any order status in-app.",
-                    "Request · Track", "$apiBase/banners/hero-request-track.jpg", null
-                )
+            val fallbacks = arrayOf(
+                arrayOf("Live now", "SuperTech", "Verified marketplace deals", "Shop trusted sellers, track orders, and pay with MoMo.", "Cart · MoMoPay", "$apiBase/banners/hero-flash-sale.jpg"),
+                arrayOf("Featured Deal", "Gadgets", "Phones & everyday gear", "Mobile essentials from verified marketplace sellers.", "Shop · Verified stock", "$apiBase/banners/hero-gadgets.jpg"),
+                arrayOf("Featured Deal", "Request & Track", "Missing a product? We source it.", "Send a request or follow any order status in-app.", "Request · Track", "$apiBase/banners/hero-request-track.jpg")
             )
-        }
-
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = ViewGroup.LayoutParams(slideWidth * slides.size.coerceAtLeast(1), slideHeight)
-        }
-        slides.forEach { spec ->
-            row.addView(
-                websiteHeroSlide(spec.label, spec.brand, spec.title, spec.body, spec.priceLine, spec.imageUrl) {
-                    val p = spec.product
-                    if (p != null) openProduct(p)
-                    else render(Tab.Shop)
-                },
-                LinearLayout.LayoutParams(slideWidth, slideHeight)
-            )
-        }
-
-        val dotsRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-        }
-        val dots = slides.indices.map { i ->
-            View(this).apply {
-                background = rounded(
-                    Color.TRANSPARENT,
-                    if (i == 0) Color.WHITE else Color.argb(90, 255, 255, 255),
-                    dp(5).toFloat()
-                )
-            }.also { dot ->
-                val lp = LinearLayout.LayoutParams(if (i == 0) dp(18) else dp(8), dp(8))
-                lp.setMargins(dp(3), 0, dp(3), 0)
-                dotsRow.addView(dot, lp)
+            for (fb in fallbacks) {
+                val slide = websiteHeroSlide(fb[0], fb[1], fb[2], fb[3], fb[4], fb[5]) {
+                    render(Tab.Shop)
+                }
+                row.addView(slide, LinearLayout.LayoutParams(slideWidth, slideHeight))
             }
+        }
+
+        val dotsRow = LinearLayout(this)
+        dotsRow.orientation = LinearLayout.HORIZONTAL
+        dotsRow.gravity = Gravity.CENTER
+        val dots = ArrayList<View>()
+        for (i in 0 until slideCount) {
+            val dot = View(this)
+            dot.background = rounded(
+                Color.TRANSPARENT,
+                if (i == 0) Color.WHITE else Color.argb(90, 255, 255, 255),
+                dp(5).toFloat()
+            )
+            val lp = LinearLayout.LayoutParams(if (i == 0) dp(18) else dp(8), dp(8))
+            lp.setMargins(dp(3), 0, dp(3), 0)
+            dotsRow.addView(dot, lp)
+            dots.add(dot)
         }
 
         var activePage = 0
-        fun paintDots(page: Int) {
-            if (page == activePage) return
+        val pager = PagerScrollView(stride, slideCount) { page ->
+            if (page == activePage) return@PagerScrollView
             activePage = page
-            dots.forEachIndexed { i, dot ->
+            for (i in dots.indices) {
+                val dot = dots[i]
                 dot.background = rounded(
                     Color.TRANSPARENT,
                     if (i == page) Color.WHITE else Color.argb(90, 255, 255, 255),
@@ -1861,18 +1901,26 @@ class MainActivity : AppCompatActivity() {
                 dot.layoutParams = lp
             }
         }
-
-        val pager = PagerScrollView(stride, slides.size) { page -> paintDots(page) }
         pager.addView(row)
 
-        // Autoplay ~7s like website Swiper
-        if (slides.size > 1) {
+        if (slideCount > 1) {
             val auto = object : Runnable {
                 override fun run() {
                     if (!pager.isAttachedToWindow) return
-                    val next = (activePage + 1) % slides.size
+                    val next = (activePage + 1) % slideCount
                     pager.smoothScrollTo(next * stride, 0)
-                    paintDots(next)
+                    activePage = next
+                    for (i in dots.indices) {
+                        val dot = dots[i]
+                        dot.background = rounded(
+                            Color.TRANSPARENT,
+                            if (i == next) Color.WHITE else Color.argb(90, 255, 255, 255),
+                            dp(5).toFloat()
+                        )
+                        val lp = dot.layoutParams as LinearLayout.LayoutParams
+                        lp.width = if (i == next) dp(18) else dp(8)
+                        dot.layoutParams = lp
+                    }
                     pager.postDelayed(this, 7000L)
                 }
             }
@@ -1887,12 +1935,9 @@ class MainActivity : AppCompatActivity() {
 
         val frame = FrameLayout(this)
         frame.addView(pager, FrameLayout.LayoutParams(match(), slideHeight))
-        frame.addView(
-            dotsRow,
-            FrameLayout.LayoutParams(match(), wrap(), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply {
-                bottomMargin = dp(12)
-            }
-        )
+        val dotsLp = FrameLayout.LayoutParams(match(), wrap(), Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
+        dotsLp.bottomMargin = dp(12)
+        frame.addView(dotsRow, dotsLp)
         return frame
     }
 
@@ -1909,15 +1954,27 @@ class MainActivity : AppCompatActivity() {
         imageUrl: String,
         onCta: () -> Unit
     ): View {
-        val accentColor = Color.rgb(232, 119, 10) // brand orange — avoid name clash with `brand` string
-        val pad = dp(16)
+        // Local helpers avoid any outer-scope resolution issues in this large file
+        val density = resources.displayMetrics.density
+        fun d(v: Int) = (v * density).toInt()
+        fun mp() = ViewGroup.LayoutParams.MATCH_PARENT
+        fun wp() = ViewGroup.LayoutParams.WRAP_CONTENT
+        fun pill(stroke: Int, fill: Int, radiusPx: Float): GradientDrawable {
+            return GradientDrawable().apply {
+                setColor(fill)
+                cornerRadius = radiusPx
+                if (stroke != Color.TRANSPARENT) setStroke(d(1), stroke)
+            }
+        }
+
+        val accentColor = Color.rgb(232, 119, 10)
         val frame = FrameLayout(this)
         frame.setBackgroundColor(Color.rgb(10, 15, 26))
 
         val bg = ImageView(this)
         bg.scaleType = ImageView.ScaleType.CENTER_CROP
         bg.alpha = 0.55f
-        frame.addView(bg, FrameLayout.LayoutParams(match(), match()))
+        frame.addView(bg, FrameLayout.LayoutParams(mp(), mp()))
         loadImage(bg, "$apiBase/banners/hero-brand-bg-mobile.jpg")
 
         val scrim = View(this)
@@ -1929,22 +1986,22 @@ class MainActivity : AppCompatActivity() {
                 Color.argb(245, 10, 15, 26)
             )
         )
-        frame.addView(scrim, FrameLayout.LayoutParams(match(), match()))
+        frame.addView(scrim, FrameLayout.LayoutParams(mp(), mp()))
 
         val col = LinearLayout(this)
         col.orientation = LinearLayout.VERTICAL
-        col.setPadding(pad, dp(14), pad, dp(28))
+        col.setPadding(d(16), d(14), d(16), d(28))
 
         val imageCard = FrameLayout(this)
-        imageCard.background = rounded(Color.argb(50, 255, 255, 255), Color.rgb(24, 28, 36), dp(18).toFloat())
-        imageCard.elevation = dp(8).toFloat()
+        imageCard.background = pill(Color.argb(50, 255, 255, 255), Color.rgb(24, 28, 36), d(18).toFloat())
+        imageCard.elevation = d(8).toFloat()
         val productImg = ImageView(this)
         productImg.scaleType = ImageView.ScaleType.CENTER_CROP
         productImg.setBackgroundColor(Color.rgb(32, 36, 44))
-        imageCard.addView(productImg, FrameLayout.LayoutParams(match(), match()))
+        imageCard.addView(productImg, FrameLayout.LayoutParams(mp(), mp()))
         if (imageUrl.isNotBlank()) loadImage(productImg, imageUrl)
-        val imageLp = LinearLayout.LayoutParams(match(), dp(150))
-        imageLp.bottomMargin = dp(12)
+        val imageLp = LinearLayout.LayoutParams(mp(), d(150))
+        imageLp.bottomMargin = d(12)
         col.addView(imageCard, imageLp)
 
         val labelView = TextView(this)
@@ -1953,29 +2010,40 @@ class MainActivity : AppCompatActivity() {
         labelView.typeface = Typeface.DEFAULT_BOLD
         labelView.letterSpacing = 0.14f
         labelView.setTextColor(Color.WHITE)
-        labelView.background = rounded(
+        labelView.background = pill(
             Color.argb(70, 255, 255, 255),
             Color.argb(35, 255, 255, 255),
-            dp(14).toFloat()
+            d(14).toFloat()
         )
-        labelView.setPadding(dp(10), dp(5), dp(10), dp(5))
-        val labelLp = LinearLayout.LayoutParams(wrap(), wrap())
-        labelLp.bottomMargin = dp(8)
+        labelView.setPadding(d(10), d(5), d(10), d(5))
+        val labelLp = LinearLayout.LayoutParams(wp(), wp())
+        labelLp.bottomMargin = d(8)
         col.addView(labelView, labelLp)
 
-        val brandView = text(brand.uppercase(Locale.US), 11f, accentColor, Typeface.BOLD)
+        val brandView = TextView(this)
+        brandView.text = brand.uppercase(Locale.US)
+        brandView.textSize = 11f
+        brandView.typeface = Typeface.DEFAULT_BOLD
+        brandView.setTextColor(accentColor)
         brandView.letterSpacing = 0.14f
         col.addView(brandView)
 
-        val titleView = text(title, 22f, Color.WHITE, Typeface.BOLD)
-        titleView.setPadding(0, dp(4), 0, 0)
+        val titleView = TextView(this)
+        titleView.text = title
+        titleView.textSize = 22f
+        titleView.typeface = Typeface.DEFAULT_BOLD
+        titleView.setTextColor(Color.WHITE)
+        titleView.setPadding(0, d(4), 0, 0)
         titleView.maxLines = 2
         titleView.ellipsize = android.text.TextUtils.TruncateAt.END
         titleView.setLineSpacing(0f, 1.05f)
         col.addView(titleView)
 
-        val bodyView = text(body, 12f, Color.argb(190, 255, 255, 255), Typeface.NORMAL)
-        bodyView.setPadding(0, dp(4), 0, 0)
+        val bodyView = TextView(this)
+        bodyView.text = body
+        bodyView.textSize = 12f
+        bodyView.setTextColor(Color.argb(190, 255, 255, 255))
+        bodyView.setPadding(0, d(4), 0, 0)
         bodyView.maxLines = 2
         bodyView.ellipsize = android.text.TextUtils.TruncateAt.END
         col.addView(bodyView)
@@ -1986,14 +2054,14 @@ class MainActivity : AppCompatActivity() {
             priceView.textSize = 14f
             priceView.typeface = Typeface.DEFAULT_BOLD
             priceView.setTextColor(Color.WHITE)
-            priceView.background = rounded(
+            priceView.background = pill(
                 Color.argb(50, 255, 255, 255),
                 Color.argb(28, 255, 255, 255),
-                dp(10).toFloat()
+                d(10).toFloat()
             )
-            priceView.setPadding(dp(12), dp(7), dp(12), dp(7))
-            val priceLp = LinearLayout.LayoutParams(wrap(), wrap())
-            priceLp.topMargin = dp(10)
+            priceView.setPadding(d(12), d(7), d(12), d(7))
+            val priceLp = LinearLayout.LayoutParams(wp(), wp())
+            priceLp.topMargin = d(10)
             col.addView(priceView, priceLp)
         }
 
@@ -2004,22 +2072,22 @@ class MainActivity : AppCompatActivity() {
         cta.typeface = Typeface.DEFAULT_BOLD
         cta.setTextColor(ColorStateList.valueOf(Color.WHITE))
         cta.backgroundTintList = null
-        cta.background = rounded(Color.TRANSPARENT, accentColor, dp(24).toFloat())
+        cta.background = pill(Color.TRANSPARENT, accentColor, d(24).toFloat())
         cta.stateListAnimator = null
-        cta.minimumHeight = dp(44)
+        cta.minimumHeight = d(44)
         cta.setOnClickListener { onCta() }
-        val ctaLp = LinearLayout.LayoutParams(wrap(), dp(44))
-        ctaLp.topMargin = dp(12)
+        val ctaLp = LinearLayout.LayoutParams(wp(), d(44))
+        ctaLp.topMargin = d(12)
         col.addView(cta, ctaLp)
 
         frame.isClickable = false
         frame.isFocusable = false
-        frame.addView(col, FrameLayout.LayoutParams(match(), match()))
+        frame.addView(col, FrameLayout.LayoutParams(mp(), mp()))
         frame.contentDescription = "Hero: $title"
         return frame
     }
 
-    /** Website category image path: /categories/{slug}.jpg */
+    // Website category image path: /categories/<slug>.jpg
     private fun categoryImageUrl(category: String): String {
         val slug = category.lowercase(Locale.US)
             .replace("&", "")
@@ -2030,8 +2098,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Website VisualCategoryRail / “Shop by category” strip under the hero.
-     * Uses the same /categories/*.jpg assets as supertech.africa.
+     * Website VisualCategoryRail / "Shop by category" strip under the hero.
+     * Uses the same categories/{slug}.jpg assets as supertech.africa.
      */
     private fun blueCategoryRail(items: List<String>): View {
         val wrap = LinearLayout(this).apply {
@@ -3215,7 +3283,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderTabs() {
         bottomTabs.removeAllViews()
-        // Shop is an internal surface (search/category), not a dock tab
         Tab.values().filter { it != Tab.Shop }.forEach { tab ->
             val active = when (tab) {
                 Tab.Browse -> browseSheetOpen
@@ -3224,38 +3291,19 @@ class MainActivity : AppCompatActivity() {
                 Tab.Request, Tab.Account -> false
             }
 
-            val item = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER_HORIZONTAL or Gravity.CENTER_VERTICAL
-                setPadding(0, if (tab == Tab.Browse && active) dp(0) else dp(2), 0, 0)
-                if (tab == Tab.Browse && active) {
-                    background = GradientDrawable().apply {
-                        setColor(Color.TRANSPARENT)
-                        setStroke(0, Color.TRANSPARENT)
-                    }
-                    // gold top border accent
-                    setBackgroundColor(Color.TRANSPARENT)
-                }
-                pressable()
-                setOnClickListener { render(tab) }
-            }
-
-            // Gold top edge for active Browse (Photo Factory)
-            if (tab == Tab.Browse) {
-                item.addView(View(this).apply {
-                    setBackgroundColor(if (active) gold else Color.TRANSPARENT)
-                }, LinearLayout.LayoutParams(dp(28), dp(3)).apply {
-                    bottomMargin = dp(2)
-                    gravity = Gravity.CENTER_HORIZONTAL
-                })
-            }
-
             val iconWrap = FrameLayout(this)
-            val icon = ImageView(this).apply {
-                setImageResource(tab.iconRes)
-                setColorFilter(if (active) gold else Color.argb(200, 255, 255, 255))
+            if (tab == Tab.Account) {
+                iconWrap.addView(
+                    mainAccountDockGlyph(active),
+                    FrameLayout.LayoutParams(dp(26), dp(24), Gravity.CENTER)
+                )
+            } else {
+                val icon = ImageView(this).apply {
+                    setImageResource(tab.iconRes)
+                    setColorFilter(if (active) gold else Color.argb(200, 255, 255, 255))
+                }
+                iconWrap.addView(icon, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
             }
-            iconWrap.addView(icon, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
 
             if (tab == Tab.Cart && cartCount() > 0) {
                 iconWrap.addView(TextView(this).apply {
@@ -3269,15 +3317,46 @@ class MainActivity : AppCompatActivity() {
                 }, FrameLayout.LayoutParams(wrap(), dp(16), Gravity.TOP or Gravity.END))
             }
 
+            val activePill = FrameLayout(this).apply {
+                if (active) {
+                    background = rounded(Color.TRANSPARENT, Color.argb(45, 245, 166, 42), dp(16).toFloat())
+                }
+                setPadding(dp(12), dp(4), dp(12), dp(4))
+                addView(iconWrap, FrameLayout.LayoutParams(dp(28), dp(24), Gravity.CENTER))
+            }
+
             val labelView = TextView(this).apply {
-                text = tab.label
+                text = when {
+                    tab == Tab.Account && !Net.isLoggedIn() -> "Sign in"
+                    else -> tab.label
+                }
                 gravity = Gravity.CENTER
                 textSize = 10f
                 typeface = if (active) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
                 setTextColor(if (active) gold else Color.argb(180, 255, 255, 255))
             }
 
-            item.addView(iconWrap, LinearLayout.LayoutParams(dp(28), dp(24)))
+            val item = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                pressable()
+                setOnClickListener {
+                    if (currentTab != tab || (tab == Tab.Browse && browseSheetOpen)) {
+                        val scale = 0.9f
+                        val dur = 120L
+                        animate().scaleX(scale).scaleY(scale).setDuration(dur).withEndAction {
+                            animate().scaleX(1.05f).scaleY(1.05f).setDuration(80).withEndAction {
+                                animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+                            }.start()
+                            render(tab)
+                        }.start()
+                    } else {
+                        render(tab)
+                    }
+                }
+            }
+
+            item.addView(activePill, LinearLayout.LayoutParams(wrap(), wrap()))
             item.addView(labelView, LinearLayout.LayoutParams(wrap(), wrap()).apply {
                 topMargin = dp(2)
                 gravity = Gravity.CENTER_HORIZONTAL
@@ -3468,11 +3547,182 @@ class MainActivity : AppCompatActivity() {
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
     }
 
-    /** Account button: jump to the dashboard if signed in, otherwise sign in. */
+    /** Account: dashboard when signed in; Google + email hub when signed out. */
     private fun openAccount() {
-        val target = if (Net.isLoggedIn()) DashboardActivity::class.java else SignInActivity::class.java
-        startActivity(Intent(this, target))
+        if (Net.isLoggedIn()) {
+            startActivity(Intent(this, DashboardActivity::class.java))
+        } else {
+            startActivity(
+                SignInActivity.intent(
+                    this,
+                    reason = "Sign in to track orders, sell as a vendor, and manage your SuperTech account.",
+                    promptGoogle = false
+                )
+            )
+        }
         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+    }
+
+    /** Home strip when browsing as guest — strong path to Google + email. */
+    private fun guestLoginBanner(): View {
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(16), dp(16), dp(16))
+            background = gradient(backgroundStrong, brand, dp(16).toFloat())
+            elevation = dp(4).toFloat()
+        }
+
+        val header = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(10))
+        }
+        header.addView(iconBubbleLocal(R.drawable.ic_lock, brand, Color.argb(45, 255, 255, 255)))
+        val titleCol = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), 0, 0, 0)
+        }
+        titleCol.addView(text("GUEST ACCESS", 11f, Color.argb(200, 255, 255, 255), Typeface.BOLD).apply { letterSpacing = 0.08f })
+        titleCol.addView(text("You're browsing as a guest", 16f, Color.WHITE, Typeface.BOLD))
+        header.addView(titleCol, LinearLayout.LayoutParams(0, wrap(), 1f))
+        card.addView(header)
+
+        card.addView(
+            text(
+                "Sign in to save orders, sell products, and sync your account.",
+                13f,
+                Color.argb(220, 255, 255, 255),
+                Typeface.NORMAL
+            ).apply { setPadding(0, 0, 0, dp(14)) }
+        )
+
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        row.addView(
+            Button(this).apply {
+                text = "Continue with Google"
+                textSize = 13f
+                isAllCaps = false
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(brandDark)
+                backgroundTintList = null
+                background = rounded(Color.TRANSPARENT, Color.WHITE, dp(12).toFloat())
+                minimumHeight = dp(44)
+                setOnClickListener {
+                    startActivity(
+                        SignInActivity.intent(
+                            this@MainActivity,
+                            reason = "Continue with Google to open your SuperTech account.",
+                            promptGoogle = true,
+                            next = "main"
+                        )
+                    )
+                }
+            },
+            LinearLayout.LayoutParams(0, wrap(), 1f)
+        )
+        row.addView(
+            Button(this).apply {
+                text = "Email"
+                textSize = 13f
+                isAllCaps = false
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Color.WHITE)
+                backgroundTintList = null
+                background = rounded(Color.argb(90, 255, 255, 255), Color.TRANSPARENT, dp(12).toFloat())
+                minimumHeight = dp(44)
+                setOnClickListener { openAccount() }
+            },
+            LinearLayout.LayoutParams(wrap(), wrap()).apply { leftMargin = dp(8) }
+        )
+        card.addView(row)
+        return card.withMargins(left = 12, right = 12, top = 10, bottom = 6)
+    }
+
+    /** Compact signed-in identity chip under the hero. */
+    private fun signedInHomeChip(): View {
+        val session = Net.session() ?: return View(this)
+        val chip = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = rounded(line, Color.WHITE, dp(14).toFloat())
+            elevation = dp(2).toFloat()
+            pressable()
+            setOnClickListener { openAccount() }
+        }
+        val letter = session.name.trim().firstOrNull()?.uppercaseChar()?.toString()
+            ?: session.email.firstOrNull()?.uppercaseChar()?.toString()
+            ?: "U"
+        chip.addView(TextView(this).apply {
+            text = letter
+            textSize = 14f
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            background = rounded(Color.TRANSPARENT, brand, dp(18).toFloat())
+        }, LinearLayout.LayoutParams(dp(36), dp(36)))
+        val col = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(10), 0, 0, 0)
+        }
+        col.addView(text(session.name, 14f, ink, Typeface.BOLD).apply { maxLines = 1 })
+        col.addView(
+            text(
+                when (session.role) {
+                    "admin" -> "Admin · Tap for dashboard"
+                    "vendor" -> "Vendor · Tap for dashboard"
+                    else -> "Signed in · Tap for account"
+                },
+                11f,
+                muted,
+                Typeface.NORMAL
+            )
+        )
+        chip.addView(col, LinearLayout.LayoutParams(0, wrap(), 1f))
+        chip.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_chevron)
+            setColorFilter(muted)
+        }, LinearLayout.LayoutParams(dp(18), dp(18)))
+        return chip.withMargins(left = 12, right = 12, top = 10, bottom = 6)
+    }
+
+    /** Account dock glyph on MainActivity (mirrors BaseActivity.accountDockGlyph). */
+    private fun mainAccountDockGlyph(active: Boolean): View {
+        val wrap = FrameLayout(this)
+        val session = Net.session()
+        if (Net.isLoggedIn() && session != null) {
+            val letter = session.name.trim().firstOrNull()?.uppercaseChar()?.toString()
+                ?: session.email.trim().firstOrNull()?.uppercaseChar()?.toString()
+                ?: "U"
+            val avatar = TextView(this).apply {
+                text = letter
+                textSize = 11f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setTextColor(if (active) brandDark else Color.WHITE)
+                background = rounded(
+                    if (active) gold else Color.argb(60, 255, 255, 255),
+                    if (active) gold else brand,
+                    dp(12).toFloat()
+                )
+            }
+            wrap.addView(avatar, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
+            wrap.addView(View(this).apply {
+                background = rounded(Color.WHITE, Color.rgb(34, 197, 94), dp(5).toFloat())
+            }, FrameLayout.LayoutParams(dp(9), dp(9), Gravity.BOTTOM or Gravity.END))
+        } else {
+            wrap.addView(ImageView(this).apply {
+                setImageResource(R.drawable.ic_person)
+                setColorFilter(if (active) gold else Color.argb(180, 255, 255, 255))
+            }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
+            wrap.addView(View(this).apply {
+                background = rounded(Color.WHITE, brand, dp(5).toFloat())
+            }, FrameLayout.LayoutParams(dp(8), dp(8), Gravity.TOP or Gravity.END))
+        }
+        return wrap
     }
 
     private fun aiFab(): View {
@@ -3648,6 +3898,80 @@ class MainActivity : AppCompatActivity() {
         val logoMark: String = "",
         val accent: String = ""
     )
+
+    private fun sortProducts(list: List<Product>): List<Product> {
+        return when (currentSort) {
+            Sort.DEFAULT -> list
+            Sort.PRICE_LOW_HIGH -> list.sortedBy { it.price }
+            Sort.PRICE_HIGH_LOW -> list.sortedByDescending { it.price }
+            Sort.NAME_AZ -> list.sortedBy { it.name }
+        }
+    }
+
+    private fun showSortDialog() {
+        val dialog = android.app.Dialog(this, android.R.style.Theme_Translucent_NoTitleBar).apply {
+            setCancelable(true)
+            setCanceledOnTouchOutside(true)
+        }
+        val root = FrameLayout(this).apply {
+            setBackgroundColor(Color.argb(120, 0, 0, 0))
+            setOnClickListener { dialog.dismiss() }
+        }
+        val sheet = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = rounded(Color.TRANSPARENT, Color.WHITE, dp(18).toFloat())
+            setPadding(dp(18), dp(16), dp(18), dp(20))
+            isClickable = true
+        }
+        sheet.addView(View(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.argb(100, 117, 117, 122), dp(3).toFloat())
+        }, LinearLayout.LayoutParams(dp(40), dp(4)).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = dp(14)
+        })
+        sheet.addView(text("Sort listings", 17f, ink, Typeface.BOLD).apply {
+            setPadding(0, 0, 0, dp(16))
+        })
+
+        fun addOption(sortOpt: Sort, label: String) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(12), dp(14), dp(12), dp(14))
+                background = rounded(Color.TRANSPARENT, if (currentSort == sortOpt) softGreen else Color.WHITE, dp(10).toFloat())
+                pressable()
+                setOnClickListener {
+                    currentSort = sortOpt
+                    dialog.dismiss()
+                    render(Tab.Shop)
+                }
+            }
+            row.addView(text(label, 14f, if (currentSort == sortOpt) brand else ink, if (currentSort == sortOpt) Typeface.BOLD else Typeface.NORMAL), LinearLayout.LayoutParams(0, wrap(), 1f))
+            if (currentSort == sortOpt) {
+                row.addView(text("✓", 14f, brand, Typeface.BOLD))
+            }
+            sheet.addView(row)
+        }
+
+        addOption(Sort.DEFAULT, "Featured (Default)")
+        addOption(Sort.PRICE_LOW_HIGH, "Price: Low to High")
+        addOption(Sort.PRICE_HIGH_LOW, "Price: High to Low")
+        addOption(Sort.NAME_AZ, "Name: A to Z")
+
+        root.addView(sheet, FrameLayout.LayoutParams(match(), wrap(), Gravity.BOTTOM).apply {
+            leftMargin = dp(12); rightMargin = dp(12); bottomMargin = dp(16)
+        })
+        dialog.setContentView(root)
+        dialog.window?.let { w ->
+            w.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            w.setWindowAnimations(android.R.style.Animation_InputMethod)
+        }
+        dialog.show()
+    }
+
+    private enum class Sort {
+        DEFAULT, PRICE_LOW_HIGH, PRICE_HIGH_LOW, NAME_AZ
+    }
 
     private companion object {
         // Stable key for tagging async image targets.

@@ -29,6 +29,17 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import org.json.JSONArray
 import org.json.JSONObject
+import android.animation.ValueAnimator
+import android.util.LruCache
+import android.view.HapticFeedbackConstants
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.LinearGradient
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Shader
+import android.graphics.Outline
+import android.view.ViewOutlineProvider
 
 /**
  * Shared design system + layout scaffolding for the native screens. Keeps the
@@ -79,6 +90,16 @@ abstract class BaseActivity : AppCompatActivity() {
     /** Loads a remote image into an ImageView, normalising relative URLs. */
     protected fun loadImage(target: android.widget.ImageView, rawUrl: String?) {
         val url = normalizeImage(rawUrl) ?: return
+        val cached = imageCache.get(url)
+        if (cached != null) {
+            target.setImageBitmap(cached)
+            target.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+            target.clearColorFilter()
+            target.setBackgroundColor(Color.TRANSPARENT)
+            target.setPadding(0, 0, 0, 0)
+            target.alpha = 1f
+            return
+        }
         val tagKey = 0x7f5a0002
         target.setTag(tagKey, url)
         imageExecutor.execute {
@@ -89,15 +110,18 @@ abstract class BaseActivity : AppCompatActivity() {
                 connection.instanceFollowRedirects = true
                 val bitmap = connection.inputStream.use { android.graphics.BitmapFactory.decodeStream(it) }
                 connection.disconnect()
-                if (bitmap != null) runOnUiThread {
-                    if (target.getTag(tagKey) == url) {
-                        target.setImageBitmap(bitmap)
-                        target.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
-                        target.clearColorFilter()
-                        target.setBackgroundColor(Color.TRANSPARENT)
-                        target.setPadding(0, 0, 0, 0)
-                        target.alpha = 0f
-                        target.animate().alpha(1f).setDuration(240).start()
+                if (bitmap != null) {
+                    imageCache.put(url, bitmap)
+                    runOnUiThread {
+                        if (target.getTag(tagKey) == url) {
+                            target.setImageBitmap(bitmap)
+                            target.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                            target.clearColorFilter()
+                            target.setBackgroundColor(Color.TRANSPARENT)
+                            target.setPadding(0, 0, 0, 0)
+                            target.alpha = 0f
+                            target.animate().alpha(1f).setDuration(240).start()
+                        }
                     }
                 }
             } catch (_: Exception) {
@@ -118,9 +142,22 @@ abstract class BaseActivity : AppCompatActivity() {
 
     // ---- Scaffold ----
 
+    protected var swipeRefreshLayout: androidx.swiperefreshlayout.widget.SwipeRefreshLayout? = null
+
+    protected fun stopRefreshing() {
+        runOnUiThread {
+            swipeRefreshLayout?.isRefreshing = false
+        }
+    }
+
     /** Builds the standard screen (top bar + scrollable content + global dock + AI fab)
      *  and returns the content column to add views to. */
-    protected fun scaffold(title: String, withBack: Boolean = true, withFab: Boolean = true): LinearLayout {
+    protected fun scaffold(
+        title: String,
+        withBack: Boolean = true,
+        withFab: Boolean = true,
+        onRefresh: (() -> Unit)? = null
+    ): LinearLayout {
         window.statusBarColor = backgroundStrong
         window.navigationBarColor = backgroundStrong
 
@@ -148,7 +185,17 @@ abstract class BaseActivity : AppCompatActivity() {
             setBackgroundColor(Color.TRANSPARENT)
             addView(content)
         }
-        shell.addView(scroll, LinearLayout.LayoutParams(mp(), 0, 1f))
+
+        if (onRefresh != null) {
+            val refresh = androidx.swiperefreshlayout.widget.SwipeRefreshLayout(this).apply {
+                addView(scroll)
+                setOnRefreshListener { onRefresh() }
+            }
+            swipeRefreshLayout = refresh
+            shell.addView(refresh, LinearLayout.LayoutParams(mp(), 0, 1f))
+        } else {
+            shell.addView(scroll, LinearLayout.LayoutParams(mp(), 0, 1f))
+        }
 
         if (showGlobalDock()) {
             val dock = globalBottomDock()
@@ -185,8 +232,14 @@ abstract class BaseActivity : AppCompatActivity() {
             setBackgroundColor(backgroundStrong)
             elevation = dp(20).toFloat()
         }
-        fun tab(label: String, iconRes: Int, tab: DockTab, onClick: () -> Unit) {
-            val on = active == tab
+        fun addTab(
+            label: String,
+            iconRes: Int,
+            dockTab: DockTab,
+            customIcon: View? = null,
+            onClick: () -> Unit
+        ) {
+            val on = active == dockTab
             val cell = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
@@ -194,10 +247,14 @@ abstract class BaseActivity : AppCompatActivity() {
                 pressable()
                 setOnClickListener { onClick() }
             }
-            cell.addView(ImageView(this).apply {
-                setImageResource(iconRes)
-                setColorFilter(if (on) gold else Color.argb(180, 255, 255, 255))
-            }, LinearLayout.LayoutParams(dp(22), dp(22)))
+            if (customIcon != null) {
+                cell.addView(customIcon, LinearLayout.LayoutParams(dp(26), dp(24)))
+            } else {
+                cell.addView(ImageView(this).apply {
+                    setImageResource(iconRes)
+                    setColorFilter(if (on) gold else Color.argb(180, 255, 255, 255))
+                }, LinearLayout.LayoutParams(dp(22), dp(22)))
+            }
             cell.addView(TextView(this).apply {
                 text = label
                 textSize = 10f
@@ -213,22 +270,125 @@ abstract class BaseActivity : AppCompatActivity() {
             }
             dock.addView(cell, LinearLayout.LayoutParams(0, mp(), 1f))
         }
-        tab("Home", R.drawable.ic_home, DockTab.HOME) { openMainTab("Home") }
-        tab("Browse", R.drawable.ic_menu, DockTab.BROWSE) { openMainTab("Home", openBrowse = true) }
-        tab("Request", R.drawable.ic_box, DockTab.REQUEST) {
+        addTab("Home", R.drawable.ic_home, DockTab.HOME) { openMainTab("Home") }
+        addTab("Browse", R.drawable.ic_menu, DockTab.BROWSE) { openMainTab("Home", openBrowse = true) }
+        addTab("Request", R.drawable.ic_box, DockTab.REQUEST) {
             if (this !is RequestProductActivity) {
                 navigateForward(Intent(this, RequestProductActivity::class.java))
             }
         }
-        tab("Stores", R.drawable.ic_store, DockTab.STORES) { openMainTab("Stores") }
-        tab("Account", R.drawable.ic_person, DockTab.ACCOUNT) {
-            val target = if (Net.isLoggedIn()) DashboardActivity::class.java else SignInActivity::class.java
-            if (this::class.java != target) {
-                navigateForward(Intent(this, target))
+        addTab("Stores", R.drawable.ic_store, DockTab.STORES) { openMainTab("Stores") }
+        addTab(
+            label = if (Net.isLoggedIn()) "Account" else "Sign in",
+            iconRes = R.drawable.ic_person,
+            dockTab = DockTab.ACCOUNT,
+            customIcon = accountDockGlyph(active == DockTab.ACCOUNT)
+        ) { openAccountScreen() }
+        addTab("Cart", R.drawable.ic_cart, DockTab.CART) { openMainTab("Cart") }
+        return dock
+    }
+
+    /**
+     * Account dock glyph:
+     * - Signed in: avatar initial in brand circle + green online dot
+     * - Signed out: person icon + small orange “sign in” pulse dot
+     */
+    protected fun accountDockGlyph(active: Boolean): View {
+        val wrap = FrameLayout(this)
+        val session = Net.session()
+        if (Net.isLoggedIn() && session != null) {
+            val letter = session.name.trim().firstOrNull()?.uppercaseChar()?.toString()
+                ?: session.email.trim().firstOrNull()?.uppercaseChar()?.toString()
+                ?: "U"
+            val avatar = TextView(this).apply {
+                text = letter
+                textSize = 11f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                setTextColor(if (active) brandDark else Color.WHITE)
+                background = rounded(
+                    if (active) gold else Color.argb(60, 255, 255, 255),
+                    if (active) gold else brand,
+                    dp(12).toFloat()
+                )
+            }
+            wrap.addView(avatar, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
+            // Online / signed-in indicator
+            wrap.addView(View(this).apply {
+                background = rounded(Color.WHITE, Color.rgb(34, 197, 94), dp(5).toFloat())
+            }, FrameLayout.LayoutParams(dp(9), dp(9), Gravity.BOTTOM or Gravity.END).apply {
+                bottomMargin = dp(0)
+                rightMargin = dp(0)
+            })
+        } else {
+            wrap.addView(ImageView(this).apply {
+                setImageResource(R.drawable.ic_person)
+                setColorFilter(if (active) gold else Color.argb(180, 255, 255, 255))
+            }, FrameLayout.LayoutParams(dp(22), dp(22), Gravity.CENTER))
+            // Soft “tap to sign in” cue
+            wrap.addView(View(this).apply {
+                background = rounded(Color.WHITE, brand, dp(5).toFloat())
+            }, FrameLayout.LayoutParams(dp(8), dp(8), Gravity.TOP or Gravity.END))
+        }
+        return wrap
+    }
+
+    /** Dashboard when signed in; full Google + email hub when signed out. */
+    protected fun openAccountScreen(reason: String? = null) {
+        if (Net.isLoggedIn()) {
+            if (this !is DashboardActivity) {
+                navigateForward(Intent(this, DashboardActivity::class.java))
+            }
+        } else {
+            if (this !is SignInActivity) {
+                navigateForward(
+                    SignInActivity.intent(
+                        this,
+                        reason = reason ?: "Sign in to open your SuperTech account.",
+                        promptGoogle = false
+                    )
+                )
             }
         }
-        tab("Cart", R.drawable.ic_cart, DockTab.CART) { openMainTab("Cart") }
-        return dock
+    }
+
+    /**
+     * Soft auth gate — dialog with Continue with Google / Email when an action needs a session.
+     */
+    protected fun requireLogin(
+        reason: String = "Sign in to continue",
+        next: String? = null,
+        onAlreadyLoggedIn: () -> Unit = {}
+    ) {
+        if (Net.isLoggedIn()) {
+            onAlreadyLoggedIn()
+            return
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Sign in required")
+            .setMessage(reason)
+            .setPositiveButton("Continue with Google") { _, _ ->
+                startActivity(
+                    SignInActivity.intent(
+                        this,
+                        reason = reason,
+                        promptGoogle = true,
+                        next = next
+                    )
+                )
+            }
+            .setNeutralButton("Email") { _, _ ->
+                startActivity(
+                    SignInActivity.intent(
+                        this,
+                        reason = reason,
+                        promptGoogle = false,
+                        next = next
+                    )
+                )
+            }
+            .setNegativeButton("Not now", null)
+            .show()
     }
 
     protected fun openMainTab(tab: String, openBrowse: Boolean = false) {
@@ -339,14 +499,18 @@ abstract class BaseActivity : AppCompatActivity() {
             setPadding(dp(8), 0, dp(14), 0)
         }
         if (withBack) {
-            bar.addView(android.widget.ImageView(this).apply {
+            val backFrame = FrameLayout(this).apply {
+                pressable()
+                setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+            }
+            backFrame.addView(android.widget.ImageView(this).apply {
                 setImageResource(R.drawable.ic_chevron)
                 setColorFilter(Color.WHITE)
                 rotation = 180f
                 setPadding(dp(10), dp(10), dp(10), dp(10))
                 contentDescription = "Back"
-                setOnClickListener { onBackPressedDispatcher.onBackPressed() }
-            }, LinearLayout.LayoutParams(dp(40), dp(46)))
+            }, FrameLayout.LayoutParams(dp(40), dp(46), Gravity.CENTER))
+            bar.addView(backFrame, LinearLayout.LayoutParams(dp(40), dp(46)))
         } else {
             bar.addView(View(this), LinearLayout.LayoutParams(dp(8), dp(1)))
         }
@@ -522,12 +686,38 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
-    protected fun card(): LinearLayout {
+    protected fun card(elevationDp: Int = 2, accentBorder: Boolean = false): LinearLayout {
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(16), dp(16), dp(16))
-            background = rounded(line, Color.WHITE, dp(16).toFloat())
-            elevation = dp(2).toFloat()
+            if (accentBorder) {
+                background = object : android.graphics.drawable.Drawable() {
+                    val paintFill = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL; isAntiAlias = true }
+                    val paintStroke = Paint().apply { color = line; style = Paint.Style.STROKE; strokeWidth = dp(1).toFloat(); isAntiAlias = true }
+                    val paintStripe = Paint().apply { color = brand; style = Paint.Style.FILL; isAntiAlias = true }
+                    val path = android.graphics.Path()
+                    val rect = android.graphics.RectF()
+
+                    override fun draw(canvas: Canvas) {
+                        rect.set(bounds)
+                        val r = dp(16).toFloat()
+                        canvas.drawRoundRect(rect, r, r, paintFill)
+                        canvas.drawRoundRect(rect, r, r, paintStroke)
+                        canvas.save()
+                        path.reset()
+                        path.addRoundRect(rect, r, r, android.graphics.Path.Direction.CW)
+                        canvas.clipPath(path)
+                        canvas.drawRect(rect.left, rect.top, rect.left + dp(4), rect.bottom, paintStripe)
+                        canvas.restore()
+                    }
+                    override fun setAlpha(alpha: Int) {}
+                    override fun setColorFilter(colorFilter: android.graphics.ColorFilter?) {}
+                    override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSLUCENT
+                }
+            } else {
+                background = rounded(line, Color.WHITE, dp(16).toFloat())
+            }
+            elevation = dp(elevationDp).toFloat()
         }
     }
 
@@ -538,8 +728,41 @@ abstract class BaseActivity : AppCompatActivity() {
             setTextColor(ink)
             setHintTextColor(muted)
             setSingleLine(true)
+            // Single-line: start of line, vertically centered in the control
+            gravity = Gravity.CENTER_VERTICAL or Gravity.START
             inputType = type
             setPadding(dp(14), dp(12), dp(14), dp(12))
+            minimumHeight = dp(48)
+            background = rounded(line, page, dp(12).toFloat())
+            setOnFocusChangeListener { v, hasFocus ->
+                v.background = rounded(if (hasFocus) brand else line, page, dp(12).toFloat())
+            }
+        }
+    }
+
+    /**
+     * Multi-line fields (description, notes, features). Text and cursor start at the
+     * top-left — without TOP gravity Android often centers text in the tall box.
+     */
+    protected fun multiLineInputField(hintText: String, lines: Int = 4): EditText {
+        return EditText(this).apply {
+            hint = hintText
+            textSize = 15f
+            setTextColor(ink)
+            setHintTextColor(muted)
+            setSingleLine(false)
+            maxLines = (lines * 3).coerceAtLeast(8)
+            minLines = lines
+            gravity = Gravity.TOP or Gravity.START
+            inputType = InputType.TYPE_CLASS_TEXT or
+                InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+                InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            // Reserve vertical space so the field doesn't look empty / centered
+            minimumHeight = dp(20 + lines * 22)
+            isVerticalScrollBarEnabled = true
+            overScrollMode = View.OVER_SCROLL_IF_CONTENT_SCROLLS
             background = rounded(line, page, dp(12).toFloat())
             setOnFocusChangeListener { v, hasFocus ->
                 v.background = rounded(if (hasFocus) brand else line, page, dp(12).toFloat())
@@ -613,6 +836,10 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     protected fun primaryButton(label: String, onClick: () -> Unit): Button {
+        return primaryButton(label, null, onClick)
+    }
+
+    protected fun primaryButton(label: String, iconRes: Int? = null, onClick: () -> Unit): Button {
         return Button(this).apply {
             text = label
             textSize = 15f
@@ -628,6 +855,11 @@ abstract class BaseActivity : AppCompatActivity() {
             setPadding(dp(18), dp(15), dp(18), dp(15))
             pressable()
             setOnClickListener { onClick() }
+            if (iconRes != null) {
+                setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0)
+                compoundDrawablePadding = dp(8)
+                gravity = Gravity.CENTER
+            }
         }
     }
 
@@ -729,7 +961,19 @@ abstract class BaseActivity : AppCompatActivity() {
     }
 
     protected fun sectionTitle(title: String): View {
-        return text(title, 18f, ink, Typeface.BOLD).apply { setPadding(dp(2), dp(14), 0, dp(8)) }
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(2), dp(14), dp(2), dp(8))
+            addView(text(title, 18f, ink, Typeface.BOLD))
+            addView(View(this@BaseActivity).apply {
+                background = rounded(Color.TRANSPARENT, brand, dp(2).toFloat())
+            }, LinearLayout.LayoutParams(dp(28), dp(4)).apply { topMargin = dp(4) })
+        }
+    }
+
+    protected fun marginBottom(view: View, bottom: Int = 12): View {
+        view.layoutParams = LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(bottom) }
+        return view
     }
 
     protected fun toast(message: String) {
@@ -1020,22 +1264,66 @@ abstract class BaseActivity : AppCompatActivity() {
 
     // ---- Loading / empty / error states ----
 
+    inner class ShimmerView(context: Context) : View(context) {
+        private val paint = Paint().apply { isAntiAlias = true }
+        private val shaderMatrix = Matrix()
+        private var shimmerTranslate = 0f
+        private var animator: ValueAnimator? = null
+
+        private val baseColor = Color.rgb(229, 229, 231)
+        private val highlightColor = Color.rgb(240, 240, 242)
+
+        init {
+            val gradient = LinearGradient(
+                0f, 0f, 150f, 0f,
+                intArrayOf(baseColor, highlightColor, baseColor),
+                floatArrayOf(0f, 0.5f, 1f),
+                Shader.TileMode.CLAMP
+            )
+            paint.shader = gradient
+        }
+
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            animator?.cancel()
+            animator = ValueAnimator.ofFloat(-w.toFloat(), w.toFloat() * 1.5f).apply {
+                duration = 1200
+                repeatCount = ValueAnimator.INFINITE
+                addUpdateListener { anim ->
+                    shimmerTranslate = anim.animatedValue as Float
+                    invalidate()
+                }
+                start()
+            }
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            shaderMatrix.setTranslate(shimmerTranslate, 0f)
+            paint.shader?.setLocalMatrix(shaderMatrix)
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+        }
+
+        override fun onDetachedFromWindow() {
+            animator?.cancel()
+            super.onDetachedFromWindow()
+        }
+    }
+
     private val skeleton = Color.rgb(229, 229, 231)
     private val skeletonSoft = Color.rgb(238, 238, 240)
 
     protected fun skeletonBlock(heightDp: Int, radiusDp: Int = 12): View {
-        return View(this).apply {
-            background = rounded(Color.TRANSPARENT, skeleton, dp(radiusDp).toFloat())
+        return ShimmerView(this).apply {
+            background = rounded(Color.TRANSPARENT, Color.TRANSPARENT, dp(radiusDp).toFloat())
+            clipToOutline = true
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setRoundRect(0, 0, view.width, view.height, dp(radiusDp).toFloat())
+                }
+            }
             layoutParams = LinearLayout.LayoutParams(mp(), dp(heightDp)).apply {
                 bottomMargin = dp(10)
             }
-            alpha = 0.85f
-            // Soft pulse
-            animate().alpha(0.45f).setDuration(700).withEndAction {
-                animate().alpha(0.9f).setDuration(700).withEndAction {
-                    // stop after one cycle — enough for perceived life without infinite cost
-                }.start()
-            }.start()
         }
     }
 
@@ -1046,12 +1334,10 @@ abstract class BaseActivity : AppCompatActivity() {
             background = rounded(line, Color.WHITE, dp(14).toFloat())
             elevation = dp(1).toFloat()
         }
-        card.addView(View(this).apply {
-            background = rounded(Color.TRANSPARENT, skeleton, dp(8).toFloat())
-        }, LinearLayout.LayoutParams(mp(), dp(16)).apply { bottomMargin = dp(10) })
-        card.addView(View(this).apply {
-            background = rounded(Color.TRANSPARENT, skeletonSoft, dp(6).toFloat())
-        }, LinearLayout.LayoutParams((resources.displayMetrics.widthPixels * 0.45f).toInt(), dp(12)))
+        card.addView(skeletonBlock(16, 8))
+        card.addView(skeletonBlock(12, 6).apply {
+            layoutParams = LinearLayout.LayoutParams((resources.displayMetrics.widthPixels * 0.45f).toInt(), dp(12))
+        })
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(card, LinearLayout.LayoutParams(mp(), wc()).apply { bottomMargin = dp(10) })
@@ -1069,12 +1355,12 @@ abstract class BaseActivity : AppCompatActivity() {
                     setPadding(dp(14), dp(14), dp(14), dp(14))
                     background = rounded(line, Color.WHITE, dp(14).toFloat())
                 }
-                box.addView(View(this).apply {
-                    background = rounded(Color.TRANSPARENT, skeleton, dp(6).toFloat())
-                }, LinearLayout.LayoutParams(dp(48), dp(20)).apply { bottomMargin = dp(8) })
-                box.addView(View(this).apply {
-                    background = rounded(Color.TRANSPARENT, skeletonSoft, dp(4).toFloat())
-                }, LinearLayout.LayoutParams(dp(72), dp(12)))
+                box.addView(skeletonBlock(20, 6).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(48), dp(20)).apply { bottomMargin = dp(8) }
+                })
+                box.addView(skeletonBlock(12, 4).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(72), dp(12))
+                })
                 val lp = LinearLayout.LayoutParams(0, wc(), 1f).apply {
                     leftMargin = if (i == 0) 0 else dp(5)
                     rightMargin = if (i == 0) dp(5) else 0
@@ -1094,16 +1380,90 @@ abstract class BaseActivity : AppCompatActivity() {
         return col
     }
 
+    enum class ChipStyle { APPROVED, PENDING, REJECTED, PAID, IN_PROGRESS, CANCELLED, INFO }
+
+    protected fun statusChip(label: String, style: ChipStyle): TextView {
+        val (fill, textCol) = when (style) {
+            ChipStyle.APPROVED -> Color.rgb(209, 250, 229) to Color.rgb(6, 95, 70)
+            ChipStyle.PENDING -> Color.rgb(254, 243, 199) to Color.rgb(146, 64, 14)
+            ChipStyle.REJECTED -> Color.rgb(254, 226, 226) to Color.rgb(153, 27, 27)
+            ChipStyle.PAID -> Color.rgb(209, 250, 229) to Color.rgb(6, 95, 70)
+            ChipStyle.IN_PROGRESS -> Color.rgb(219, 234, 254) to Color.rgb(30, 64, 175)
+            ChipStyle.CANCELLED -> Color.rgb(243, 244, 246) to Color.rgb(107, 114, 128)
+            ChipStyle.INFO -> softGreen to brand
+        }
+        return text(label, 12f, textCol, Typeface.BOLD).apply {
+            background = rounded(Color.TRANSPARENT, fill, dp(12).toFloat())
+            setPadding(dp(10), dp(5), dp(10), dp(5))
+        }
+    }
+
+    protected fun gradientHeroCard(title: String, subtitle: String, chipLabel: String? = null): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(20), dp(20), dp(20), dp(20))
+            background = gradient(backgroundStrong, brandDark, dp(20).toFloat())
+            elevation = dp(6).toFloat()
+            if (chipLabel != null) {
+                addView(TextView(this@BaseActivity).apply {
+                    text = chipLabel
+                    textSize = 10f
+                    typeface = Typeface.DEFAULT_BOLD
+                    setTextColor(Color.WHITE)
+                    background = rounded(Color.WHITE, Color.TRANSPARENT, dp(8).toFloat())
+                    setPadding(dp(8), dp(3), dp(8), dp(3))
+                }, LinearLayout.LayoutParams(wc(), wc()).apply { bottomMargin = dp(10) })
+            }
+            addView(text(title, 22f, Color.WHITE, Typeface.BOLD))
+            addView(text(subtitle, 13f, Color.argb(200, 255, 255, 255)).apply {
+                setPadding(0, dp(6), 0, 0)
+            })
+        }
+    }
+
+    protected fun infoCard(iconRes: Int, title: String, body: String, tint: Int = brand): View {
+        val cardView = card(accentBorder = true)
+        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        top.addView(iconBubble(iconRes, tint, softGreen, 40))
+        val copy = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), 0, 0, 0)
+        }
+        copy.addView(text(title, 16f, ink, Typeface.BOLD))
+        copy.addView(text(body, 13f, muted).apply { setPadding(0, dp(2), 0, 0) })
+        top.addView(copy, LinearLayout.LayoutParams(0, wc(), 1f))
+        cardView.addView(top)
+        return marginBottom(cardView)
+    }
+
     protected fun emptyState(
         title: String,
         detail: String,
         ctaLabel: String? = null,
         onCta: (() -> Unit)? = null
     ): View {
+        return emptyState(title, detail, R.drawable.ic_box, ctaLabel, onCta)
+    }
+
+    protected fun emptyState(
+        title: String,
+        detail: String,
+        iconRes: Int,
+        ctaLabel: String? = null,
+        onCta: (() -> Unit)? = null
+    ): View {
         val cardView = card()
-        cardView.addView(text(title, 17f, ink, Typeface.BOLD))
+        cardView.gravity = Gravity.CENTER_HORIZONTAL
+        cardView.addView(iconBubble(iconRes, brand, softGreen, 56).apply {
+            (layoutParams as? LinearLayout.LayoutParams)?.gravity = Gravity.CENTER_HORIZONTAL
+        })
+        cardView.addView(text(title, 17f, ink, Typeface.BOLD).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(10), 0, 0)
+        })
         cardView.addView(text(detail, 14f, muted).apply {
-            setPadding(0, dp(8), 0, 0)
+            gravity = Gravity.CENTER
+            setPadding(0, dp(6), 0, 0)
             setLineSpacing(0f, 1.2f)
         })
         if (ctaLabel != null && onCta != null) {
@@ -1125,10 +1485,20 @@ abstract class BaseActivity : AppCompatActivity() {
         altLabel: String? = null,
         onAlt: (() -> Unit)? = null
     ): View {
-        val cardView = card()
-        cardView.addView(text("Something went wrong", 17f, ink, Typeface.BOLD))
-        cardView.addView(text(message, 14f, muted).apply {
-            setPadding(0, dp(8), 0, 0)
+        val cardView = card().apply {
+            background = rounded(Color.rgb(248, 180, 180), Color.rgb(253, 242, 242), dp(16).toFloat())
+        }
+        cardView.gravity = Gravity.CENTER_HORIZONTAL
+        cardView.addView(iconBubble(R.drawable.ic_shield, danger, Color.rgb(253, 242, 242), 56).apply {
+            (layoutParams as? LinearLayout.LayoutParams)?.gravity = Gravity.CENTER_HORIZONTAL
+        })
+        cardView.addView(text("Something went wrong", 17f, Color.rgb(153, 27, 27), Typeface.BOLD).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(10), 0, 0)
+        })
+        cardView.addView(text(message, 14f, Color.rgb(185, 28, 28)).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, dp(6), 0, 0)
             setLineSpacing(0f, 1.2f)
         })
         val actions = LinearLayout(this).apply {
@@ -1257,8 +1627,10 @@ abstract class BaseActivity : AppCompatActivity() {
     protected fun View.pressable(): View {
         setOnTouchListener { v, event ->
             when (event.action) {
-                MotionEvent.ACTION_DOWN ->
+                MotionEvent.ACTION_DOWN -> {
                     v.animate().scaleX(0.96f).scaleY(0.96f).setDuration(90).start()
+                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
                     v.animate().scaleX(1f).scaleY(1f).setDuration(140)
                         .setInterpolator(OvershootInterpolator()).start()
@@ -1266,6 +1638,14 @@ abstract class BaseActivity : AppCompatActivity() {
             false
         }
         return this
+    }
+
+    protected fun EditText.setErrorState(hasError: Boolean) {
+        background = if (hasError) {
+            rounded(danger, page, dp(12).toFloat())
+        } else {
+            rounded(line, page, dp(12).toFloat())
+        }
     }
 
     protected fun rounded(stroke: Int, fill: Int, radius: Float): GradientDrawable {
@@ -1291,5 +1671,9 @@ abstract class BaseActivity : AppCompatActivity() {
         const val PASSWORD = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         const val TEXT = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
         const val PHONE = InputType.TYPE_CLASS_PHONE
+    }
+
+    companion object {
+        private val imageCache = LruCache<String, android.graphics.Bitmap>(32)
     }
 }

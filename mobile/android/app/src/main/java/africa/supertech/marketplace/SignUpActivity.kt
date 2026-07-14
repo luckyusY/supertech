@@ -21,8 +21,9 @@ class SignUpActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         val content = scaffold("Create account", withBack = true, withFab = false)
 
-        content.block(text("Join SuperTech", 27f, ink, Typeface.BOLD), 4)
-        content.block(text("Create a free account to order, track deliveries and request products.", 14f, muted), 18)
+        val hero = gradientHeroCard("Join SuperTech", "Create your free account in seconds", "Free · No credit card")
+        content.block(hero, 0)
+        content.block(text("Create a free account to order, track deliveries and request products.", 14f, muted), 12)
 
         val form = card()
         form.block(fieldLabel("Full name"), 0)
