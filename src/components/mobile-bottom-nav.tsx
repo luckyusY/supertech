@@ -150,17 +150,23 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-[var(--gold)]/35 bg-[var(--background-strong)] text-white shadow-[0_-4px_18px_rgba(0,0,0,0.35)] sm:hidden">
-        <div className="grid grid-cols-6 pb-safe text-[10px] font-semibold">
+      <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-[var(--line)] bg-[var(--surface)]/96 px-2 pb-safe shadow-[var(--elevation-2)] backdrop-blur sm:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-6 py-1.5">
           <Link
             href="/"
-            className={cn(
-              "grid place-items-center gap-0.5 py-1.5",
-              isHome ? "text-[var(--gold)]" : "text-white/80",
-            )}
+            className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
           >
-            <Home size={22} />
-            Home
+            <span
+              className={cn(
+                "relative flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] transition-colors",
+                isHome ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
+              )}
+            >
+              <Home className="h-5 w-5" />
+            </span>
+            <span className={cn("truncate text-[10px] font-semibold", isHome ? "text-[var(--accent)]" : "text-[var(--muted)]")}>
+              Home
+            </span>
           </Link>
 
           <button
@@ -169,68 +175,94 @@ export function MobileBottomNav() {
               setOpen(true);
               setActiveDepartment(null);
             }}
-            className={cn(
-              "grid place-items-center gap-0.5 border-t-4 py-1",
-              open
-                ? "border-[var(--gold)] text-[var(--gold)]"
-                : "border-transparent text-white/80",
-            )}
+            className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
             aria-expanded={open}
             aria-label="Browse categories"
           >
-            <Menu size={25} />
-            Browse
+            <span
+              className={cn(
+                "relative flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] transition-colors",
+                open ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
+              )}
+            >
+              <Menu className="h-5 w-5" />
+            </span>
+            <span className={cn("truncate text-[10px] font-semibold", open ? "text-[var(--accent)]" : "text-[var(--muted)]")}>
+              Browse
+            </span>
           </button>
 
           <Link
             href="/request-product"
-            className={cn(
-              "grid place-items-center gap-0.5 py-1.5",
-              isRequest ? "text-[var(--gold)]" : "text-white/80",
-            )}
+            className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
           >
-            <PackageSearch size={22} />
-            Request
+            <span
+              className={cn(
+                "relative flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] transition-colors",
+                isRequest ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
+              )}
+            >
+              <PackageSearch className="h-5 w-5" />
+            </span>
+            <span className={cn("truncate text-[10px] font-semibold", isRequest ? "text-[var(--accent)]" : "text-[var(--muted)]")}>
+              Request
+            </span>
           </Link>
 
           <Link
             href="/vendors"
-            className={cn(
-              "grid place-items-center gap-0.5 py-1.5",
-              isVendors ? "text-[var(--gold)]" : "text-white/80",
-            )}
+            className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
           >
-            <Store size={22} />
-            Stores
+            <span
+              className={cn(
+                "relative flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] transition-colors",
+                isVendors ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
+              )}
+            >
+              <Store className="h-5 w-5" />
+            </span>
+            <span className={cn("truncate text-[10px] font-semibold", isVendors ? "text-[var(--accent)]" : "text-[var(--muted)]")}>
+              Stores
+            </span>
           </Link>
 
           <Link
             href="/account"
-            className={cn(
-              "grid place-items-center gap-0.5 py-1.5",
-              isAccount ? "text-[var(--gold)]" : "text-white/80",
-            )}
+            className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
           >
-            <User size={22} />
-            Account
+            <span
+              className={cn(
+                "relative flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] transition-colors",
+                isAccount ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
+              )}
+            >
+              <User className="h-5 w-5" />
+            </span>
+            <span className={cn("truncate text-[10px] font-semibold", isAccount ? "text-[var(--accent)]" : "text-[var(--muted)]")}>
+              Account
+            </span>
           </Link>
 
           <Link
             href="/cart"
-            className={cn(
-              "relative grid place-items-center gap-0.5 py-1.5",
-              isCart ? "text-[var(--gold)]" : "text-white/80",
-            )}
+            className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"
           >
-            <span className="relative">
-              <ShoppingCart size={24} />
+            <span
+              className={cn(
+                "relative flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] transition-colors",
+                isCart ? "bg-[var(--accent-soft)] text-[var(--accent)]" : "text-[var(--muted)]"
+              )}
+            >
+              <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 ? (
-                <span className="absolute -right-2 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--accent)] px-0.5 text-[9px] font-black text-white">
+                <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--danger)] px-1 text-[9px] font-bold text-white">
                   {itemCount > 9 ? "9+" : itemCount}
                 </span>
               ) : null}
             </span>
-            Cart
+            <span className={cn("truncate text-[10px] font-semibold", isCart ? "text-[var(--accent)]" : "text-[var(--muted)]")}>
+              Cart
+            </span>
           </Link>
         </div>
       </div>
