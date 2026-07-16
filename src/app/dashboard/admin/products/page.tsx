@@ -38,24 +38,28 @@ export default async function ManageProductsPage() {
   const activeSeeds = seedProducts.filter((p) => !hiddenSlugs.has(p.slug)).length;
   const disabledSeeds = seedProducts.length - activeSeeds;
 
-  const submissionRows: AdminProductRow[] = submissions.map((sub) => ({
-    id: sub.id,
-    slug: sub.slug,
-    name: sub.name,
-    vendorLabel: sub.vendorName,
-    category: sub.category,
-    price: sub.price,
-    heroImage: sub.heroImage,
-    status: sub.status,
-    statusLabel: STATUS_LABELS[sub.status] ?? sub.status,
-    dateLabel: new Date(sub.createdAt).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-    kind: "submission",
-    submissionId: sub.submissionId,
-  }));
+  const submissionRows: AdminProductRow[] = submissions.map((sub) => {
+    const isDisabled = hiddenSlugs.has(sub.slug);
+    return {
+      id: sub.id,
+      slug: sub.slug,
+      name: sub.name,
+      vendorLabel: sub.vendorName,
+      category: sub.category,
+      price: sub.price,
+      heroImage: sub.heroImage,
+      status: isDisabled ? "disabled" : sub.status,
+      statusLabel: isDisabled ? STATUS_LABELS.disabled : (STATUS_LABELS[sub.status] ?? sub.status),
+      dateLabel: new Date(sub.createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      kind: "submission",
+      submissionId: sub.submissionId,
+      disabled: isDisabled,
+    };
+  });
 
   const seedRows: AdminProductRow[] = seedProducts.map((product) => {
     const isDisabled = hiddenSlugs.has(product.slug);

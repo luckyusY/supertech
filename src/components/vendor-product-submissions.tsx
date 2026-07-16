@@ -53,7 +53,7 @@ const STATUS_STYLES: Record<
     pill: "bg-[var(--success-soft)] text-[var(--success)]",
   },
   rejected: {
-    label: "Rejected",
+    label: "Action Required",
     pill: "bg-[var(--danger-soft)] text-[var(--danger)]",
   },
 };

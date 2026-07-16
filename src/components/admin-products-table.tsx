@@ -174,7 +174,30 @@ export function AdminProductsTable({
                   <div className="flex flex-wrap items-center justify-end gap-1.5">
                     {row.kind === "submission" ? (
                       <>
-                        {row.status === "approved" ? <WriteBlogLink slug={row.slug} /> : null}
+                        {row.status === "approved" || row.status === "disabled" ? (
+                          <>
+                            {!row.disabled ? <WriteBlogLink slug={row.slug} /> : null}
+                            <AdminToggleButton
+                              disabled={Boolean(row.disabled)}
+                              onToggle={toggleProductAction.bind(
+                                null,
+                                row.slug,
+                                Boolean(row.disabled),
+                              )}
+                            />
+                            <button
+                              disabled={isPending}
+                              onClick={() => {
+                                if (confirm("Send this back to the vendor for updates?")) {
+                                  startTransition(async () => { await rejectProductAction(row.submissionId!); });
+                                }
+                              }}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--warning-soft)] bg-[var(--warning-soft)]/20 px-3 py-1.5 text-xs font-medium text-orange-600 hover:bg-[var(--warning-soft)] transition-colors disabled:opacity-50"
+                            >
+                              Request Update
+                            </button>
+                          </>
+                        ) : null}
                         {row.status === "pending_review" ? (
                           <>
                             <button
@@ -187,9 +210,9 @@ export function AdminProductsTable({
                             <button
                               disabled={isPending}
                               onClick={() => startTransition(async () => { await rejectProductAction(row.submissionId!); })}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-100 transition-colors disabled:opacity-50"
                             >
-                              Reject
+                              Request Update
                             </button>
                           </>
                         ) : null}
