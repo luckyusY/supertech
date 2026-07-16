@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Heart, MessageCircle, ShoppingBag, Star } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import { toast } from "sonner";
 import { ProductCardGallery } from "@/components/product-card-gallery";
 import { useCart } from "@/components/cart-provider";
@@ -41,7 +41,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
   const vendor = getVendorBySlug(product.vendorSlug);
   const { addItem } = useCart();
-  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlisted, setWishlisted] = useState(() => readWishlist().includes(product.slug));
   const mode = getMarketplaceMode(product.category);
   const bigTicket = isBigTicketMode(mode);
   const plan = buildBuyBoxPlan({
@@ -55,10 +55,6 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
     const list = [product.heroImage, ...(product.gallery ?? [])];
     return list;
   }, [product.gallery, product.heroImage]);
-
-  useEffect(() => {
-    setWishlisted(readWishlist().includes(product.slug));
-  }, [product.slug]);
 
   function handleQuickAdd(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();

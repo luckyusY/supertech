@@ -25,7 +25,6 @@ import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { ProductCard } from "@/components/product-card";
 import { TrustStrip } from "@/components/trust-strip";
 import {
-  VisualCategoryGrid,
   VisualCategoryRail,
 } from "@/components/visual-category-grid";
 import {
@@ -390,7 +389,6 @@ export default async function Home() {
       {/* Adorama-style full-bleed hero + brand orange category product strip */}
       <HeroSlider slides={heroSlides} />
       <VisualCategoryRail items={visualCategories} />
-      <VisualCategoryGrid items={visualCategories} />
 
       {/* ——— Merchandising ——— */}
       <section className="page-shell space-y-5 pb-8 sm:space-y-6 sm:pb-12">
@@ -426,7 +424,7 @@ export default async function Home() {
             title="Home control"
             href="/catalog?category=Home+Control"
             headerClass="shelf-header-home"
-            theme="dark"
+            theme="light"
             products={homeDeals}
           />
         ) : null}
@@ -439,7 +437,7 @@ export default async function Home() {
               title="Phones & wearables"
               href="/catalog?category=Mobile+Essentials"
               headerClass="shelf-header-phones"
-              theme="dark"
+              theme="light"
               products={phoneDeals}
             />
           </>
@@ -453,7 +451,7 @@ export default async function Home() {
               title="Beauty & personal care"
               href="/catalog?category=Beauty+%26+Personal+Care"
               headerClass="shelf-header-beauty"
-              theme="dark"
+              theme="light"
               products={beautyDeals}
             />
           </>
@@ -465,7 +463,7 @@ export default async function Home() {
             title="Health & wellness"
             href="/catalog?category=Health+%26+Wellness"
             headerClass="shelf-header-wellness"
-            theme="dark"
+            theme="light"
             products={wellnessDeals}
           />
         ) : null}
@@ -476,7 +474,7 @@ export default async function Home() {
             title="Creator & gaming"
             href="/catalog?category=Creator+Gear"
             headerClass="shelf-header-creator"
-            theme="dark"
+            theme="light"
             products={creatorDeals}
           />
         ) : null}
@@ -489,7 +487,7 @@ export default async function Home() {
               title="Cars for sale & rent"
               href="/catalog?category=Cars+for+Sale"
               headerClass="shelf-header-cars"
-              theme="dark"
+              theme="light"
               products={carDeals}
             />
           </>
@@ -501,7 +499,7 @@ export default async function Home() {
             title="Property listings"
             href="/catalog?category=Apartments+for+Sale"
             headerClass="shelf-header-property"
-            theme="dark"
+            theme="light"
             products={propertyDeals}
           />
         ) : null}

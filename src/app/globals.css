@@ -3,24 +3,24 @@
 :root {
   /* ——— Neutrals ——— */
   --neutral-0: #ffffff;
-  --neutral-50: #f7f6f3;
-  --neutral-100: #f0efe9;
-  --neutral-200: #e3e1db;
-  --neutral-300: #c9c7c0;
+  --neutral-50: #f6f7f8;
+  --neutral-100: #eef0f2;
+  --neutral-200: #dfe2e6;
+  --neutral-300: #c7cbd1;
   --neutral-400: #9b9a96;
   --neutral-500: #66666d;
   --neutral-700: #3a3a3e;
   --neutral-900: #18181a;
 
   /* ——— Core surfaces ——— */
-  --background: #f5f4f0;
+  --background: #f4f5f6;
   --background-strong: #1e1e20;
   --foreground: #18181a;
   --surface: #ffffff;
   --surface-elevated: #ffffff;
   --surface-strong: #1e1e20;
   --muted: #66666d;
-  --line: #e3e1db;
+  --line: #dfe2e6;
 
   /* ——— Brand ——— */
   --accent: #e8770a;          /* slightly darker for WCAG text-on-orange */
@@ -95,7 +95,7 @@
   --announcement-bg: #1e1e20;
 
   /* Ambient canvas */
-  --canvas-base: #f5f4f0;
+  --canvas-base: #f4f5f6;
   --canvas-glow-brand: rgba(232, 119, 10, 0.55);
   --canvas-glow-cool: rgba(28, 84, 104, 0.45);
   --canvas-vignette: rgba(24, 24, 26, 0.55);
@@ -280,10 +280,7 @@ a {
 /* Homepage band: restrained brand energy (hero zone only preferred).
    Full-page wash reduced so product content stays primary. */
 .marketplace-campaign-bg {
-  background:
-    radial-gradient(circle at 12% 0%, rgba(245, 131, 12, 0.16), transparent 22rem),
-    radial-gradient(circle at 88% 8%, rgba(255, 210, 130, 0.10), transparent 18rem),
-    linear-gradient(180deg, #f7f0e6 0%, var(--background) 28rem, var(--background) 100%);
+  background: var(--background);
 }
 
 .marketplace-campaign-bg .soft-card,
@@ -474,11 +471,6 @@ img.loaded[data-placeholder="blur"] {
 /* Better readability */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
-}
-
-/* Performance optimizations */
-img {
-  loading: lazy;
 }
 
 /* Swiper custom styles (campaign / full-bleed) */
@@ -754,15 +746,27 @@ a {
 }
 
 /* Shelf header utility classes */
-.shelf-header-flash    { background: var(--shelf-flash);    color: white; }
-.shelf-header-topsell  { background: var(--shelf-topsell);  color: white; }
-.shelf-header-home     { background: var(--shelf-home);     color: white; }
-.shelf-header-phones   { background: var(--shelf-phones);   color: white; }
-.shelf-header-beauty   { background: var(--shelf-beauty);   color: white; }
-.shelf-header-wellness { background: var(--shelf-wellness); color: white; }
-.shelf-header-creator  { background: var(--shelf-creator);  color: white; }
-.shelf-header-cars     { background: var(--shelf-cars);     color: white; }
-.shelf-header-property { background: var(--shelf-property); color: white; }
+.shelf-header-flash { background: var(--shelf-flash); color: white; }
+.shelf-header-topsell { background: var(--shelf-topsell); color: white; }
+.shelf-header-home,
+.shelf-header-phones,
+.shelf-header-beauty,
+.shelf-header-wellness,
+.shelf-header-creator,
+.shelf-header-cars,
+.shelf-header-property {
+  border-top: 3px solid var(--accent);
+  background: white;
+  color: var(--foreground);
+}
+
+.shelf-header-home { border-top-color: #21836f; }
+.shelf-header-phones { border-top-color: #2d65c8; }
+.shelf-header-beauty { border-top-color: #b64c78; }
+.shelf-header-wellness { border-top-color: #43875f; }
+.shelf-header-creator { border-top-color: #6648b8; }
+.shelf-header-cars { border-top-color: #294f91; }
+.shelf-header-property { border-top-color: #257142; }
 
 /* Screen-reader only (Tailwind may provide .sr-only; keep fallback) */
 .sr-only {
