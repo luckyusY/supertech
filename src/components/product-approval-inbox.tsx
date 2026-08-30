@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle, Package, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle, Package, XCircle } from "lucide-react";
+import {
+  NETWORK_FAILURE_MESSAGE,
+  describeApiFailure,
+} from "@/lib/api-error-message";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 
 type Submission = {
@@ -43,19 +47,30 @@ export function ProductApprovalInbox() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [state, setState] = useState<"loading" | "error" | "ready">("loading");
   const [processing, setProcessing] = useState<Record<string, boolean>>({});
+  const [loadError, setLoadError] = useState<string | null>(null);
+  // Kept separate from `loadError`: a failed approve must not replace the
+  // whole inbox with a "couldn't load" screen, which hid the list and made a
+  // recoverable action failure look like a total outage.
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function loadSubmissions() {
     setState("loading");
+    setLoadError(null);
     try {
       const response = await fetch(
         "/api/product-submissions?status=pending_review&limit=8",
         { cache: "no-store" },
       );
-      if (!response.ok) throw new Error("Failed");
+      if (!response.ok) {
+        setLoadError(await describeApiFailure(response, "load pending submissions"));
+        setState("error");
+        return;
+      }
       const payload = (await response.json()) as { submissions: Submission[] };
       setSubmissions(payload.submissions);
       setState("ready");
     } catch {
+      setLoadError(NETWORK_FAILURE_MESSAGE);
       setState("error");
     }
   }
@@ -66,20 +81,49 @@ export function ProductApprovalInbox() {
 
   async function updateStatus(id: string, status: "approved" | "rejected") {
     setProcessing((prev) => ({ ...prev, [id]: true }));
+    setActionError(null);
     try {
       const response = await fetch(`/api/product-submissions/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-      if (!response.ok) throw new Error("Failed");
+      if (!response.ok) {
+        setActionError(
+          await describeApiFailure(
+            response,
+            status === "approved" ? "approve this product" : "reject this product",
+          ),
+        );
+        return;
+      }
       await loadSubmissions();
     } catch {
-      setState("error");
+      setActionError(NETWORK_FAILURE_MESSAGE);
     } finally {
       setProcessing((prev) => ({ ...prev, [id]: false }));
     }
   }
+
+  const actionErrorBanner = actionError ? (
+    <div
+      role="alert"
+      className="flex items-start gap-3 rounded-[1.4rem] border border-[rgba(217,45,32,0.3)] bg-[rgba(217,45,32,0.06)] p-4"
+    >
+      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--red)]" />
+      <div className="min-w-0">
+        <p className="font-semibold text-[var(--red)]">Review failed</p>
+        <p className="mt-1 break-words text-sm text-[var(--foreground)]">{actionError}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => setActionError(null)}
+        className="ml-auto shrink-0 text-sm font-semibold text-[var(--muted)] underline underline-offset-2"
+      >
+        Dismiss
+      </button>
+    </div>
+  ) : null;
 
   if (state === "loading") {
     return (
@@ -92,7 +136,7 @@ export function ProductApprovalInbox() {
   if (state === "error") {
     return (
       <div className="rounded-[1.4rem] border border-[var(--line)] bg-white p-5 text-sm text-[var(--muted)]">
-        Unable to load submissions right now.{" "}
+        {loadError ?? "Unable to load submissions right now."}{" "}
         <button
           type="button"
           onClick={() => void loadSubmissions()}
@@ -106,16 +150,20 @@ export function ProductApprovalInbox() {
 
   if (submissions.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-[1.4rem] border border-[var(--line)] bg-white p-8 text-center">
-        <CheckCircle className="h-8 w-8 text-[var(--teal)] opacity-60" />
-        <p className="text-sm font-semibold">All caught up!</p>
-        <p className="text-xs text-[var(--muted)]">No pending product submissions.</p>
+      <div className="space-y-5">
+        {actionErrorBanner}
+        <div className="flex flex-col items-center gap-2 rounded-[1.4rem] border border-[var(--line)] bg-white p-8 text-center">
+          <CheckCircle className="h-8 w-8 text-[var(--teal)] opacity-60" />
+          <p className="text-sm font-semibold">All caught up!</p>
+          <p className="text-xs text-[var(--muted)]">No pending product submissions.</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
+      {actionErrorBanner}
       {submissions.map((submission) => {
         const busy = !!processing[submission.id];
         return (
