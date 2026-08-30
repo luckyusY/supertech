@@ -27,8 +27,8 @@ export default async function AppTrackPage({ searchParams }: AppTrackPageProps) 
   return (
     <>
       <AppHeader eyebrow="Order tracking" title="Track" subtitle="No account needed" />
-      <main className="mx-auto max-w-md space-y-4 px-4 py-4">
-        <form action="/app/track" className="rounded-lg bg-white p-4 shadow-sm">
+      <main className="mx-auto max-w-md space-y-3 px-3 py-3 sm:px-4 sm:py-4">
+        <form action="/app/track" className="rounded-[var(--radius-lg)] border border-[var(--line)] bg-white p-4 shadow-[var(--elevation-1)]">
           <div className="space-y-3">
             <label className="block">
               <span className="text-sm font-black">Request ID</span>
@@ -36,7 +36,7 @@ export default async function AppTrackPage({ searchParams }: AppTrackPageProps) 
                 name="requestId"
                 defaultValue={normalizedRequestId}
                 placeholder="ORQ-20260411-ABCD"
-                className="mt-2 h-12 w-full rounded-lg border border-black/10 px-4 text-sm font-semibold uppercase outline-none"
+                className="mt-2 h-12 w-full rounded-[var(--radius-sm)] border border-[var(--line)] px-4 text-sm font-semibold uppercase outline-none focus:border-[var(--accent)]"
               />
             </label>
             <label className="block">
@@ -46,13 +46,13 @@ export default async function AppTrackPage({ searchParams }: AppTrackPageProps) 
                 type="email"
                 defaultValue={normalizedEmail}
                 placeholder="you@example.com"
-                className="mt-2 h-12 w-full rounded-lg border border-black/10 px-4 text-sm font-semibold outline-none"
+                className="mt-2 h-12 w-full rounded-[var(--radius-sm)] border border-[var(--line)] px-4 text-sm font-semibold outline-none focus:border-[var(--accent)]"
               />
             </label>
           </div>
           <button
             type="submit"
-            className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#102019] text-sm font-black text-white"
+            className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--foreground)] text-sm font-bold text-white"
           >
             <Search className="h-4 w-4" />
             Track order
@@ -66,7 +66,7 @@ export default async function AppTrackPage({ searchParams }: AppTrackPageProps) 
         ) : null}
 
         {order ? (
-          <section className="rounded-lg bg-white p-4 shadow-sm">
+          <section className="rounded-[var(--radius-lg)] border border-[var(--line)] bg-white p-4 shadow-[var(--elevation-1)]">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-[#66736b]">
@@ -87,7 +87,7 @@ export default async function AppTrackPage({ searchParams }: AppTrackPageProps) 
             </div>
           </section>
         ) : (
-          <section className="rounded-lg bg-[#102019] p-4 text-white">
+          <section className="rounded-[var(--radius-lg)] bg-[var(--background-strong)] p-4 text-white">
             <h2 className="text-xl font-black">No account needed</h2>
             <p className="mt-2 text-sm leading-6 text-white/68">
               Use your request ID and email from checkout to follow the latest status.
@@ -104,7 +104,7 @@ export default async function AppTrackPage({ searchParams }: AppTrackPageProps) 
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-[#f3f6f2] p-3">
+    <div className="rounded-[var(--radius-md)] bg-[var(--neutral-50)] p-3">
       <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#66736b]">
         {label}
       </p>

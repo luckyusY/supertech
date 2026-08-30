@@ -132,11 +132,11 @@ export function OrderRequestForm({
 
   if (success) {
     return (
-      <div className="soft-card p-6 sm:p-8">
+    <div className="soft-card p-4 sm:p-8">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Request submitted
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
+      <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
           Your order request is in our queue.
         </h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -187,7 +187,7 @@ export function OrderRequestForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="soft-card p-6 sm:p-8">
+    <form onSubmit={handleSubmit} className="soft-card p-4 sm:p-8">
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-5">
           <div>

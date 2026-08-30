@@ -54,7 +54,7 @@ export default async function VendorPage({ params }: VendorPageProps) {
   const vendorProducts = await getPublicVendorProducts(vendor.slug);
 
   return (
-    <div className="page-shell py-8">
+    <div className="page-shell py-5 sm:py-8">
       <section className="dark-card relative overflow-hidden p-6 sm:p-8 lg:p-10">
         {vendor.coverImage ? (
           <Image
@@ -74,13 +74,13 @@ export default async function VendorPage({ params }: VendorPageProps) {
             </p>
             <div className="mt-4 flex items-center gap-4">
               <div
-                className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] text-lg font-semibold text-white"
+                className="flex h-14 w-14 items-center justify-center rounded-[var(--radius-lg)] text-lg font-semibold text-white sm:h-16 sm:w-16"
                 style={{ backgroundColor: vendor.accent }}
               >
                 {vendor.logoMark}
               </div>
               <div>
-                <h1 className="text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+                <h1 className="text-3xl font-bold sm:text-4xl">
                   {vendor.name}
                 </h1>
                 <p className="mt-2 max-w-2xl text-base leading-7 text-[rgba(255,255,255,0.76)]">

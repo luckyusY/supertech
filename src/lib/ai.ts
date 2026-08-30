@@ -30,8 +30,20 @@ export class AiConfigurationError extends Error {
 }
 
 function readEnvValue(name: string) {
-  const value = process.env[name]?.trim();
-  if (!value || value === '""' || value === "''") return "";
+  let value = process.env[name]?.trim();
+  if (!value) return "";
+
+  // Tolerate values that arrive still wrapped in quotes (e.g. a `.env` file
+  // copied from `vercel env pull`). A quoted key would otherwise be sent as
+  // `Bearer "sk-..."` and rejected with a 401.
+  if (
+    value.length >= 2 &&
+    value[0] === value[value.length - 1] &&
+    (value[0] === '"' || value[0] === "'")
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+
   return value;
 }
 

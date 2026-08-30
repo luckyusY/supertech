@@ -59,7 +59,7 @@ export function ProductBuyBox({
             </p>
             <Badge variant="brand">{MODE_LABELS[plan.mode]}</Badge>
           </div>
-          <h1 className="mt-3 text-3xl font-semibold leading-[1.12] tracking-[-0.03em] sm:text-4xl sm:tracking-[-0.05em]">
+      <h1 className="mt-3 text-2xl font-bold leading-[1.15] sm:text-4xl">
             {product.name}
           </h1>
 

@@ -18,15 +18,15 @@ export default async function BlogIndexPage() {
   const blogs = hasMongoConfig() ? await getPublishedBlogs(60).catch(() => []) : [];
 
   return (
-    <div className="marketplace-campaign-bg py-6 sm:py-10">
+    <div className="marketplace-campaign-bg py-4 sm:py-8">
       <div className="page-shell">
         <div className="soft-card overflow-hidden">
-          <div className="border-b border-[var(--line)] bg-[#fff8ef] p-5 sm:p-8">
+        <div className="border-b border-[var(--line)] bg-white p-5 sm:p-8">
             <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
               <Sparkles className="h-4 w-4" />
               SuperTech Blog
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
+          <h1 className="mt-2 text-3xl font-bold text-[var(--foreground)] sm:text-4xl">
               Product stories &amp; buying guides
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)] sm:text-base">
@@ -56,7 +56,7 @@ export default async function BlogIndexPage() {
               <div className="p-4 sm:p-6 sm:pb-0">
                 <Link
                   href={`/blog/${blogs[0].slug}`}
-                  className="group grid overflow-hidden rounded-2xl border border-[var(--line)] bg-white transition-shadow hover:shadow-md md:grid-cols-2"
+              className="group grid overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-white transition-shadow hover:shadow-md md:grid-cols-2"
                 >
                   <div className="relative aspect-[16/10] bg-[#f7f7f7] md:aspect-auto md:min-h-[16rem]">
                     <Image

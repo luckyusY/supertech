@@ -86,7 +86,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
         ) : null}
 
         <div
-          className="group relative h-[300px] w-full min-w-0 shrink-0 touch-pan-y overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-white sm:aspect-square sm:h-auto sm:flex-1 md:cursor-zoom-in"
+        className="group relative h-[17.5rem] w-full min-w-0 shrink-0 touch-pan-y overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-white sm:aspect-square sm:h-auto sm:flex-1 md:cursor-zoom-in"
           onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)}
           onTouchEnd={(event) => swipe(event.changedTouches[0]?.clientX ?? 0)}
           onMouseMove={(event) => {

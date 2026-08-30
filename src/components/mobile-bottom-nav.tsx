@@ -150,8 +150,8 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-[100] border-t border-[var(--line)] bg-[var(--surface)]/96 px-2 pb-safe shadow-[var(--elevation-2)] backdrop-blur sm:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-6 py-1.5">
+      <div className="fixed inset-x-0 bottom-0 z-[100] min-h-[var(--mobile-nav-height)] border-t border-[var(--line)] bg-[var(--surface)]/96 px-1 pb-safe shadow-[var(--elevation-2)] backdrop-blur sm:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-6 py-1">
           <Link
             href="/"
             className="app-tap relative flex min-w-0 flex-col items-center gap-0.5 px-1 py-1"

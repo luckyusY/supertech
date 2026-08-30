@@ -57,12 +57,12 @@ const sections = [
 export default function PrivacyPage() {
   return (
     <div className="bg-[#fff8ef]">
-      <section className="page-shell py-10 sm:py-14">
+    <section className="page-shell py-6 sm:py-12">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
             SuperTech Marketplace
           </p>
-          <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[var(--foreground)] sm:text-5xl">
+        <h1 className="mt-3 text-3xl font-bold text-[var(--foreground)] sm:text-4xl">
             Privacy Policy
           </h1>
           <p className="mt-4 text-sm leading-7 text-[var(--muted)] sm:text-base">

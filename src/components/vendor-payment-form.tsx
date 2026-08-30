@@ -73,10 +73,10 @@ export function VendorPaymentForm({
   }
 
   const inputClass =
-    "w-full rounded-[0.75rem] border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)]/25";
+    "min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)]/25";
 
   return (
-    <section className="soft-card p-6 sm:p-8">
+    <section className="soft-card p-4 sm:p-8">
       <div className="flex items-center gap-3">
         <Wallet className="h-5 w-5 text-[var(--accent)]" />
         <h2 className="text-2xl font-semibold tracking-[-0.04em]">
@@ -143,12 +143,12 @@ export function VendorPaymentForm({
               </p>
             ) : null}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={status === "saving"}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--foreground)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
               >
                 {status === "saved" ? (
                   <>
@@ -169,7 +169,7 @@ export function VendorPaymentForm({
                     setBusinessName(DEFAULT_MOMO_BUSINESS_NAME);
                     setStatus("idle");
                   }}
-                  className="inline-flex items-center justify-center rounded-full border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)]"
+                  className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-sm)] border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)]"
                 >
                   Reset to default
                 </button>

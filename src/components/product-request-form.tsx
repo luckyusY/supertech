@@ -111,11 +111,11 @@ export function ProductRequestForm({ initialCustomer }: ProductRequestFormProps)
 
   if (success) {
     return (
-      <div className="soft-card p-6 sm:p-8">
+    <div className="soft-card p-4 sm:p-8">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Request received
         </p>
-        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em]">
+      <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
           We have your sourcing and shipping request.
         </h2>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -160,7 +160,7 @@ export function ProductRequestForm({ initialCustomer }: ProductRequestFormProps)
   }
 
   return (
-    <form onSubmit={handleSubmit} className="soft-card p-6 sm:p-8">
+    <form onSubmit={handleSubmit} className="soft-card p-4 sm:p-8">
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-5">
           <div>

@@ -55,7 +55,7 @@ export function PasswordRecoveryForm() {
 
   if (success) {
     return (
-      <div className="soft-card p-6 sm:p-8">
+      <div className="soft-card p-4 sm:p-8">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Request received
         </p>
@@ -86,7 +86,7 @@ export function PasswordRecoveryForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="soft-card space-y-5 p-6 sm:p-8">
+      <form onSubmit={handleSubmit} className="soft-card space-y-5 p-4 sm:p-8">
       <div>
         <label className="text-sm font-semibold" htmlFor="recovery-email">
           Account email

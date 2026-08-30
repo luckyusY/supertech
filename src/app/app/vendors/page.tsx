@@ -1,27 +1,59 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, ShieldCheck, Star } from "lucide-react";
+import { ChevronRight, Search, ShieldCheck, Star } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { getPublicVendors } from "@/lib/public-marketplace";
 
 export const dynamic = "force-dynamic";
 
-export default async function AppVendorsPage() {
+type AppVendorsPageProps = {
+  searchParams: Promise<{ query?: string }>;
+};
+
+export default async function AppVendorsPage({ searchParams }: AppVendorsPageProps) {
+  const { query = "" } = await searchParams;
   const vendors = await getPublicVendors();
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredVendors = normalizedQuery
+    ? vendors.filter((vendor) =>
+        [vendor.name, vendor.headline, vendor.location, ...vendor.categories]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : vendors;
 
   return (
     <>
       <AppHeader
         eyebrow="Official stores"
         title="Vendors"
-        subtitle={`${vendors.length} verified sellers`}
+        subtitle={`${filteredVendors.length} verified sellers`}
       />
-      <main className="mx-auto max-w-md space-y-3 px-4 py-4">
-        {vendors.map((vendor) => (
+      <main className="mx-auto max-w-md space-y-3 px-3 py-3 sm:px-4 sm:py-4">
+        <form action="/app/vendors" className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--muted)]" />
+          <input
+            name="query"
+            type="search"
+            defaultValue={query}
+            placeholder="Search verified vendors"
+            className="h-12 w-full rounded-[var(--radius-md)] border border-[var(--line)] bg-white pl-12 pr-4 text-sm font-semibold outline-none focus:border-[var(--accent)]"
+          />
+        </form>
+
+        {filteredVendors.length === 0 ? (
+          <div className="rounded-[var(--radius-lg)] border border-dashed border-[var(--line)] bg-white p-6 text-center">
+            <p className="font-bold">No vendors match this search</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">Try a store name, location, or category.</p>
+          </div>
+        ) : null}
+
+        {filteredVendors.map((vendor) => (
           <Link
             key={vendor.id}
             href={`/vendors/${vendor.slug}`}
-            className="app-tap block overflow-hidden rounded-lg bg-white shadow-sm"
+            className="app-tap block overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-white shadow-[var(--elevation-1)]"
           >
             <div className="relative h-32">
               <Image src={vendor.coverImage} alt={vendor.name} fill className="object-cover" sizes="448px" />

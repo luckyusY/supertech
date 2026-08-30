@@ -505,26 +505,22 @@ export default async function Home() {
         ) : null}
 
         <GsapReveal y={24}>
-          <div className="relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--background-strong)] p-6 text-white sm:p-8">
-            <div
-              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[var(--accent)]/25 blur-3xl"
-              aria-hidden
-            />
-            <div className="relative flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+          <div className="relative overflow-hidden rounded-none border border-black/10 bg-[var(--background-strong)] p-8 text-white sm:p-12 shadow-sm">
+            <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/55">
                   Sell on SuperTech
                 </p>
-                <h2 className="mt-2 max-w-lg text-2xl font-bold tracking-[-0.03em] sm:text-[1.65rem]">
+                <h2 className="mt-2 max-w-lg text-2xl font-bold tracking-[-0.02em] sm:text-[1.75rem]">
                   Reach shoppers who value verified sellers.
                 </h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-white/65">
-                  Apply once, list products, fulfill orders, and get paid the local way.
+                <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">
+                  Apply once, list products, fulfill orders, and get paid securely.
                 </p>
               </div>
               <Link
                 href="/become-vendor"
-                className="inline-flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--accent)] px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-[var(--accent-hover)]"
+                className="inline-flex shrink-0 items-center gap-2 rounded-none bg-[var(--accent)] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[var(--accent-hover)]"
               >
                 Become a vendor
                 <ChevronRight className="h-4 w-4" />

@@ -22,7 +22,7 @@ export function DashboardScrollTable({
   return (
     <HoverScrollRegion
       className={cn(
-        "dashboard-table-scroll overflow-auto rounded-[var(--radius-lg)] border border-[var(--line)] bg-white",
+        "dashboard-table-scroll mobile-scroll-hint overflow-auto rounded-[var(--radius-lg)] border border-[var(--line)] bg-white",
         className,
       )}
       style={style}

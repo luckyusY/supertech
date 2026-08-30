@@ -112,7 +112,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
           <button
             type="button"
             onClick={() => setShowForm((v) => !v)}
-            className="w-full rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--foreground)] hover:text-white sm:w-auto"
+        className="min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--line)] px-4 py-2 text-sm font-semibold hover:bg-[var(--foreground)] hover:text-white sm:w-auto"
           >
             {showForm ? "Cancel" : "Write a review"}
           </button>
@@ -126,7 +126,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-[1.2rem] border border-[var(--line)] bg-white p-4 sm:rounded-[1.5rem] sm:p-6">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-[var(--radius-lg)] border border-[var(--line)] bg-white p-4 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-sm font-semibold" htmlFor="rv-name">Name</label>
@@ -158,7 +158,7 @@ export function ProductReviews({ productSlug }: { productSlug: string }) {
             <textarea id="rv-body" required rows={4} value={body} onChange={(e) => setBody(e.target.value)} className="mt-1 w-full rounded-[0.9rem] border border-[var(--line)] px-3 py-2 text-sm" />
           </div>
           {formError && <p className="text-sm text-[var(--accent)]">{formError}</p>}
-          <button type="submit" disabled={submitting} className="w-full rounded-full bg-[var(--foreground)] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto">
+        <button type="submit" disabled={submitting} className="min-h-11 w-full rounded-[var(--radius-sm)] bg-[var(--foreground)] px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto">
             {submitting ? "Submitting..." : "Submit review"}
           </button>
         </form>

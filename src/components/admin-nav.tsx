@@ -86,7 +86,7 @@ function NavLinks({
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+              "group flex min-h-10 items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-sm font-semibold transition-colors",
               active
                 ? "bg-[var(--accent)] text-white shadow-[0_6px_16px_rgba(246,139,30,0.32)]"
                 : "text-white/65 hover:bg-white/8 hover:text-white",
@@ -119,7 +119,7 @@ function NavLinks({
 
 function UserCard({ name, email }: { name: string; email: string }) {
   return (
-    <div className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3.5 py-3">
+    <div className="shrink-0 rounded-[var(--radius-lg)] border border-white/10 bg-white/5 px-3.5 py-3">
       <p className="truncate text-sm font-semibold">{name}</p>
       <p className="truncate text-xs text-white/55">{email}</p>
       <div className="mt-2 flex items-center justify-between gap-2">
@@ -185,7 +185,7 @@ export function AdminNav({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] text-[var(--foreground)]"
+          className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--line)] text-[var(--foreground)]"
           aria-label="Open admin menu"
         >
           <Menu className="h-5 w-5" />

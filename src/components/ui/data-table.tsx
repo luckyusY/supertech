@@ -33,7 +33,7 @@ export function DataTable({
     >
       <HoverScrollRegion
         className={cn(
-          "dashboard-table-scroll",
+          "dashboard-table-scroll mobile-scroll-hint",
           maxHeight === false ? "overflow-x-auto" : "overflow-auto",
         )}
         style={scrollStyle}

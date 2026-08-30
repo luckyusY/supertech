@@ -146,7 +146,6 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTop"
             android:exported="false" />
-
         <activity
             android:name=".AdminAiStudioActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
@@ -233,6 +232,13 @@
 
         <activity
             android:name=".VendorProfileActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:launchMode="singleTop"
+            android:exported="false" />
+
+        <activity
+            android:name=".ManageProfileActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
             android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTop"

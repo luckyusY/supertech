@@ -14,7 +14,17 @@ try {
     const eqIndex = trimmed.indexOf("=");
     if (eqIndex === -1) continue;
     const key = trimmed.slice(0, eqIndex).trim();
-    const value = trimmed.slice(eqIndex + 1).trim();
+    let value = trimmed.slice(eqIndex + 1).trim();
+    // `vercel env pull` writes quoted values (KEY="value"). Strip a matching
+    // pair of wrapping quotes, otherwise the quotes end up inside the value
+    // and things like `Authorization: Bearer "sk-..."` fail with a 401.
+    if (
+      value.length >= 2 &&
+      value[0] === value[value.length - 1] &&
+      (value[0] === '"' || value[0] === "'")
+    ) {
+      value = value.slice(1, -1);
+    }
     if (!process.env[key]) process.env[key] = value;
   }
   console.log("Loaded .env.local");

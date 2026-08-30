@@ -4,7 +4,7 @@ import { NativeAppBridge } from "@/components/native-app-bridge";
 
 export default function AppShellLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="app-shell min-h-screen bg-[var(--background)] pb-24 text-[var(--foreground)]">
+    <div className="app-shell min-h-screen bg-[var(--background)] pb-[var(--mobile-page-bottom)] text-[var(--foreground)]">
       <NativeAppBridge />
       {children}
       <AppBottomTabs />

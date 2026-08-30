@@ -89,9 +89,9 @@ export default function RequestPage() {
       >
         <ArrowLeft className="h-4 w-4" /> Back to shop
       </Link>
-      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         {/* Info panel */}
-        <aside className="dark-card p-6 sm:p-8">
+        <aside className="dark-card p-5 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
             Product sourcing
           </p>
@@ -135,7 +135,7 @@ export default function RequestPage() {
         </aside>
 
         {/* Form */}
-        <section className="soft-card p-6 sm:p-8">
+        <section className="soft-card p-4 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
             Request a product
           </p>

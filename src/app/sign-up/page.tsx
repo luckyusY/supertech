@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function SignUpPage() {
   return (
-    <div className="page-shell flex min-h-[calc(100vh-80px)] items-center py-8 sm:py-12">
+    <div className="page-shell flex min-h-[calc(100dvh-80px)] items-center py-5 sm:py-10">
       <div className="mx-auto grid w-full max-w-4xl gap-6 xl:grid-cols-[1fr_420px]">
         {/* Brand panel — hidden on mobile */}
         <section className="dark-card hidden flex-col justify-between p-8 xl:flex lg:p-12">
@@ -43,7 +43,7 @@ export default function SignUpPage() {
         </section>
 
         {/* Form panel */}
-        <section className="soft-card mx-auto w-full max-w-md p-6 sm:p-8 xl:max-w-none xl:mx-0">
+        <section className="soft-card mx-auto w-full max-w-md p-4 sm:p-8 xl:mx-0 xl:max-w-none">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Create account</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Start shopping today</h2>
           <p className="mt-2 text-sm text-[var(--muted)]">

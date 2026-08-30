@@ -16,8 +16,8 @@ export default async function BecomeVendorPage() {
 
   if (!session) {
     return (
-      <div className="page-shell py-16">
-        <div className="soft-card mx-auto max-w-lg p-10 text-center">
+      <div className="page-shell py-8 sm:py-16">
+        <div className="soft-card mx-auto max-w-lg p-5 text-center sm:p-10">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(37,99,235,0.1)]">
             <LogIn className="h-8 w-8 text-[var(--accent)]" />
           </div>

@@ -18,7 +18,7 @@ export function AppBottomTabs() {
   const { itemCount } = useCart();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-[var(--z-header)] border-t border-[var(--line)] bg-[var(--surface)]/96 px-2 pb-safe shadow-[var(--elevation-2)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-[var(--z-header)] min-h-[var(--mobile-nav-height)] border-t border-[var(--line)] bg-[var(--surface)]/96 px-2 pb-safe shadow-[var(--elevation-2)] backdrop-blur">
       <div className="mx-auto grid max-w-md grid-cols-5 py-1.5">
         {tabs.map((tab) => {
           const isActive =
