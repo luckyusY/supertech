@@ -2,11 +2,32 @@ import { NextResponse } from "next/server";
 import { AiConfigurationError, generateAiText, hasAiConfig } from "@/lib/ai";
 import { getPublicProducts } from "@/lib/public-marketplace";
 
-export async function POST(request: Request) {
-  if (!hasAiConfig()) {
-    return NextResponse.json({ products: [] });
-  }
+type PublicProduct = Awaited<ReturnType<typeof getPublicProducts>>[number];
 
+/**
+ * Non-AI related products: same category first, then anything else. Used when
+ * the model is unavailable so the "You may also like" rail is never empty.
+ */
+function getFallbackRecommendations(
+  products: PublicProduct[],
+  slug: string,
+  limit: number,
+) {
+  const current = products.find((product) => product.slug === slug);
+  const candidates = products.filter((product) => product.slug !== slug);
+  if (!current) return candidates.slice(0, limit);
+
+  const sameCategory = candidates.filter(
+    (product) => product.category === current.category,
+  );
+  const rest = candidates.filter(
+    (product) => product.category !== current.category,
+  );
+
+  return [...sameCategory, ...rest].slice(0, limit);
+}
+
+export async function POST(request: Request) {
   let body: { slug?: string; limit?: number };
   try {
     body = await request.json();
@@ -16,6 +37,11 @@ export async function POST(request: Request) {
 
   const slug = String(body.slug || "").trim();
   const limit = Math.min(Math.max(Number(body.limit) || 4, 1), 6);
+
+  if (!hasAiConfig()) {
+    const products = getFallbackRecommendations(await getPublicProducts(), slug, limit);
+    return NextResponse.json({ products });
+  }
 
   try {
     const allProducts = await getPublicProducts();
@@ -75,20 +101,21 @@ export async function POST(request: Request) {
       .slice(0, limit);
 
     // Fallback: same-category products if the model returned nothing usable.
-    if (recommended.length === 0 && current) {
-      const sameCategory = shortlist
-        .filter((product) => product.category === current.category)
-        .slice(0, limit);
-      return NextResponse.json({ products: sameCategory });
+    if (recommended.length === 0) {
+      return NextResponse.json({
+        products: getFallbackRecommendations(allProducts, slug, limit),
+      });
     }
 
     return NextResponse.json({ products: recommended });
   } catch (error) {
-    if (error instanceof AiConfigurationError) {
-      return NextResponse.json({ products: [] });
+    if (!(error instanceof AiConfigurationError)) {
+      console.error("AI recommend error", error);
     }
 
-    console.error("AI recommend error", error);
-    return NextResponse.json({ products: [] });
+    const products = await getPublicProducts()
+      .then((all) => getFallbackRecommendations(all, slug, limit))
+      .catch(() => []);
+    return NextResponse.json({ products });
   }
 }

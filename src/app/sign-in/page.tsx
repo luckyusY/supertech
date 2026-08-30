@@ -17,7 +17,7 @@ export default async function SignInPage({ searchParams }: Props) {
   const { next, verified, magic } = await searchParams;
 
   return (
-    <div className="relative flex min-h-[calc(100vh-80px)] items-center overflow-hidden py-8 sm:py-12">
+    <div className="relative flex min-h-[calc(100dvh-80px)] items-center overflow-hidden py-5 sm:py-10">
       <div
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
@@ -74,7 +74,7 @@ export default async function SignInPage({ searchParams }: Props) {
         </section>
 
         {/* Form panel */}
-        <section className="soft-card mx-auto w-full max-w-md p-6 sm:p-8 xl:max-w-none xl:mx-0">
+        <section className="soft-card mx-auto w-full max-w-md p-4 sm:p-8 xl:mx-0 xl:max-w-none">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">Sign in</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Continue to your account</h2>
           <p className="mt-2 text-sm text-[var(--muted)]">

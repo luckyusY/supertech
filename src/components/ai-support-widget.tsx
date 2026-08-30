@@ -195,9 +195,9 @@ export function AiSupportWidget() {
     messages[messages.length - 1].content.length === 0;
 
   return (
-    <div className="fixed bottom-24 right-4 z-[60] sm:bottom-5 sm:right-5">
+    <div className="fixed bottom-[calc(var(--mobile-page-bottom)+0.75rem)] right-3 z-[60] sm:bottom-5 sm:right-5">
       {isOpen ? (
-        <section className="flex h-[34rem] max-h-[calc(100vh-8rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[1.4rem] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(0,0,0,0.28)] sm:w-[25rem]">
+        <section className="flex h-[min(34rem,calc(100dvh-var(--mobile-page-bottom)-2rem))] w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(0,0,0,0.28)] sm:h-[34rem] sm:max-h-[calc(100vh-8rem)] sm:w-[25rem]">
           {/* Header */}
           <div className="relative flex items-center justify-between gap-3 overflow-hidden bg-gradient-to-br from-[var(--accent)] to-[#e07e17] px-4 py-3.5 text-white">
             <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10" />

@@ -138,17 +138,17 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   }
 
   return (
-    <div className="py-5 sm:py-6">
+    <div className="py-3 sm:py-6">
       <div className="page-shell">
         <AiSearchBar initialQuery={aiMode ? query?.trim() ?? "" : ""} autoRun={aiMode} />
-        <div className="soft-card overflow-hidden">
+        <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-white shadow-[var(--elevation-1)]">
           <div className="border-b border-[var(--line)] bg-white px-4 py-4 sm:px-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
               {pageLabel}
             </p>
             <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="text-3xl font-black tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
+                <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-4xl">
                   {pageTitle}
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
@@ -171,7 +171,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           </div>
 
           {/* Mode + sort command bar */}
-          <div className="border-b border-[var(--line)] bg-[var(--neutral-50)] px-4 py-3 sm:px-6">
+          <div className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--neutral-50)]/96 px-4 py-3 backdrop-blur sm:static sm:px-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="scroll-x items-center gap-2">
                 {(
@@ -199,7 +199,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
                 })}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="scroll-x items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
                   Sort
                 </span>
@@ -223,7 +223,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
             </div>
           </div>
 
-          <div className="border-b border-[var(--line)] bg-[#fafafa] px-4 py-4 sm:px-6">
+          <div className="border-b border-[var(--line)] bg-white px-4 py-3 sm:px-6 sm:py-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="scroll-x items-center gap-2 pb-1">
                 <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -299,7 +299,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 p-3 sm:p-4 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-4 lg:grid-cols-4 xl:grid-cols-5">
               {filteredProducts.map((product, index) => (
                 <ProductCard key={product.id} product={product} index={index} />
               ))}

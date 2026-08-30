@@ -16,12 +16,12 @@ export default async function RequestProductPage() {
 
   return (
     <div className="page-shell py-8">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-        <section className="soft-card p-6 sm:p-8 lg:p-10">
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+        <section className="soft-card p-4 sm:p-8 lg:p-10">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
             Request a product
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
             Need something we do not stock yet? We can source and ship it for you.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
@@ -71,7 +71,7 @@ export default async function RequestProductPage() {
           </div>
         </section>
 
-        <aside className="dark-card p-6 sm:p-8">
+        <aside className="dark-card p-5 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
             How it works
           </p>

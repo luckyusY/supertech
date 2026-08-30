@@ -116,9 +116,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
   });
 
   return (
-    <div className="page-shell py-4 pb-36 sm:py-6 sm:pb-24">
+    <div className="page-shell py-3 pb-8 sm:py-6 sm:pb-24">
       {/* Breadcrumb — Photo Factory density */}
-      <nav className="mb-4 flex flex-wrap items-center gap-1 text-caption text-[var(--muted)]">
+      <nav className="mb-3 flex min-w-0 items-center gap-1 overflow-hidden text-caption text-[var(--muted)] sm:mb-4 sm:flex-wrap">
         <Link href="/" className="hover:text-[var(--accent)]">
           Home
         </Link>
@@ -181,7 +181,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         {/* About + features — tab-style sections */}
         <div className="mt-8 border-t border-[var(--line)] pt-6">
-          <div className="flex flex-wrap gap-2 border-b border-[var(--line)] pb-3">
+          <div className="sticky top-0 z-20 -mx-3 flex gap-2 overflow-x-auto border-b border-[var(--line)] bg-white/96 px-3 py-2 backdrop-blur sm:static sm:mx-0 sm:flex-wrap sm:bg-transparent sm:px-0 sm:pb-3 sm:pt-0">
             {[
               { id: "about", label: "About" },
               { id: "features", label: "Key features" },
@@ -190,7 +190,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <a
                 key={tab.id}
                 href={`#${tab.id}`}
-                className="rounded-full border border-[var(--line)] bg-white px-3.5 py-1.5 text-xs font-bold text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3.5 py-2 text-xs font-bold text-[var(--foreground)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               >
                 {tab.label}
               </a>

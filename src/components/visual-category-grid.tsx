@@ -67,32 +67,40 @@ export function VisualCategoryRail({ items }: { items: VisualCategoryItem[] }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(90deg,#cc6600_0%,#e8770a_45%,#b35900_100%)] py-3 sm:py-4">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.12),transparent_42%)]" />
-      <div className="relative">
-        <div className="no-scrollbar flex gap-0 overflow-x-auto px-1 sm:px-2">
+    <section className="border-b border-[var(--line)] bg-white py-4 sm:py-5">
+      <div className="page-shell">
+        <div className="mb-3 flex items-end justify-between gap-4 sm:mb-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">Explore</p>
+            <h2 className="mt-1 text-lg font-bold text-[var(--foreground)] sm:text-xl">Shop by category</h2>
+          </div>
+          <Link href="/catalog" className="text-xs font-bold text-[var(--accent)] hover:text-[var(--accent-hover)] sm:text-sm">
+            View catalog
+          </Link>
+        </div>
+        <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1 sm:gap-3">
           {items.map((item) => (
             <Link
               key={`rail-${item.name}`}
               href={item.href}
-              className="group relative flex h-[7.5rem] w-[7.25rem] shrink-0 flex-col items-center justify-end px-2 pb-2 pt-1 sm:h-36 sm:w-40"
+              className="group flex h-[7.75rem] w-[7rem] shrink-0 flex-col overflow-hidden rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--neutral-50)] sm:h-[9rem] sm:w-[8.5rem]"
             >
-              <span className="relative mb-1 block h-[4.5rem] w-full sm:h-24">
+              <span className="relative block min-h-0 flex-1 w-full">
                 {item.image ? (
                   <Image
                     src={item.image}
                     alt=""
                     fill
                     sizes="160px"
-                    className="object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.35)] transition duration-300 group-hover:scale-105"
+                    className="object-contain p-2 transition duration-300 group-hover:scale-105"
                   />
                 ) : item.icon ? (
-                  <span className="grid h-full w-full place-items-center text-white/90">
+                  <span className="grid h-full w-full place-items-center text-[var(--accent)]">
                     <item.icon className="h-10 w-10" />
                   </span>
                 ) : null}
               </span>
-              <span className="line-clamp-2 text-center text-[11px] font-semibold leading-tight text-white sm:text-xs">
+              <span className="flex min-h-10 items-center justify-center border-t border-[var(--line)] bg-white px-2 text-center text-[11px] font-semibold leading-tight text-[var(--foreground)] sm:text-xs">
                 {item.name}
               </span>
             </Link>

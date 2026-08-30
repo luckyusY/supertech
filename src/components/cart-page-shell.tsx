@@ -111,12 +111,12 @@ export function CartPageShell() {
 
   if (success) {
     return (
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
-        <section className="soft-card p-6 sm:p-8 lg:p-10">
+      <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
+        <section className="soft-card p-4 sm:p-8 lg:p-10">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
             Order placed
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
             We have received your order.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
@@ -164,7 +164,7 @@ export function CartPageShell() {
           </div>
         </section>
 
-        <aside className="dark-card p-6 sm:p-8">
+        <aside className="dark-card p-5 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
             What happens next
           </p>
@@ -180,11 +180,11 @@ export function CartPageShell() {
 
   if (!isReady) {
     return (
-      <div className="soft-card p-6 sm:p-8 lg:p-10">
+      <div className="soft-card p-4 sm:p-8 lg:p-10">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Your cart
         </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+        <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
           Loading your cart...
         </h1>
         <p className="mt-4 text-base leading-7 text-[var(--muted)]">
@@ -196,7 +196,7 @@ export function CartPageShell() {
 
   if (items.length === 0) {
     return (
-      <div className="soft-card p-6 sm:p-8 lg:p-10">
+      <div className="soft-card p-4 sm:p-8 lg:p-10">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[1.6rem] bg-[rgba(15,23,42,0.06)]">
             <ShoppingBag className="h-7 w-7 text-[var(--accent)]" />
@@ -204,7 +204,7 @@ export function CartPageShell() {
           <p className="mt-6 font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
             Your cart
           </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
             Your cart is empty.
           </h1>
           <p className="mt-4 text-base leading-7 text-[var(--muted)]">
@@ -231,12 +231,12 @@ export function CartPageShell() {
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
-      <section className="soft-card p-6 sm:p-8 lg:p-10">
+    <div className="grid gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1.1fr)_360px]">
+      <section className="soft-card p-4 sm:p-8 lg:p-10">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Your cart
         </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+        <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
           Review your items.
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)]">
@@ -248,7 +248,7 @@ export function CartPageShell() {
           {items.map((item) => (
             <div
               key={item.slug}
-              className="grid gap-4 overflow-hidden rounded-[1.6rem] border border-[var(--line)] bg-white sm:grid-cols-[140px_minmax(0,1fr)]"
+              className="grid gap-4 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-white sm:grid-cols-[140px_minmax(0,1fr)]"
             >
               <div className="relative min-h-[160px]">
                 <Image
@@ -313,7 +313,7 @@ export function CartPageShell() {
       </section>
 
       <aside className="space-y-6">
-        <section className="dark-card p-6 sm:p-8">
+        <section className="dark-card p-5 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[rgba(255,255,255,0.6)]">
             Basket summary
           </p>
@@ -337,7 +337,7 @@ export function CartPageShell() {
           </div>
         </section>
 
-        <form onSubmit={handleSubmit} className="soft-card p-6 sm:p-8">
+        <form onSubmit={handleSubmit} className="soft-card p-4 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
             Customer details
           </p>

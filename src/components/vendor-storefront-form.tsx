@@ -96,10 +96,10 @@ export function VendorStorefrontForm({
   }
 
   const inputClass =
-    "w-full rounded-[0.75rem] border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)]/25";
+    "min-h-11 w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)]/25";
 
   return (
-    <section className="soft-card p-6 sm:p-8">
+    <section className="soft-card p-4 sm:p-8">
       <div className="flex items-center gap-3">
         <ImagePlus className="h-5 w-5 text-[var(--accent)]" />
         <h2 className="text-2xl font-semibold tracking-[-0.04em]">
@@ -122,7 +122,7 @@ export function VendorStorefrontForm({
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
               Cover image
             </p>
-            <div className="relative mt-2 aspect-[16/8.4] overflow-hidden rounded-[1.2rem] border border-[var(--line)] bg-[rgba(15,23,42,0.04)]">
+            <div className="relative mt-2 aspect-[16/8.4] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--neutral-50)]">
               {coverImage ? (
                 <>
                   <Image
@@ -173,7 +173,7 @@ export function VendorStorefrontForm({
                     <button
                       type="button"
                       onClick={() => open()}
-                      className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-2.5 text-sm font-semibold text-white"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--foreground)] px-5 py-2.5 text-sm font-semibold text-white"
                     >
                       <ImagePlus className="h-4 w-4" />
                       {coverImage ? "Replace cover" : "Upload cover"}
@@ -187,7 +187,7 @@ export function VendorStorefrontForm({
                       setCoverImage("");
                       void persist({ coverImage: "" });
                     }}
-                    className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)]"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)]"
                   >
                     <Trash2 className="h-4 w-4" />
                     Remove
@@ -253,7 +253,7 @@ export function VendorStorefrontForm({
               type="button"
               onClick={() => void persist()}
               disabled={status === "saving"}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--foreground)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
               {status === "saved" ? (
                 <>

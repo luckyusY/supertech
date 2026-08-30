@@ -152,11 +152,11 @@ export function BecomeVendorForm({ prefill }: Props) {
         </div>
 
         {/* Right — form */}
-        <div className="soft-card p-5 sm:p-8">
+      <div className="soft-card p-4 sm:p-8">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
             Vendor application
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
+        <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
             Tell us about your business
           </h2>
 

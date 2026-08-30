@@ -226,7 +226,7 @@ export function VendorOrderQueue({
       </div>
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap gap-2">
+        <div className="scroll-x gap-2 pb-1">
           {FILTERS.map((item) => (
             <button
               key={item.id}
@@ -236,7 +236,7 @@ export function VendorOrderQueue({
                 setPage(1);
               }}
               className={cn(
-                "rounded-full px-3 py-1.5 text-xs font-bold transition-colors",
+                "shrink-0 rounded-[var(--radius-sm)] px-3 py-2 text-xs font-bold transition-colors",
                 filter === item.id
                   ? "bg-[var(--foreground)] text-white"
                   : "border border-[var(--line)] bg-white text-[var(--muted)] hover:text-[var(--foreground)]",
@@ -308,7 +308,7 @@ export function VendorOrderQueue({
       ) : null}
 
       {state.status === "ready" && filteredOrders.length > 0 ? (
-        <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)]">
+        <div className="mobile-scroll-hint overflow-hidden rounded-[var(--radius-lg)] border border-[var(--line)]">
           <HoverScrollRegion
             className="dashboard-table-scroll overflow-auto"
             style={{ maxHeight: "min(32rem, calc(100dvh - 14rem))" }}

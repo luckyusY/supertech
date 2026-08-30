@@ -17,9 +17,9 @@ export function AdminPageHeader({
   actions,
 }: AdminPageHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 border-b border-[var(--line)] pb-6 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-4 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-start sm:justify-between sm:pb-6">
       <div className="flex items-start gap-3.5">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem] bg-[var(--accent-soft)] text-[var(--accent)]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--accent-soft)] text-[var(--accent)] sm:h-11 sm:w-11">
           <Icon className="h-5 w-5" />
         </span>
         <div>
@@ -32,7 +32,7 @@ export function AdminPageHeader({
           ) : null}
         </div>
       </div>
-      {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end">{actions}</div> : null}
     </div>
   );
 }

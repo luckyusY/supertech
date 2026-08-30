@@ -54,14 +54,14 @@ export default async function AccountPage() {
   return (
     <div className="page-shell py-8">
       {/* Profile header */}
-      <div className="soft-card p-6 sm:p-8 lg:p-10">
+      <div className="soft-card p-4 sm:p-8 lg:p-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div>
             <BrandLogo size="md" sublabel="My account" className="mb-4" />
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
               Profile
             </p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
               {session.name}
             </h1>
             <p className="mt-3 text-base text-[var(--muted)]">{session.email}</p>

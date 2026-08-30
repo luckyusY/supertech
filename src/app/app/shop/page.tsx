@@ -33,7 +33,7 @@ export default async function AppShopPage({ searchParams }: AppShopPageProps) {
         title="Shop"
         subtitle={`${filteredProducts.length} products`}
       />
-      <main className="mx-auto max-w-md space-y-4 px-4 py-4">
+      <main className="mx-auto max-w-md space-y-3 px-3 py-3 sm:px-4 sm:py-4">
         <form action="/app/shop" className="grid grid-cols-[minmax(0,1fr)_52px] gap-2">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--muted)]" />
@@ -98,7 +98,7 @@ export default async function AppShopPage({ searchParams }: AppShopPageProps) {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             {filteredProducts.map((product) => (
               <AppProductCard key={product.id} product={product} />
             ))}

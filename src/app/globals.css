@@ -3,35 +3,35 @@
 :root {
   /* ——— Neutrals ——— */
   --neutral-0: #ffffff;
-  --neutral-50: #f7f6f3;
-  --neutral-100: #f0efe9;
-  --neutral-200: #e3e1db;
-  --neutral-300: #c9c7c0;
-  --neutral-400: #9b9a96;
-  --neutral-500: #66666d;
-  --neutral-700: #3a3a3e;
-  --neutral-900: #18181a;
+  --neutral-50: #fafafa;
+  --neutral-100: #f4f4f4;
+  --neutral-200: #e0e0e0;
+  --neutral-300: #cccccc;
+  --neutral-400: #999999;
+  --neutral-500: #666666;
+  --neutral-700: #333333;
+  --neutral-900: #111111;
 
   /* ——— Core surfaces ——— */
-  --background: #f5f4f0;
-  --background-strong: #1e1e20;
-  --foreground: #18181a;
+  --background: #ffffff;
+  --background-strong: #111111;
+  --foreground: #111111;
   --surface: #ffffff;
   --surface-elevated: #ffffff;
-  --surface-strong: #1e1e20;
-  --muted: #66666d;
-  --line: #e3e1db;
+  --surface-strong: #111111;
+  --muted: #666666;
+  --line: #e0e0e0;
 
-  /* ——— Brand ——— */
-  --accent: #e8770a;          /* slightly darker for WCAG text-on-orange */
-  --accent-soft: #fff2db;
-  --accent-hover: #cf6a09;
+  /* ——— Brand (Corporate Identity: PwC-inspired Orange) ——— */
+  --accent: #D04A02;
+  --accent-soft: #faebe3;
+  --accent-hover: #a13901;
   --on-accent: #ffffff;
 
   /* Legacy alias */
-  --red: #d92d20;
-  --red-soft: #fde7ea;
-  --teal: #1c5468;
+  --red: #D04A02;
+  --red-soft: #faebe3;
+  --teal: #00338D; /* KPMG-like Blue */
   --gold: #f5a62a;
 
   /* ——— Semantic status ——— */
@@ -43,16 +43,16 @@
   --danger: #d92d20;
   --danger-soft: #fde7ea;
   --danger-hover: #b42318;
-  --info: #1c5468;
-  --info-soft: #e8f1f4;
+  --info: #00338D;
+  --info-soft: #e5eaf3;
 
   /* ——— Elevation ——— */
   --elevation-0: none;
-  --elevation-1: 0 1px 3px rgba(24, 24, 26, 0.08);
-  --elevation-2: 0 2px 14px rgba(24, 24, 26, 0.10);
-  --elevation-3: 0 8px 28px rgba(24, 24, 26, 0.14);
-  --shadow: var(--elevation-2);
-  --grid: rgba(24, 24, 26, 0.05);
+  --elevation-1: 0 1px 3px rgba(17, 17, 17, 0.05);
+  --elevation-2: 0 4px 12px rgba(17, 17, 17, 0.08);
+  --elevation-3: 0 8px 24px rgba(17, 17, 17, 0.12);
+  --shadow: var(--elevation-1);
+  --grid: rgba(17, 17, 17, 0.03);
 
   /* ——— Motion ——— */
   --duration-fast: 120ms;
@@ -68,6 +68,10 @@
   --z-drawer: 60;
   --z-modal: 70;
   --z-toast: 80;
+
+  /* Mobile fixed-layer contract */
+  --mobile-nav-height: 4.5rem;
+  --mobile-page-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
 
   /* ——— Type scale (reference) ——— */
   --text-display: 2.25rem;
@@ -90,32 +94,32 @@
   --space-16: 4rem;
 
   /* Semantic surface tokens */
-  --header-bg: var(--accent);
-  --footer-bg: #1e1e20;
-  --announcement-bg: #1e1e20;
+  --header-bg: #ffffff;
+  --footer-bg: #111111;
+  --announcement-bg: #111111;
 
   /* Ambient canvas */
-  --canvas-base: #f5f4f0;
-  --canvas-glow-brand: rgba(232, 119, 10, 0.55);
-  --canvas-glow-cool: rgba(28, 84, 104, 0.45);
-  --canvas-vignette: rgba(24, 24, 26, 0.55);
+  --canvas-base: #ffffff;
+  --canvas-glow-brand: rgba(208, 74, 2, 0.2);
+  --canvas-glow-cool: rgba(0, 51, 141, 0.2);
+  --canvas-vignette: rgba(17, 17, 17, 0.2);
 
-  /* Per-shelf gradient tokens (slightly softened) */
-  --shelf-flash:    linear-gradient(90deg, #d93a24 0%, #ef6419 48%, #f57b10 100%);
-  --shelf-topsell:  #1e1e20;
-  --shelf-home:     linear-gradient(90deg, #157060 0%, #3ea48a 100%);
-  --shelf-phones:   linear-gradient(90deg, #1a4ea8 0%, #3d78f0 100%);
-  --shelf-beauty:   linear-gradient(90deg, #a83c69 0%, #de8db2 100%);
-  --shelf-wellness: linear-gradient(90deg, #2d7a54 0%, #80c49a 100%);
-  --shelf-creator:  linear-gradient(90deg, #5330af 0%, #895cf0 100%);
-  --shelf-cars:     linear-gradient(90deg, #122e60 0%, #1d50cc 100%);
-  --shelf-property: linear-gradient(90deg, #0c3c22 0%, #118836 100%);
+  /* Per-shelf gradient tokens (Cleaned up for Corporate) */
+  --shelf-flash:    #111111;
+  --shelf-topsell:  #111111;
+  --shelf-home:     #00338D;
+  --shelf-phones:   #111111;
+  --shelf-beauty:   #D04A02;
+  --shelf-wellness: #00338D;
+  --shelf-creator:  #111111;
+  --shelf-cars:     #111111;
+  --shelf-property: #111111;
 
-  /* Radius design contract */
-  --radius-sm:  0.375rem;   /* 6px  — buttons, badges */
-  --radius-md:  0.75rem;    /* 12px — cards, inputs */
-  --radius-lg:  1rem;       /* 16px — modals, drawers */
-  --radius-xl:  1.5rem;     /* 24px — mega-menu, hero */
+  /* Radius design contract (Sharper for corporate feel) */
+  --radius-sm:  0px;
+  --radius-md:  0px;
+  --radius-lg:  2px;
+  --radius-xl:  4px;
   --radius-full: 9999px;
 }
 
@@ -129,18 +133,18 @@
 
 /* ——— Typography roles ——— */
 .text-display {
-  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-size: clamp(1.75rem, 2.5vw, var(--text-display));
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1.15;
 }
 
 .text-title {
-  font-family: var(--font-space-grotesk), var(--font-inter), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-size: clamp(1.25rem, 1.6vw, var(--text-title));
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   line-height: 1.25;
 }
 
@@ -268,9 +272,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+:where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  min-height: 2.75rem;
+  font: inherit;
+}
+
+:where(button, a, input, select, textarea) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(button, [role="button"], a) {
+  touch-action: manipulation;
+}
+
+/* Must live in @layer base: unlayered rules outrank every Tailwind utility, so
+   a bare `a { color: inherit }` silently kills `text-[var(--foreground)]`,
+   `text-[var(--gold)]` etc. on every link (white-on-white header buttons). */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 ::selection {
@@ -280,10 +302,7 @@ a {
 /* Homepage band: restrained brand energy (hero zone only preferred).
    Full-page wash reduced so product content stays primary. */
 .marketplace-campaign-bg {
-  background:
-    radial-gradient(circle at 12% 0%, rgba(245, 131, 12, 0.16), transparent 22rem),
-    radial-gradient(circle at 88% 8%, rgba(255, 210, 130, 0.10), transparent 18rem),
-    linear-gradient(180deg, #f7f0e6 0%, var(--background) 28rem, var(--background) 100%);
+  background: var(--background);
 }
 
 .marketplace-campaign-bg .soft-card,
@@ -320,9 +339,53 @@ a {
   padding-inline: 0.75rem;
 }
 
+.page-stack {
+  display: grid;
+  gap: 1.25rem;
+  padding-block: 1.25rem;
+}
+
+.mobile-scroll-hint {
+  position: relative;
+}
+
 @media (min-width: 640px) {
   .page-shell {
     padding-inline: 1rem;
+  }
+
+  .page-stack {
+    gap: 1.5rem;
+    padding-block: 1.75rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .public-page-content {
+    padding-bottom: var(--mobile-page-bottom);
+  }
+
+  .mobile-scroll-hint::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset-block: 0;
+    right: 0;
+    width: 1.75rem;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.94));
+  }
+
+  .dashboard-main-scroll > div {
+    padding: 1rem 0.75rem;
+  }
+
+  .dashboard-main-scroll [class*="soft-card"][class*="p-6"],
+  .dashboard-main-scroll [class*="soft-card"][class*="p-8"] {
+    padding: 1rem;
+  }
+
+  .dashboard-main-scroll table {
+    font-size: 0.8125rem;
   }
 }
 
@@ -474,11 +537,6 @@ img.loaded[data-placeholder="blur"] {
 /* Better readability */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
-}
-
-/* Performance optimizations */
-img {
-  loading: lazy;
 }
 
 /* Swiper custom styles (campaign / full-bleed) */
@@ -754,15 +812,27 @@ a {
 }
 
 /* Shelf header utility classes */
-.shelf-header-flash    { background: var(--shelf-flash);    color: white; }
-.shelf-header-topsell  { background: var(--shelf-topsell);  color: white; }
-.shelf-header-home     { background: var(--shelf-home);     color: white; }
-.shelf-header-phones   { background: var(--shelf-phones);   color: white; }
-.shelf-header-beauty   { background: var(--shelf-beauty);   color: white; }
-.shelf-header-wellness { background: var(--shelf-wellness); color: white; }
-.shelf-header-creator  { background: var(--shelf-creator);  color: white; }
-.shelf-header-cars     { background: var(--shelf-cars);     color: white; }
-.shelf-header-property { background: var(--shelf-property); color: white; }
+.shelf-header-flash { background: var(--shelf-flash); color: white; }
+.shelf-header-topsell { background: var(--shelf-topsell); color: white; }
+.shelf-header-home,
+.shelf-header-phones,
+.shelf-header-beauty,
+.shelf-header-wellness,
+.shelf-header-creator,
+.shelf-header-cars,
+.shelf-header-property {
+  border-top: 3px solid var(--accent);
+  background: white;
+  color: var(--foreground);
+}
+
+.shelf-header-home { border-top-color: #21836f; }
+.shelf-header-phones { border-top-color: #2d65c8; }
+.shelf-header-beauty { border-top-color: #b64c78; }
+.shelf-header-wellness { border-top-color: #43875f; }
+.shelf-header-creator { border-top-color: #6648b8; }
+.shelf-header-cars { border-top-color: #294f91; }
+.shelf-header-property { border-top-color: #257142; }
 
 /* Screen-reader only (Tailwind may provide .sr-only; keep fallback) */
 .sr-only {

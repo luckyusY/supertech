@@ -52,10 +52,6 @@ function getFallbackMatches(products: PublicProduct[], query: string, limit: num
 }
 
 export async function POST(request: Request) {
-  if (!hasAiConfig()) {
-    return NextResponse.json({ products: [], note: "AI search is not configured." });
-  }
-
   let body: { query?: string; limit?: number };
   try {
     body = await request.json();
@@ -72,6 +68,13 @@ export async function POST(request: Request) {
   }
 
   const limit = Math.min(Math.max(Number(body.limit) || 12, 1), 20);
+
+  // Without an API key we still answer with keyword matches instead of an
+  // empty result set, so search never looks broken to the shopper.
+  if (!hasAiConfig()) {
+    const products = getFallbackMatches(await getPublicProducts(), query, limit);
+    return NextResponse.json({ products, note: "AI search is not configured." });
+  }
 
   try {
     const allProducts = await getPublicProducts();

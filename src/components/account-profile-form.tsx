@@ -49,7 +49,7 @@ export function AccountProfileForm({
     "mt-2 w-full rounded-[1rem] border border-[var(--line)] bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[var(--accent)]/25";
 
   return (
-    <section className="soft-card p-6 sm:p-8">
+    <section className="soft-card p-4 sm:p-8">
       <div className="flex items-center gap-3">
         <UserRound className="h-5 w-5 text-[var(--accent)]" />
         <h2 className="text-2xl font-semibold tracking-[-0.04em]">Personal info</h2>
@@ -97,7 +97,7 @@ export function AccountProfileForm({
             type="button"
             onClick={() => void save()}
             disabled={status === "saving"}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--foreground)] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto"
           >
             {status === "saved" ? (
               <>

@@ -16,11 +16,11 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
 
   return (
     <div className="page-shell flex min-h-[calc(100vh-80px)] items-center py-8">
-      <section className="soft-card mx-auto w-full max-w-md p-6 sm:p-8">
+      <section className="soft-card mx-auto w-full max-w-md p-4 sm:p-8">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Account security
         </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.05em]">
+        <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
           Reset your password.
         </h1>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
@@ -43,4 +43,3 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
     </div>
   );
 }
-

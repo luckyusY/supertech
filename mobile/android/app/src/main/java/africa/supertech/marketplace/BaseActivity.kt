@@ -104,12 +104,33 @@ abstract class BaseActivity : AppCompatActivity() {
         target.setTag(tagKey, url)
         imageExecutor.execute {
             try {
-                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
-                connection.connectTimeout = 12000
-                connection.readTimeout = 12000
-                connection.instanceFollowRedirects = true
-                val bitmap = connection.inputStream.use { android.graphics.BitmapFactory.decodeStream(it) }
-                connection.disconnect()
+                // Disk cache check
+                val safeName = android.util.Base64.encodeToString(url.toByteArray(), android.util.Base64.NO_WRAP or android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING)
+                val cacheFile = java.io.File(target.context.cacheDir, "img_$safeName")
+                var bitmap: android.graphics.Bitmap? = null
+                
+                if (cacheFile.exists()) {
+                    bitmap = android.graphics.BitmapFactory.decodeFile(cacheFile.absolutePath)
+                }
+
+                if (bitmap == null) {
+                    val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                    connection.connectTimeout = 12000
+                    connection.readTimeout = 12000
+                    connection.instanceFollowRedirects = true
+                    bitmap = connection.inputStream.use { android.graphics.BitmapFactory.decodeStream(it) }
+                    connection.disconnect()
+
+                    // Save to disk cache
+                    if (bitmap != null) {
+                        try {
+                            java.io.FileOutputStream(cacheFile).use { out ->
+                                bitmap!!.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out)
+                            }
+                        } catch (_: Exception) {}
+                    }
+                }
+
                 if (bitmap != null) {
                     imageCache.put(url, bitmap)
                     runOnUiThread {

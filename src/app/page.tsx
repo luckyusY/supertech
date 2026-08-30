@@ -25,7 +25,6 @@ import { HeroSlider, type HeroSlide } from "@/components/hero-slider";
 import { ProductCard } from "@/components/product-card";
 import { TrustStrip } from "@/components/trust-strip";
 import {
-  VisualCategoryGrid,
   VisualCategoryRail,
 } from "@/components/visual-category-grid";
 import {
@@ -390,7 +389,6 @@ export default async function Home() {
       {/* Adorama-style full-bleed hero + brand orange category product strip */}
       <HeroSlider slides={heroSlides} />
       <VisualCategoryRail items={visualCategories} />
-      <VisualCategoryGrid items={visualCategories} />
 
       {/* ——— Merchandising ——— */}
       <section className="page-shell space-y-5 pb-8 sm:space-y-6 sm:pb-12">
@@ -426,7 +424,7 @@ export default async function Home() {
             title="Home control"
             href="/catalog?category=Home+Control"
             headerClass="shelf-header-home"
-            theme="dark"
+            theme="light"
             products={homeDeals}
           />
         ) : null}
@@ -439,7 +437,7 @@ export default async function Home() {
               title="Phones & wearables"
               href="/catalog?category=Mobile+Essentials"
               headerClass="shelf-header-phones"
-              theme="dark"
+              theme="light"
               products={phoneDeals}
             />
           </>
@@ -453,7 +451,7 @@ export default async function Home() {
               title="Beauty & personal care"
               href="/catalog?category=Beauty+%26+Personal+Care"
               headerClass="shelf-header-beauty"
-              theme="dark"
+              theme="light"
               products={beautyDeals}
             />
           </>
@@ -465,7 +463,7 @@ export default async function Home() {
             title="Health & wellness"
             href="/catalog?category=Health+%26+Wellness"
             headerClass="shelf-header-wellness"
-            theme="dark"
+            theme="light"
             products={wellnessDeals}
           />
         ) : null}
@@ -476,7 +474,7 @@ export default async function Home() {
             title="Creator & gaming"
             href="/catalog?category=Creator+Gear"
             headerClass="shelf-header-creator"
-            theme="dark"
+            theme="light"
             products={creatorDeals}
           />
         ) : null}
@@ -489,7 +487,7 @@ export default async function Home() {
               title="Cars for sale & rent"
               href="/catalog?category=Cars+for+Sale"
               headerClass="shelf-header-cars"
-              theme="dark"
+              theme="light"
               products={carDeals}
             />
           </>
@@ -501,32 +499,28 @@ export default async function Home() {
             title="Property listings"
             href="/catalog?category=Apartments+for+Sale"
             headerClass="shelf-header-property"
-            theme="dark"
+            theme="light"
             products={propertyDeals}
           />
         ) : null}
 
         <GsapReveal y={24}>
-          <div className="relative overflow-hidden rounded-[var(--radius-lg)] bg-[var(--background-strong)] p-6 text-white sm:p-8">
-            <div
-              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[var(--accent)]/25 blur-3xl"
-              aria-hidden
-            />
-            <div className="relative flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
+          <div className="relative overflow-hidden rounded-none border border-black/10 bg-[var(--background-strong)] p-8 text-white sm:p-12 shadow-sm">
+            <div className="relative flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/55">
                   Sell on SuperTech
                 </p>
-                <h2 className="mt-2 max-w-lg text-2xl font-bold tracking-[-0.03em] sm:text-[1.65rem]">
+                <h2 className="mt-2 max-w-lg text-2xl font-bold tracking-[-0.02em] sm:text-[1.75rem]">
                   Reach shoppers who value verified sellers.
                 </h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-white/65">
-                  Apply once, list products, fulfill orders, and get paid the local way.
+                <p className="mt-2 max-w-xl text-sm leading-6 text-white/70">
+                  Apply once, list products, fulfill orders, and get paid securely.
                 </p>
               </div>
               <Link
                 href="/become-vendor"
-                className="inline-flex shrink-0 items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--accent)] px-5 py-3 text-sm font-bold text-white shadow-lg hover:bg-[var(--accent-hover)]"
+                className="inline-flex shrink-0 items-center gap-2 rounded-none bg-[var(--accent)] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[var(--accent-hover)]"
               >
                 Become a vendor
                 <ChevronRight className="h-4 w-4" />

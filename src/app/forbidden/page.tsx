@@ -10,12 +10,12 @@ export const metadata: Metadata = {
 export default function ForbiddenPage() {
   return (
     <div className="page-shell py-8">
-      <div className="soft-card p-6 sm:p-8 lg:p-10">
+      <div className="soft-card p-4 sm:p-8 lg:p-10">
         <BrandLogo size="lg" sublabel="Marketplace" className="mb-6" />
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-[var(--muted)]">
           Restricted area
         </p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">
           This account does not have permission for that workspace.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
