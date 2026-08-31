@@ -190,8 +190,12 @@ html[data-canvas="app"] {
   --canvas-base: #f5f4f0;
 }
 
-* {
-  border-color: var(--line);
+/* Default border color (restores a neutral border instead of Tailwind v4's
+   currentColor default). Must be layered so `border-*` color utilities win. */
+@layer base {
+  * {
+    border-color: var(--line);
+  }
 }
 
 html {
@@ -258,19 +262,28 @@ html.lenis-stopped {
   50% { opacity: 0.4; }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), var(--font-space-grotesk), sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-inter), var(--font-space-grotesk), sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* Base link defaults must live in @layer base so Tailwind text-color and
+   text-decoration utilities (which sit in @layer utilities) can still win.
+   Unlayered, this rule overrode every text-* utility on <a> elements — e.g.
+   the white-pill Account/Cart links in the dark header inherited white and
+   became invisible. */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 ::selection {
@@ -427,11 +440,14 @@ a {
   }
 }
 
-/* Smooth ring focus */
-*:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 6px;
+/* Smooth ring focus — layered so `rounded-*` utilities keep their shape
+   while focused (unlayered, this forced every focused element to 6px). */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
 }
 
 /* Entrance animations */
@@ -471,9 +487,11 @@ img.loaded[data-placeholder="blur"] {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-/* Better readability */
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em;
+/* Better readability — layered so `tracking-*` utilities can override. */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+  }
 }
 
 /* Performance optimizations */
