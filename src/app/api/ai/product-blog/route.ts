@@ -141,10 +141,7 @@ function parseDraft(raw: string, product: Product): BlogDraftPayload | null {
 
 export async function POST(request: Request) {
   if (!hasAiConfig()) {
-    return NextResponse.json(
-      { error: "AI is not configured. Add OPENAI_API_KEY in your environment settings." },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: new AiConfigurationError().message }, { status: 503 });
   }
 
   let body: ProductBlogRequest;

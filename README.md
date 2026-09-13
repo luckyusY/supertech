@@ -46,6 +46,39 @@ Required for real integrations:
 - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
 - `NEXT_PUBLIC_CLOUDINARY_API_KEY`
 
+## AI provider
+
+AI search, product recommendations, support chat, product copy, and the blog
+writer all run through one provider. Two are supported:
+
+| Provider | API key | Model variable | Default model |
+| --- | --- | --- | --- |
+| OpenAI / ChatGPT | `OPENAI_API_KEY` (or `CHATGPT_API_KEY`) | `OPENAI_MODEL` | `gpt-4.1-mini` |
+| DeepSeek | `DEEPSEEK_API_KEY` | `DEEPSEEK_MODEL` | `deepseek-chat` |
+
+To use DeepSeek, create a key at [platform.deepseek.com](https://platform.deepseek.com)
+and add it to `.env.local`:
+
+```bash
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-your-key
+DEEPSEEK_MODEL=deepseek-chat
+```
+
+`deepseek-reasoner` also works if you want DeepSeek's reasoning model; the
+temperature is dropped automatically for it because DeepSeek ignores sampling
+parameters on reasoning models.
+
+Notes:
+
+- `AI_PROVIDER` accepts `openai` or `deepseek`. Leave it blank to auto-select
+  the first provider that has an API key, so OpenAI-only setups keep working.
+- If `AI_PROVIDER` names a provider whose key is missing, the app reports AI as
+  "not configured" rather than silently calling the other provider.
+- `DEEPSEEK_BASE_URL` / `OPENAI_BASE_URL` let you point at a proxy or gateway.
+- The active provider and model are shown in the admin **AI Studio** header and
+  in `GET /api/health`.
+
 ## Suggested next steps
 
 1. Add authentication for admins, vendors, and customers.

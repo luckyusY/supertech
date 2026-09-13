@@ -1,7 +1,26 @@
 import { products, vendors } from "@/lib/marketplace";
+import {
+  AiConfigurationError,
+  getAiModel,
+  getAiProviderId,
+  getAiProviderLabel,
+  hasAiConfig,
+  resolveAiProvider,
+  type ResolvedAiProvider,
+} from "@/lib/ai-provider";
 
-const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+export {
+  AiConfigurationError,
+  getAiModel,
+  getAiProviderId,
+  getAiProviderLabel,
+  hasAiConfig,
+};
+export type { AiProviderId } from "@/lib/ai-provider";
 
+const REQUEST_TIMEOUT_MS = 25000;
+
+/** OpenAI Responses API payload. */
 type OpenAITextResponse = {
   output_text?: string;
   output?: {
@@ -15,6 +34,18 @@ type OpenAITextResponse = {
   };
 };
 
+/** Chat Completions payload (DeepSeek and other OpenAI-compatible APIs). */
+type ChatCompletionsResponse = {
+  choices?: {
+    message?: {
+      content?: string | null;
+    };
+  }[];
+  error?: {
+    message?: string;
+  };
+};
+
 type GenerateAiTextOptions = {
   instructions: string;
   input: string;
@@ -22,29 +53,94 @@ type GenerateAiTextOptions = {
   maxOutputTokens?: number;
 };
 
-export class AiConfigurationError extends Error {
-  constructor() {
-    super("AI is not configured. Add OPENAI_API_KEY in your environment settings.");
-    this.name = "AiConfigurationError";
+type AiRequestOptions = GenerateAiTextOptions & { stream?: boolean };
+
+/**
+ * DeepSeek's reasoning models ignore or reject sampling parameters, so the
+ * temperature is dropped for them.
+ */
+function supportsTemperature(provider: ResolvedAiProvider) {
+  return !(provider.id === "deepseek" && provider.model.includes("reasoner"));
+}
+
+function buildRequestBody(provider: ResolvedAiProvider, options: AiRequestOptions) {
+  const { instructions, input, temperature, maxOutputTokens, stream } = options;
+
+  if (provider.protocol === "chat") {
+    return {
+      model: provider.model,
+      messages: [
+        { role: "system", content: instructions },
+        { role: "user", content: input },
+      ],
+      ...(supportsTemperature(provider) ? { temperature } : {}),
+      max_tokens: maxOutputTokens,
+      ...(stream ? { stream: true } : {}),
+    };
   }
+
+  return {
+    model: provider.model,
+    instructions,
+    input,
+    temperature,
+    max_output_tokens: maxOutputTokens,
+    ...(stream ? { stream: true } : {}),
+  };
 }
 
-function readEnvValue(name: string) {
-  const value = process.env[name]?.trim();
-  if (!value || value === '""' || value === "''") return "";
-  return value;
+async function requestAi(provider: ResolvedAiProvider, options: AiRequestOptions) {
+  return fetch(provider.endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${provider.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    body: JSON.stringify(buildRequestBody(provider, options)),
+  });
 }
 
-function getAiApiKey() {
-  return readEnvValue("OPENAI_API_KEY") || readEnvValue("CHATGPT_API_KEY");
+async function readErrorMessage(response: Response) {
+  const data = (await response.json().catch(() => ({}))) as
+    | OpenAITextResponse
+    | ChatCompletionsResponse;
+  return data.error?.message || "AI request failed.";
 }
 
-export function hasAiConfig() {
-  return Boolean(getAiApiKey());
+function extractText(provider: ResolvedAiProvider, data: unknown) {
+  if (provider.protocol === "chat") {
+    const chat = data as ChatCompletionsResponse;
+    return chat.choices?.[0]?.message?.content?.trim() || "";
+  }
+
+  const responses = data as OpenAITextResponse;
+  return (
+    responses.output_text ||
+    responses.output
+      ?.flatMap((item) => item.content ?? [])
+      .map((content) => content.text)
+      .filter(Boolean)
+      .join("\n")
+      .trim() ||
+    ""
+  );
 }
 
-export function getAiModel() {
-  return readEnvValue("OPENAI_MODEL") || readEnvValue("CHATGPT_MODEL") || "gpt-4.1-mini";
+/** Pulls the text delta out of one SSE event, whichever protocol produced it. */
+function extractStreamDelta(provider: ResolvedAiProvider, payload: string) {
+  if (provider.protocol === "chat") {
+    const event = JSON.parse(payload) as {
+      choices?: { delta?: { content?: string | null } }[];
+    };
+    const delta = event.choices?.[0]?.delta?.content;
+    return typeof delta === "string" ? delta : "";
+  }
+
+  const event = JSON.parse(payload) as { type?: string; delta?: string };
+  return event.type === "response.output_text.delta" && typeof event.delta === "string"
+    ? event.delta
+    : "";
 }
 
 const MARKETPLACE_HOW_TO = [
@@ -124,41 +220,24 @@ export async function generateAiText({
   temperature = 0.5,
   maxOutputTokens = 900,
 }: GenerateAiTextOptions) {
-  const apiKey = getAiApiKey();
-  if (!apiKey) {
+  const provider = resolveAiProvider();
+  if (!provider) {
     throw new AiConfigurationError();
   }
 
-  const response = await fetch(OPENAI_RESPONSES_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    signal: AbortSignal.timeout(25000),
-    body: JSON.stringify({
-      model: getAiModel(),
-      instructions,
-      input,
-      temperature,
-      max_output_tokens: maxOutputTokens,
-    }),
+  const response = await requestAi(provider, {
+    instructions,
+    input,
+    temperature,
+    maxOutputTokens,
   });
 
-  const data = (await response.json().catch(() => ({}))) as OpenAITextResponse;
-
   if (!response.ok) {
-    throw new Error(data.error?.message || "AI request failed.");
+    throw new Error(await readErrorMessage(response));
   }
 
-  const outputText =
-    data.output_text ||
-    data.output
-      ?.flatMap((item) => item.content ?? [])
-      .map((content) => content.text)
-      .filter(Boolean)
-      .join("\n")
-      .trim();
+  const data = await response.json().catch(() => ({}));
+  const outputText = extractText(provider, data);
 
   if (!outputText) {
     throw new Error("The AI did not return any text.");
@@ -168,9 +247,9 @@ export async function generateAiText({
 }
 
 /**
- * Streams AI output as plain-text chunks. Parses the OpenAI Responses SSE
- * stream server-side and re-emits only the text deltas so the client can
- * append them directly without parsing SSE.
+ * Streams AI output as plain-text chunks. Parses the provider's SSE stream
+ * server-side and re-emits only the text deltas so the client can append them
+ * directly without parsing SSE.
  */
 export async function streamAiText({
   instructions,
@@ -178,31 +257,21 @@ export async function streamAiText({
   temperature = 0.5,
   maxOutputTokens = 900,
 }: GenerateAiTextOptions): Promise<ReadableStream<Uint8Array>> {
-  const apiKey = getAiApiKey();
-  if (!apiKey) {
+  const provider = resolveAiProvider();
+  if (!provider) {
     throw new AiConfigurationError();
   }
 
-  const response = await fetch(OPENAI_RESPONSES_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    signal: AbortSignal.timeout(25000),
-    body: JSON.stringify({
-      model: getAiModel(),
-      instructions,
-      input,
-      temperature,
-      max_output_tokens: maxOutputTokens,
-      stream: true,
-    }),
+  const response = await requestAi(provider, {
+    instructions,
+    input,
+    temperature,
+    maxOutputTokens,
+    stream: true,
   });
 
   if (!response.ok || !response.body) {
-    const data = (await response.json().catch(() => ({}))) as OpenAITextResponse;
-    throw new Error(data.error?.message || "AI request failed.");
+    throw new Error(await readErrorMessage(response));
   }
 
   const reader = response.body.getReader();
@@ -212,37 +281,41 @@ export async function streamAiText({
 
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
-      const { done, value } = await reader.read();
-      if (done) {
-        controller.close();
-        return;
-      }
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      // Keep the last (possibly incomplete) line in the buffer.
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-        const payload = trimmed.slice(5).trim();
-        if (!payload || payload === "[DONE]") continue;
-
-        try {
-          const event = JSON.parse(payload) as {
-            type?: string;
-            delta?: string;
-          };
-          if (
-            event.type === "response.output_text.delta" &&
-            typeof event.delta === "string"
-          ) {
-            controller.enqueue(encoder.encode(event.delta));
-          }
-        } catch {
-          // Ignore keep-alive or non-JSON lines.
+      // Keep reading until something is emitted or the upstream ends: a single
+      // read often yields only non-text events (OpenAI lifecycle events, or the
+      // role-only chunk DeepSeek opens with), and returning without enqueueing
+      // would stall the stream.
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+          return;
         }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        // Keep the last (possibly incomplete) line in the buffer.
+        buffer = lines.pop() ?? "";
+
+        let enqueued = false;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+
+          try {
+            const delta = extractStreamDelta(provider, payload);
+            if (delta) {
+              controller.enqueue(encoder.encode(delta));
+              enqueued = true;
+            }
+          } catch {
+            // Ignore keep-alive or non-JSON lines.
+          }
+        }
+
+        if (enqueued) return;
       }
     },
     cancel() {

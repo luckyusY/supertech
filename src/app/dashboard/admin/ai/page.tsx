@@ -4,7 +4,7 @@ import { Bot, PenLine, Sparkles } from "lucide-react";
 import { AiContentGenerator } from "@/components/ai-content-generator";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { requirePageSession } from "@/lib/auth";
-import { hasAiConfig, getAiModel } from "@/lib/ai";
+import { hasAiConfig, getAiModel, getAiProviderLabel } from "@/lib/ai";
 
 export const metadata: Metadata = {
   title: "AI Studio",
@@ -24,7 +24,7 @@ export default async function AdminAiPage() {
         icon={Sparkles}
         eyebrow="SuperTech AI"
         title="AI Studio"
-        description="Create articles, product descriptions, social captions, and customer emails using your ChatGPT API settings."
+        description="Create articles, product descriptions, social captions, and customer emails using your OpenAI or DeepSeek API settings."
         actions={
           <>
             <Link
@@ -42,7 +42,7 @@ export default async function AdminAiPage() {
               }`}
             >
               <Bot className="h-3.5 w-3.5" />
-              {aiConfigured ? `Ready · ${getAiModel()}` : "Not configured"}
+              {aiConfigured ? `Ready · ${getAiProviderLabel()} · ${getAiModel()}` : "Not configured"}
             </span>
           </>
         }

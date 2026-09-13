@@ -1,3 +1,7 @@
+import { getAiModel, getAiProviderLabel, hasAiConfig } from "@/lib/ai-provider";
+
+export { hasAiConfig };
+
 export type IntegrationStatus = {
   mongodb: {
     configured: boolean;
@@ -14,6 +18,8 @@ export type IntegrationStatus = {
   ai: {
     configured: boolean;
     label: string;
+    provider: string;
+    model: string;
   };
 };
 
@@ -38,10 +44,6 @@ export function hasCloudinaryClientConfig() {
     hasValue(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) &&
     hasValue(process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY)
   );
-}
-
-export function hasAiConfig() {
-  return hasValue(process.env.OPENAI_API_KEY) || hasValue(process.env.CHATGPT_API_KEY);
 }
 
 export function getIntegrationStatus(): IntegrationStatus {
@@ -72,8 +74,10 @@ export function getIntegrationStatus(): IntegrationStatus {
     ai: {
       configured: aiConfigured,
       label: aiConfigured
-        ? "ChatGPT/OpenAI API is ready for support and content generation."
-        : "Add OPENAI_API_KEY or CHATGPT_API_KEY to enable AI support and content generation.",
+        ? `${getAiProviderLabel()} (${getAiModel()}) is ready for support and content generation.`
+        : "Add OPENAI_API_KEY or DEEPSEEK_API_KEY to enable AI support and content generation. Use AI_PROVIDER to choose between them.",
+      provider: getAiProviderLabel(),
+      model: getAiModel(),
     },
   };
 }
