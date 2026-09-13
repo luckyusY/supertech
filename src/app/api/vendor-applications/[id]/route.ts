@@ -20,8 +20,38 @@ export async function PATCH(
   const auth = authorizeRequest(request, ["admin"]);
   if (!auth.ok) return auth.response;
 
-  const { id } = await params;
-  const body = (await request.json()) as { status?: string };
+  try {
+    return await reviewApplication(request, await params, auth.session.email);
+  } catch (error) {
+    // This route previously had no error handling, so a throw anywhere in the
+    // vendor/user creation path became an opaque 500 with no body. To the admin
+    // that was indistinguishable from the button doing nothing at all.
+    console.error("Vendor application review failed", error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to review this vendor application.",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+async function reviewApplication(
+  request: Request,
+  { id }: { id: string },
+  reviewerEmail: string,
+) {
+  let body: { status?: string };
+
+  try {
+    body = (await request.json()) as { status?: string };
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
   const status = body.status;
 
   if (status !== "approved" && status !== "rejected") {
@@ -68,7 +98,7 @@ export async function PATCH(
       });
     }
 
-    await updateVendorApplicationStatus(id, status, auth.session.email);
+    await updateVendorApplicationStatus(id, status, reviewerEmail);
 
     return NextResponse.json({
       success: true,
@@ -78,6 +108,6 @@ export async function PATCH(
     });
   }
 
-  await updateVendorApplicationStatus(id, status, auth.session.email);
+  await updateVendorApplicationStatus(id, status, reviewerEmail);
   return NextResponse.json({ success: true });
 }

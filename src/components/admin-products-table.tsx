@@ -189,7 +189,7 @@ export function AdminProductsTable({
                               disabled={isPending}
                               onClick={() => {
                                 if (confirm("Send this back to the vendor for updates?")) {
-                                  startTransition(async () => { await rejectProductAction(row.submissionId!); });
+                                  startTransition(async () => { await rejectProductAction(row.id); });
                                 }
                               }}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--warning-soft)] bg-[var(--warning-soft)]/20 px-3 py-1.5 text-xs font-medium text-orange-600 hover:bg-[var(--warning-soft)] transition-colors disabled:opacity-50"
@@ -202,14 +202,14 @@ export function AdminProductsTable({
                           <>
                             <button
                               disabled={isPending}
-                              onClick={() => startTransition(async () => { await approveProductAction(row.submissionId!); })}
+                              onClick={() => startTransition(async () => { await approveProductAction(row.id); })}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
                             >
                               Approve
                             </button>
                             <button
                               disabled={isPending}
-                              onClick={() => startTransition(async () => { await rejectProductAction(row.submissionId!); })}
+                              onClick={() => startTransition(async () => { await rejectProductAction(row.id); })}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-100 transition-colors disabled:opacity-50"
                             >
                               Request Update

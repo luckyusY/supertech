@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, CheckCircle2, Clock, Copy, KeyRound, MapPin, Store, XCircle } from "lucide-react";
+import { AlertTriangle, Building2, CheckCircle2, Clock, Copy, KeyRound, MapPin, Store, XCircle } from "lucide-react";
+import {
+  NETWORK_FAILURE_MESSAGE,
+  describeApiFailure,
+} from "@/lib/api-error-message";
 
 type Application = {
   _id: string;
@@ -32,10 +36,12 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
   const [applications, setApplications] = useState<Application[]>(initialApplications);
   const [loading, setLoading] = useState<string | null>(null);
   const [approvalResult, setApprovalResult] = useState<ApprovalResult | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   async function review(id: string, status: "approved" | "rejected") {
     setLoading(id);
     setApprovalResult(null);
+    setReviewError(null);
     try {
       const res = await fetch(`/api/vendor-applications/${id}`, {
         method: "PATCH",
@@ -60,7 +66,18 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
             vendorSlug: data.vendorSlug ?? "",
           });
         }
+      } else {
+        setReviewError(
+          await describeApiFailure(
+            res,
+            status === "approved"
+              ? "approve this application"
+              : "reject this application",
+          ),
+        );
       }
+    } catch {
+      setReviewError(NETWORK_FAILURE_MESSAGE);
     } finally {
       setLoading(null);
     }
@@ -83,6 +100,28 @@ export function VendorApplicationsInbox({ initialApplications }: Props) {
 
   return (
     <div className="space-y-6">
+      {reviewError && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-[1.4rem] border border-[rgba(217,45,32,0.3)] bg-[rgba(217,45,32,0.06)] p-4"
+        >
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--red)]" />
+          <div className="min-w-0">
+            <p className="font-semibold text-[var(--red)]">Review failed</p>
+            <p className="mt-1 break-words text-sm text-[var(--foreground)]">
+              {reviewError}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setReviewError(null)}
+            className="ml-auto shrink-0 text-sm font-semibold text-[var(--muted)] underline underline-offset-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Temp password banner shown after approval */}
       {approvalResult?.tempPassword && (
         <div className="rounded-[1.4rem] border border-[rgba(8,145,178,0.3)] bg-[rgba(8,145,178,0.06)] p-5">
