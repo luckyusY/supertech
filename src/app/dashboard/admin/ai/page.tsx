@@ -24,7 +24,7 @@ export default async function AdminAiPage() {
         icon={Sparkles}
         eyebrow="SuperTech AI"
         title="AI Studio"
-        description="Create articles, product descriptions, social captions, and customer emails using your OpenAI or DeepSeek API settings."
+        description="Create articles, product descriptions, social captions, and customer emails using your DeepSeek API settings."
         actions={
           <>
             <Link

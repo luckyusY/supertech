@@ -75,7 +75,7 @@ export function getIntegrationStatus(): IntegrationStatus {
       configured: aiConfigured,
       label: aiConfigured
         ? `${getAiProviderLabel()} (${getAiModel()}) is ready for support and content generation.`
-        : "Add OPENAI_API_KEY or DEEPSEEK_API_KEY to enable AI support and content generation. Use AI_PROVIDER to choose between them.",
+        : "Add DEEPSEEK_API_KEY to enable AI support and content generation (or OPENAI_API_KEY to fall back to OpenAI).",
       provider: getAiProviderLabel(),
       model: getAiModel(),
     },

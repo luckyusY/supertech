@@ -48,16 +48,12 @@ Required for real integrations:
 
 ## AI provider
 
-AI search, product recommendations, support chat, product copy, and the blog
-writer all run through one provider. Two are supported:
+SuperTech runs its AI features on **DeepSeek**. AI search, product
+recommendations, support chat, product copy, and the blog writer all go through
+one provider.
 
-| Provider | API key | Model variable | Default model |
-| --- | --- | --- | --- |
-| OpenAI / ChatGPT | `OPENAI_API_KEY` (or `CHATGPT_API_KEY`) | `OPENAI_MODEL` | `gpt-4.1-mini` |
-| DeepSeek | `DEEPSEEK_API_KEY` | `DEEPSEEK_MODEL` | `deepseek-chat` |
-
-To use DeepSeek, create a key at [platform.deepseek.com](https://platform.deepseek.com)
-and add it to `.env.local`:
+Create a key at [platform.deepseek.com](https://platform.deepseek.com) and add
+it to `.env.local`:
 
 ```bash
 AI_PROVIDER=deepseek
@@ -69,10 +65,18 @@ DEEPSEEK_MODEL=deepseek-chat
 temperature is dropped automatically for it because DeepSeek ignores sampling
 parameters on reasoning models.
 
+OpenAI/ChatGPT remains supported as a fallback so older deployments keep
+working, but it is not what the app is built around:
+
+| Provider | API key | Model variable | Default model |
+| --- | --- | --- | --- |
+| DeepSeek (default) | `DEEPSEEK_API_KEY` | `DEEPSEEK_MODEL` | `deepseek-chat` |
+| OpenAI / ChatGPT (fallback) | `OPENAI_API_KEY` (or `CHATGPT_API_KEY`) | `OPENAI_MODEL` | `gpt-4.1-mini` |
+
 Notes:
 
-- `AI_PROVIDER` accepts `openai` or `deepseek`. Leave it blank to auto-select
-  the first provider that has an API key, so OpenAI-only setups keep working.
+- `AI_PROVIDER` accepts `deepseek` or `openai`. Leave it blank and DeepSeek is
+  preferred whenever `DEEPSEEK_API_KEY` is set; otherwise OpenAI is used.
 - If `AI_PROVIDER` names a provider whose key is missing, the app reports AI as
   "not configured" rather than silently calling the other provider.
 - `DEEPSEEK_BASE_URL` / `OPENAI_BASE_URL` let you point at a proxy or gateway.

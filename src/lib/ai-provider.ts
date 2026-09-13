@@ -2,11 +2,12 @@
  * Provider resolution for SuperTech AI features.
  *
  * Two providers are supported today:
- * - `openai`  — the OpenAI Responses API (also used for ChatGPT-labelled keys)
- * - `deepseek` — DeepSeek's OpenAI-compatible Chat Completions API
+ * - `deepseek` — DeepSeek's OpenAI-compatible Chat Completions API (default)
+ * - `openai`   — the OpenAI Responses API (also used for ChatGPT-labelled keys)
  *
- * Pick one with `AI_PROVIDER`. When it is unset the first provider that has an
- * API key wins, so existing OpenAI-only deployments keep working untouched.
+ * SuperTech runs on DeepSeek, so it is preferred when `AI_PROVIDER` is unset.
+ * OpenAI stays supported as a fallback: with no DeepSeek key but an OpenAI one
+ * configured, OpenAI is still used, so older deployments keep working.
  */
 
 export type AiProviderId = "openai" | "deepseek";
@@ -39,18 +40,6 @@ export type ResolvedAiProvider = {
 
 const PROVIDERS: AiProviderDefinition[] = [
   {
-    id: "openai",
-    label: "OpenAI",
-    protocol: "responses",
-    apiKeyEnv: ["OPENAI_API_KEY", "CHATGPT_API_KEY"],
-    modelEnv: ["OPENAI_MODEL", "CHATGPT_MODEL"],
-    baseUrlEnv: ["OPENAI_BASE_URL"],
-    defaultBaseUrl: "https://api.openai.com/v1",
-    defaultModel: "gpt-4.1-mini",
-    endpointPath: "/responses",
-    keyHint: "OPENAI_API_KEY",
-  },
-  {
     id: "deepseek",
     label: "DeepSeek",
     protocol: "chat",
@@ -62,17 +51,29 @@ const PROVIDERS: AiProviderDefinition[] = [
     endpointPath: "/chat/completions",
     keyHint: "DEEPSEEK_API_KEY",
   },
+  {
+    id: "openai",
+    label: "OpenAI",
+    protocol: "responses",
+    apiKeyEnv: ["OPENAI_API_KEY", "CHATGPT_API_KEY"],
+    modelEnv: ["OPENAI_MODEL", "CHATGPT_MODEL"],
+    baseUrlEnv: ["OPENAI_BASE_URL"],
+    defaultBaseUrl: "https://api.openai.com/v1",
+    defaultModel: "gpt-4.1-mini",
+    endpointPath: "/responses",
+    keyHint: "OPENAI_API_KEY",
+  },
 ];
 
 /** Friendly spellings accepted in AI_PROVIDER. */
 const PROVIDER_ALIASES: Record<string, AiProviderId> = {
+  deepseek: "deepseek",
+  "deep-seek": "deepseek",
+  deep_seek: "deepseek",
   openai: "openai",
   "open-ai": "openai",
   chatgpt: "openai",
   gpt: "openai",
-  deepseek: "deepseek",
-  "deep-seek": "deepseek",
-  deep_seek: "deepseek",
 };
 
 export function readEnvValue(name: string) {
@@ -139,7 +140,7 @@ export function resolveAiProvider(): ResolvedAiProvider | null {
 export function getMissingKeyHint() {
   const requested = getRequestedDefinition();
   if (requested) return requested.keyHint;
-  return "OPENAI_API_KEY or DEEPSEEK_API_KEY";
+  return "DEEPSEEK_API_KEY or OPENAI_API_KEY";
 }
 
 export class AiConfigurationError extends Error {
