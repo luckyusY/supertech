@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PenLine, Search } from "lucide-react";
+import { toast } from "sonner";
 import { AdminDeleteButton } from "@/components/admin-delete-button";
 import { AdminToggleButton } from "@/components/admin-toggle-button";
 import {
@@ -11,6 +12,7 @@ import {
   deleteProductAction,
   rejectProductAction,
   toggleProductAction,
+  type ProductModerationResult,
 } from "@/app/dashboard/admin/products/actions";
 import {
   DataTable,
@@ -71,6 +73,24 @@ export function AdminProductsTable({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [isPending, startTransition] = useTransition();
+
+  function runModeration(
+    action: () => Promise<ProductModerationResult>,
+    successMessage: string,
+  ) {
+    startTransition(async () => {
+      try {
+        const result = await action();
+        if (result.ok) {
+          toast.success(successMessage);
+        } else {
+          toast.error(result.error);
+        }
+      } catch {
+        toast.error("Something went wrong. Please try again.");
+      }
+    });
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -189,7 +209,10 @@ export function AdminProductsTable({
                               disabled={isPending}
                               onClick={() => {
                                 if (confirm("Send this back to the vendor for updates?")) {
-                                  startTransition(async () => { await rejectProductAction(row.submissionId!); });
+                                  runModeration(
+                                    () => rejectProductAction(row.id),
+                                    `Update requested from ${row.vendorLabel}.`,
+                                  );
                                 }
                               }}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--warning-soft)] bg-[var(--warning-soft)]/20 px-3 py-1.5 text-xs font-medium text-orange-600 hover:bg-[var(--warning-soft)] transition-colors disabled:opacity-50"
@@ -202,14 +225,24 @@ export function AdminProductsTable({
                           <>
                             <button
                               disabled={isPending}
-                              onClick={() => startTransition(async () => { await approveProductAction(row.submissionId!); })}
+                              onClick={() =>
+                                runModeration(
+                                  () => approveProductAction(row.id),
+                                  `${row.name} approved.`,
+                                )
+                              }
                               className="inline-flex items-center gap-1.5 rounded-lg border border-green-300 bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50"
                             >
                               Approve
                             </button>
                             <button
                               disabled={isPending}
-                              onClick={() => startTransition(async () => { await rejectProductAction(row.submissionId!); })}
+                              onClick={() =>
+                                runModeration(
+                                  () => rejectProductAction(row.id),
+                                  `Update requested from ${row.vendorLabel}.`,
+                                )
+                              }
                               className="inline-flex items-center gap-1.5 rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-700 hover:bg-orange-100 transition-colors disabled:opacity-50"
                             >
                               Request Update
